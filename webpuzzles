@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Reorder Mode- Conditionals</title>
+  <title>Code Shuffler – Conditionals</title>
   <style>
     :root{
       --gap: 12px;
@@ -97,7 +97,7 @@
   </style>
 </head>
 <body>
-  <h1>Parsons Code Checker — Reorder Mode</h1>
+  <h1>Code Shuffler – Conditionals</h1>
   <div class="meta">Drag lines to reorder them. Drop a line onto another to swap places. Submit to check.</div>
 
   <div class="puzzle-box" id="puzzleDescription">Select a puzzle to see its description.</div>

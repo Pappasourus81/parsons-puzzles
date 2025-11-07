@@ -204,9 +204,9 @@ const puzzles = [
     title: "Complex expression with SUBSTRING and assignment",
     description: "No input. Task: Set Text = \"X12Y\", then extract NumStr = SUBSTRING(Text,2,2). Finally assign Num = NumStr. Ensure correct punctuation and assignment symbols.",
     // CORRECTED: removed unusable trailing blank — there are now 7 blanks
-    lines: ["Text ___1___ \"X12Y\"","NumStr ___2___ SUBSTRING ___3___ Text ___4___ 2 ___5___ 2 ___6___","Num ___7___ NumStr"],
+    lines: ["Text ___1___ \"X12Y\"","NumStr ← ___2___ ( ___3___  ___4___ 2 ___5___ 2 ___6___","Num ___7___ NumStr"],
     bank: ["←","=","SUBSTRING","(","Text",",",")","2","2","NumStr","Num","INT","'","\""],
-    answers: {"1":"←","2":"←","3":"SUBSTRING","4":"Text","5":"2","6":"2","7":"←"}
+    answers: {"1":"←","2":"SUBSTRING","3":"SUBSTRING","4":"Text","5":",","6":"2","7":"←"}
   }
 ];
 

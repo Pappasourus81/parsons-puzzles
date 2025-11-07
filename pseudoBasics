@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Missing Code- Pseudocode Basics</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --accent:#0ea5a4;
+      --muted:#94a3b8;
+      --glass: rgba(255,255,255,0.03);
+      --success: #16a34a;
+      --danger: #ef4444;
+      --white: #eef2ff;
+      --shadow: 0 10px 30px rgba(2,6,23,0.7);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%}
+    body{
+      margin:0;
+      min-height:100%;
+      background: linear-gradient(180deg,#071029 0%, #071b2a 60%, #041020 100%);
+      color:var(--white);
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:28px;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    .wrap{
+      width:100%;
+      max-width:1100px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:12px;
+      padding:20px;
+      box-shadow:var(--shadow);
+      border:1px solid rgba(255,255,255,0.03);
+      backdrop-filter: blur(4px);
+    }
+
+    header h1{
+      margin:0 0 6px 0;
+      font-size:20px;
+      letter-spacing:0.2px;
+    }
+    header p.lead{
+      margin:0 0 16px 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+    button{
+      background:var(--glass);
+      color:var(--white);
+      border:1px solid rgba(255,255,255,0.04);
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    button.primary{background:linear-gradient(90deg,var(--accent), #06b6d4); color:#022;}
+    button:active{transform:translateY(1px)}
+    .muted{color:var(--muted); font-size:13px}
+
+    .panel{
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:18px;
+      align-items:start;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+      border-radius:12px;
+      padding:14px;
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    .description{
+      font-size:14px;
+      color:var(--muted);
+      margin-bottom:8px;
+      line-height:1.45;
+    }
+    .example{
+      background: rgba(255,255,255,0.02);
+      padding:10px;
+      border-radius:8px;
+      font-family: "Courier New", monospace;
+      font-size:13px;
+      color:var(--white);
+      margin-top:8px;
+    }
+
+    /* Scrambled lines area */
+    .scramble-area{
+      min-height: 220px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      flex-direction:column;
+    }
+
+    .lines{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .line{
+      background: linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+      padding:10px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.02);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      cursor:grab;
+      user-select:none;
+      font-family: "Courier New", monospace;
+      font-size:13px;
+    }
+    .line.dragging{opacity:0.6; transform:scale(1.01)}
+    .line .idx{
+      opacity:0.6;
+      width:28px;
+      text-align:center;
+      font-weight:700;
+      color:var(--muted);
+    }
+    .placeholder{
+      opacity:0.5;
+      color:var(--muted);
+      font-style:italic;
+    }
+
+    .bank{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+    .token{
+      background:rgba(255,255,255,0.03);
+      padding:6px 9px;
+      border-radius:6px;
+      border:1px solid rgba(255,255,255,0.03);
+      cursor:grab;
+      font-family: "Courier New", monospace;
+      font-size:13px;
+    }
+
+    .blank-drop{
+      display:inline-block;
+      min-width:36px;
+      padding:2px 6px;
+      border-bottom:2px dashed rgba(255,255,255,0.12);
+      margin:0 6px;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .blank-drop.filled{
+      border-bottom-style:solid;
+      color:var(--white);
+    }
+
+    .status{
+      margin-top:8px;
+      font-weight:700;
+    }
+
+    .tokens-column{
+      max-height:420px;
+      overflow:auto;
+    }
+
+    .footer{
+      margin-top:16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+
+    .legend{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .swatch{width:12px; height:12px; border-radius:3px; display:inline-block}
+
+    /* success / danger */
+    .line.correct{
+      border-color: rgba(22,163,74,0.4);
+      background: linear-gradient(90deg, rgba(16,185,129,0.07), rgba(255,255,255,0.01));
+      box-shadow: 0 6px 16px rgba(16,185,129,0.06);
+    }
+    .line.incorrect{
+      border-color: rgba(239,68,68,0.22);
+      background: linear-gradient(90deg, rgba(239,68,68,0.03), rgba(255,255,255,0.01));
+    }
+
+    @media (max-width:980px){
+      .panel{grid-template-columns: 1fr}
+      .tokens-column{max-height:none}
+    }
+
+    .fade-in { animation: fadeIn .35s ease both; }
+    @keyframes fadeIn { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Missing Code- Pseudocode Basics</h1>
+      <p class="lead">Short syntax puzzles — no BEGIN/END lines. Reorder any scrambled lines (usually 1–2 lines) and drag tokens into the blanks. Press <strong>Submit</strong>.</p>
+    </header>
+
+    <div class="controls">
+      <button id="resetBtn">Reset (reshuffle)</button>
+      <button id="submitBtn" class="primary">Submit</button>
+      <button id="nextBtn">Next Puzzle ➜</button>
+      <div style="flex:1"></div>
+      <div class="muted">Puzzle <span id="pIndex">1</span> / 10</div>
+    </div>
+
+    <div class="panel">
+      <div class="card fade-in">
+        <div id="pTitle" style="font-weight:800; margin-bottom:6px">Title</div>
+        <div id="pDesc" class="description">Description</div>
+        <div id="pExample" class="example"></div>
+
+        <div style="margin-top:12px; font-weight:700; margin-bottom:8px">Scrambled code — drag to reorder</div>
+        <div class="scramble-area">
+          <div class="lines" id="linesContainer"></div>
+        </div>
+
+        <div class="footer">
+          <div class="legend">
+            <div><span class="swatch" style="background:var(--success)"></span> correct</div>
+            <div><span class="swatch" style="background:var(--danger)"></span> incorrect</div>
+          </div>
+          <div id="feedback" class="muted">Reorder lines and fill blanks, then Submit.</div>
+        </div>
+      </div>
+
+      <div class="card tokens-column fade-in">
+        <div style="font-weight:800">Token bank (drag tokens into blanks)</div>
+        <div class="muted" style="font-size:13px; margin-bottom:8px">Tokens include correct answers + distractors. Click a filled blank to return its token to the bank.</div>
+        <div id="bank" class="bank"></div>
+
+        <div style="margin-top:12px; font-weight:700">Token hints</div>
+        <div id="tokenInfo" class="muted" style="font-size:13px; margin-top:6px"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // small helper: create element
+    function el(tag, attrs={}, text=''){ const e=document.createElement(tag); for(const k in attrs) e.setAttribute(k, attrs[k]); if(text) e.textContent=text; return e; }
+
+    // shuffle
+    function shuffle(arr){
+      const a = arr.slice();
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]] = [a[j],a[i]];
+      }
+      return a;
+    }
+
+    // === PUZZLES: NO BEGIN/END; 1-2 code lines each ===
+    const puzzles = [
+      // 1
+      {
+        title: "Declare a Variable",
+        description: "Declare variable total of type INTEGER. One line only.",
+        example: "DECLARE total : INTEGER",
+        lines: [
+          "___1___ total ___2___ ___3___"
+        ],
+        solution: [
+          "DECLARE total : INTEGER"
+        ],
+        blanks: { "1":"DECLARE", "2":":", "3":"INTEGER" },
+        bank: ["DECLARE","SET","total","TOTAL",":","=","INTEGER","STRING","REAL",";"]
+      },
+
+      // 2
+      {
+        title: "Assign a Number",
+        description: "Assign 7 to total using the assignment arrow.",
+        example: "total ← 7",
+        lines: [
+          "total ___1___ ___2___"
+        ],
+        solution: [
+          "total ← 7"
+        ],
+        blanks: { "1":"←", "2":"7" },
+        bank: ["=","←",":=","7","5","\"7\"","total","<-"]
+      },
+
+      // 3
+      {
+        title: "Declare a String",
+        description: "Declare name as STRING (one line).",
+        example: "DECLARE name : STRING",
+        lines: [
+          "___1___ name ___2___ ___3___"
+        ],
+        solution: [
+          "DECLARE name : STRING"
+        ],
+        blanks: { "1":"DECLARE", "2":":", "3":"STRING" },
+        bank: ["DECLARE","VAR","name",":","STRING","INTEGER","'STRING'","\"STRING\""]
+      },
+
+      // 4
+      {
+        title: "Concatenate Names",
+        description: "Create fullName by concatenating FirstName, a space, and LastName.",
+        example: 'fullName ← FirstName , " " , LastName',
+        lines: [
+          "fullName ___1___ FirstName ___2___ \" \" ___3___ LastName"
+        ],
+        solution: [
+          "fullName ← FirstName , \" \" , LastName"
+        ],
+        blanks: { "1":"←", "2":",", "3":"," },
+        bank: ["←",":=","=","FirstName","LastName",",","\" \"","CONCAT"]
+      },
+
+      // 5
+      {
+        title: "Types: REAL and INTEGER",
+        description: "Declare price as REAL and quantity as INTEGER. Two separate lines.",
+        example: "DECLARE price : REAL",
+        lines: [
+          "DECLARE price ___1___ ___2___",
+          "DECLARE quantity ___3___ ___4___"
+        ],
+        solution: [
+          "DECLARE price : REAL",
+          "DECLARE quantity : INTEGER"
+        ],
+        blanks: { "1":":", "2":"REAL", "3":":", "4":"INTEGER" },
+        bank: ["REAL","INTEGER","STRING","DECLARE",":",",",";"]
+      },
+
+      // 6
+      {
+        title: "Arithmetic: multiplication and addition",
+        description: "Compute total = price * quantity + tax (one line). Use assignment arrow.",
+        example: "total ← price * quantity + tax",
+        lines: [
+          "total ___1___ price ___2___ quantity ___3___ tax"
+        ],
+        solution: [
+          "total ← price * quantity + tax"
+        ],
+        blanks: { "1":"←", "2":"*", "3":"+" },
+        bank: ["←","=","*","+","/","-","price","quantity","tax"]
+      },
+
+      // 7
+      {
+        title: "DIV operator",
+        description: "Integer division: groups ← total DIV size (one line).",
+        example: "groups ← total DIV size",
+        lines: [
+          "groups ___1___ total ___2___ size"
+        ],
+        solution: [
+          "groups ← total DIV size"
+        ],
+        blanks: { "1":"←", "2":"DIV" },
+        bank: ["←","=","DIV","MOD","total","size","groups"]
+      },
+
+      // 8
+      {
+        title: "Parentheses in Expression",
+        description: "Use parentheses to group (quantity + tax) before multiplying by price.",
+        example: "total ← price * ( quantity + tax )",
+        lines: [
+          "total ___1___ price ___2___ ( quantity ___3___ tax )"
+        ],
+        solution: [
+          "total ← price * ( quantity + tax )"
+        ],
+        blanks: { "1":"←", "2":"*", "3":"+" },
+        bank: ["←","=","*","+","(",")","quantity","tax"]
+      },
+
+      // 9
+      {
+        title: "Numeric vs String Literal",
+        description: "Assign age the number 14 (INTEGER). Avoid using \"14\" which is a STRING.",
+        example: "age ← 14",
+        lines: [
+          "age ___1___ ___2___"
+        ],
+        solution: [
+          "age ← 14"
+        ],
+        blanks: { "1":"←", "2":"14" },
+        bank: ["←","=","14","\"14\"","AGE","age"]
+      },
+
+      // 10
+      {
+        title: "Punctuation: colon vs comma",
+        description: "Declare score as INTEGER. Use colon before type; comma is a distractor.",
+        example: "DECLARE score : INTEGER",
+        lines: [
+          "DECLARE score ___1___ ___2___"
+        ],
+        solution: [
+          "DECLARE score : INTEGER"
+        ],
+        blanks: { "1":":", "2":"INTEGER" },
+        bank: [":",",","INTEGER","STRING","DECLARE","score",";"]
+      }
+    ];
+
+    // --- State ---
+    let current = 0;
+    let currentOrder = []; // displayed order of lines
+    const pIndex = document.getElementById('pIndex');
+    const pTitle = document.getElementById('pTitle');
+    const pDesc = document.getElementById('pDesc');
+    const pExample = document.getElementById('pExample');
+    const linesContainer = document.getElementById('linesContainer');
+    const bankDiv = document.getElementById('bank');
+    const feedback = document.getElementById('feedback');
+
+    // render puzzle
+    function renderPuzzle(i){
+      const pu = puzzles[i];
+      pIndex.textContent = (i+1);
+      pTitle.textContent = pu.title;
+      pDesc.textContent = pu.description;
+      pExample.textContent = pu.example;
+
+      // scramble all lines (no BEGIN/END)
+      currentOrder = shuffle(pu.lines.slice());
+
+      // render lines
+      linesContainer.innerHTML = '';
+      currentOrder.forEach((lineText, idx) => {
+        const row = el('div', { class: 'line', draggable: true });
+        row.dataset.index = idx;
+        row.appendChild(el('div', { class: 'idx' }, String(idx+1)));
+
+        // replace blanks like ___1___ with droppable spans
+        const inner = document.createElement('div');
+        inner.style.flex = '1';
+        const htmlParts = lineText.split(/(___\d+___)/).map(part => {
+          if(/^___\d+___$/.test(part)){
+            const num = part.replace(/[^0-9]/g,'');
+            return `<span class="blank-drop" data-blank="${num}">___${num}___</span>`;
+          } else {
+            return part.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          }
+        }).join('');
+        inner.innerHTML = htmlParts;
+        row.appendChild(inner);
+
+        addDragHandlers(row);
+        linesContainer.appendChild(row);
+      });
+
+      // render bank tokens (shuffled)
+      bankDiv.innerHTML = '';
+      const tokens = shuffle(pu.bank.slice());
+      tokens.forEach(tok => {
+        const t = el('div', { class: 'token', draggable: true }, tok);
+        t.dataset.token = tok;
+        addTokenDragHandlers(t);
+        bankDiv.appendChild(t);
+      });
+
+      feedback.textContent = 'Arrange lines (if more than one) and fill blanks, then Submit.';
+    }
+
+    // drag handlers for lines
+    function addDragHandlers(row){
+      row.addEventListener('dragstart', (e)=>{
+        row.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', row.dataset.index);
+        if(e.dataTransfer.setDragImage){
+          const crt = row.cloneNode(true);
+          crt.style.position = 'absolute'; crt.style.top='-9999px';
+          document.body.appendChild(crt);
+          e.dataTransfer.setDragImage(crt, 10, 10);
+          setTimeout(()=>document.body.removeChild(crt), 0);
+        }
+      });
+      row.addEventListener('dragend', ()=> row.classList.remove('dragging'));
+
+      row.addEventListener('dragover', (e)=>{
+        e.preventDefault();
+        const dragging = document.querySelector('.line.dragging');
+        if(!dragging || dragging === row) return;
+        const rect = row.getBoundingClientRect();
+        const after = (e.clientY - rect.top) > rect.height/2;
+        if(after){
+          row.parentNode.insertBefore(dragging, row.nextSibling);
+        } else {
+          row.parentNode.insertBefore(dragging, row);
+        }
+        Array.from(linesContainer.children).forEach((r, idx)=> r.querySelector('.idx').textContent = idx+1);
+      });
+    }
+
+    // token drag handlers
+    function addTokenDragHandlers(tokenEl){
+      tokenEl.addEventListener('dragstart', (e)=>{
+        e.dataTransfer.setData('text/token', tokenEl.dataset.token);
+        tokenEl.classList.add('dragging');
+      });
+      tokenEl.addEventListener('dragend', ()=> tokenEl.classList.remove('dragging'));
+    }
+
+    // make blanks droppable (observer will re-run this)
+    function refreshBlankDroppables(){
+      const blanks = document.querySelectorAll('.blank-drop');
+      blanks.forEach(b=>{
+        b.addEventListener('dragover', (e)=>{ e.preventDefault(); });
+        b.addEventListener('drop', (e)=>{
+          e.preventDefault();
+          const tok = e.dataTransfer.getData('text/token');
+          if(!tok) return;
+          b.textContent = tok;
+          b.classList.add('filled');
+          b.dataset.filled = tok;
+          // remove first matching token from bank
+          const tokenNodes = Array.from(bankDiv.children);
+          const match = tokenNodes.find(n => n.dataset.token === tok);
+          if(match) match.parentNode.removeChild(match);
+        });
+      });
+    }
+
+    // observe changes in linesContainer to refresh droppables
+    const observer = new MutationObserver(()=> refreshBlankDroppables());
+    observer.observe(linesContainer, { childList:true, subtree:true });
+
+    // Submit: compare displayed lines (with filled blanks) to solution
+    function checkSubmit(){
+      const pu = puzzles[current];
+      // build displayed lines
+      const displayed = Array.from(linesContainer.children).map(r => {
+        const inner = r.querySelector('div:nth-child(2)');
+        const clone = inner.cloneNode(true);
+        clone.querySelectorAll('.blank-drop').forEach(sp=>{
+          const val = sp.dataset.filled ? sp.dataset.filled : sp.textContent;
+          const txt = document.createTextNode(val);
+          sp.parentNode.replaceChild(txt, sp);
+        });
+        return clone.textContent.trim();
+      });
+
+      // Compare to solution (solution may have specific order)
+      // We consider puzzle correct when displayed line texts equal solution lines in order
+      const sol = pu.solution.slice();
+      Array.from(linesContainer.children).forEach((r, idx)=>{
+        const sline = sol[idx] || '';
+        const dline = displayed[idx] || '';
+        if(sline.trim() === dline.trim()){
+          r.classList.remove('incorrect');
+          r.classList.add('correct');
+        } else {
+          r.classList.remove('correct');
+          r.classList.add('incorrect');
+        }
+      });
+
+      // check blanks filled
+      const blankSpans = document.querySelectorAll('.blank-drop');
+      const unfilled = Array.from(blankSpans).filter(s => !s.dataset.filled);
+      if(unfilled.length>0){
+        feedback.textContent = `Please fill all blanks. ${unfilled.length} blank(s) left.`;
+        return;
+      }
+
+      // check blanks correctness
+      let blanksAllCorrect = true;
+      blankSpans.forEach(s=>{
+        const bnum = s.dataset.blank;
+        const expected = pu.blanks[bnum];
+        const given = s.dataset.filled;
+        if(expected !== given){
+          blanksAllCorrect = false;
+          const parentLine = s.closest('.line');
+          if(parentLine){
+            parentLine.classList.remove('correct');
+            parentLine.classList.add('incorrect');
+          }
+        }
+      });
+
+      const allLinesCorrect = Array.from(linesContainer.children).every(r => r.classList.contains('correct'));
+      if(allLinesCorrect && blanksAllCorrect){
+        feedback.textContent = 'All correct 🎉 — well done!';
+      } else {
+        feedback.textContent = 'Some lines or blanks are incorrect. Incorrect lines shown in red.';
+      }
+    }
+
+    // Reset
+    function resetPuzzle(){
+      renderPuzzle(current);
+    }
+
+    // Next
+    function nextPuzzle(){
+      current = (current + 1) % puzzles.length;
+      renderPuzzle(current);
+    }
+
+    // Event bindings
+    document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
+    document.getElementById('submitBtn').addEventListener('click', checkSubmit);
+    document.getElementById('nextBtn').addEventListener('click', nextPuzzle);
+
+    // bank mutation observer to add handlers
+    const bankObserver = new MutationObserver(()=> {
+      Array.from(bankDiv.children).forEach(n => {
+        if(!n._hasHandlers){
+          addTokenDragHandlers(n);
+          n._hasHandlers = true;
+        }
+      });
+    });
+    bankObserver.observe(bankDiv, { childList:true });
+
+    // clicking filled blank returns token to bank
+    document.addEventListener('click', (e)=>{
+      const target = e.target;
+      if(target.classList && target.classList.contains('blank-drop') && target.dataset.filled){
+        const tok = target.dataset.filled;
+        const t = el('div', { class: 'token', draggable: true }, tok);
+        t.dataset.token = tok;
+        addTokenDragHandlers(t);
+        bankDiv.appendChild(t);
+        delete target.dataset.filled;
+        target.classList.remove('filled');
+        target.textContent = `___${target.dataset.blank}___`;
+      }
+    });
+
+    // initial render
+    function renderPuzzle(i){
+      const pu = puzzles[i];
+      pIndex.textContent = (i+1);
+      pTitle.textContent = pu.title;
+      pDesc.textContent = pu.description;
+      pExample.textContent = pu.example;
+
+      // scramble lines
+      currentOrder = shuffle(pu.lines.slice());
+
+      linesContainer.innerHTML = '';
+      currentOrder.forEach((lineText, idx) => {
+        const row = el('div', { class: 'line', draggable: true });
+        row.dataset.index = idx;
+        row.appendChild(el('div', { class: 'idx' }, String(idx+1)));
+
+        const inner = document.createElement('div');
+        inner.style.flex = '1';
+        const htmlParts = lineText.split(/(___\d+___)/).map(part => {
+          if(/^___\d+___$/.test(part)){
+            const num = part.replace(/[^0-9]/g,'');
+            return `<span class="blank-drop" data-blank="${num}">___${num}___</span>`;
+          } else {
+            return part.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          }
+        }).join('');
+        inner.innerHTML = htmlParts;
+        row.appendChild(inner);
+
+        addDragHandlers(row);
+        linesContainer.appendChild(row);
+      });
+
+      // tokens
+      bankDiv.innerHTML = '';
+      const tokens = shuffle(pu.bank.slice());
+      tokens.forEach(tok => {
+        const t = el('div', { class: 'token', draggable: true }, tok);
+        t.dataset.token = tok;
+        addTokenDragHandlers(t);
+        bankDiv.appendChild(t);
+      });
+
+      feedback.textContent = 'Arrange lines (if more than one) and fill blanks, then Submit.';
+    }
+
+    renderPuzzle(current);
+  </script>
+</body>
+</html>

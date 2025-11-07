@@ -23,436 +23,203 @@
   .meta{color:var(--muted);font-size:13px}
   .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
   .description{background:linear-gradient(90deg,#ffffff,#fbfdff);border-radius:10px;padding:12px;border:1px solid #e6eefc}
-  .pseudocode{
-    font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
-    background:#0f1724;color:#e6eefc;padding:12px;border-radius:8px;margin-top:12px;
-    white-space:pre;line-height:1.6;display:block;
-  }
+  .pseudocode{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;background:#0f1724;color:#e6eefc;padding:12px;border-radius:8px;margin-top:12px;white-space:pre;line-height:1.6;display:block;}
   .line{display:block}
   .controls{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
   button{background:var(--accent);color:white;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600;box-shadow:0 6px 12px rgba(11,102,255,0.12)}
   button.secondary{background:#eef3ff;color:var(--accent);box-shadow:none}
-  button:disabled{opacity:0.6;cursor:not-allowed}
   .bank{display:flex;flex-wrap:wrap;gap:var(--bank-gap);margin-top:12px}
   .token{display:inline-block;padding:8px 10px;border-radius:8px;background:#fff;border:1px solid #e6eefc;cursor:grab;box-shadow:0 4px 10px rgba(11,102,255,0.06);min-width:36px;text-align:center;color:#07203a}
-  .token:active{cursor:grabbing}
-  .token[draggable="true"]{user-select:none}
-  .token.selected{box-shadow:0 6px 18px rgba(11,102,255,0.16);transform:translateY(-2px)}
-  .blank{
-    display:inline-block;min-width:64px;padding:6px 8px;border-radius:6px;
-    background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.12);
-    margin:0 4px;vertical-align:middle;color:#e6eefc;
-  }
-  .blank.empty{opacity:0.8}
+  .blank{display:inline-block;min-width:60px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.2);margin:0 4px;vertical-align:middle;color:#e6eefc;}
   .blank.correct{background:var(--good);color:#064e3b;border-style:solid;border-color:#86efac}
   .blank.incorrect{background:var(--bad);color:#7f1d1d;border-style:solid;border-color:#fca5a5}
-  .bank-wrap{margin-top:12px}
-  .hint{color:var(--muted);font-size:13px;margin-top:8px}
+  .placed-clone{display:inline-block;padding:6px 8px;border-radius:6px;background:#fff;color:#07203a;border:1px solid #e6eefc;box-shadow:0 4px 10px rgba(2,6,23,0.06);min-width:36px;text-align:center;font-weight:600;}
   .status{margin-top:12px;font-weight:600}
-  /* placed clone styling - visible tokens when placed */
-  .placed-clone{
-    display:inline-block;
-    padding:6px 8px;
-    border-radius:6px;
-    background:#ffffff;
-    color:#07203a;               /* dark text for visibility */
-    border:1px solid #e6eefc;
-    box-shadow:0 4px 10px rgba(2,6,23,0.06);
-    min-width:36px;
-    text-align:center;
-    font-weight:600;
-  }
-  /* focus outlines for accessibility */
-  .token:focus, .blank:focus, button:focus, .placed-clone:focus, select:focus {outline:3px solid rgba(11,102,255,0.12);outline-offset:3px}
-  /* subtle animations */
-  .token{transition:transform .12s ease, box-shadow .12s ease}
-  .token:active{transform:scale(.98)}
-  @keyframes pop{0%{transform:scale(.85)}100%{transform:scale(1)}}
-  /* responsive */
-  @media (max-width:640px){
-    .wrap{padding:12px}
-    .token{padding:8px}
-    .controls{gap:6px}
-  }
-  .sr-only{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
 </style>
 </head>
 <body>
-<div class="wrap" id="app">
+<div class="wrap">
   <header>
-    <div>
-      <h1>Code Shuffler – Syntax and Data Types</h1>
-      <div class="meta">Fill numbered blanks using tokens from the bank. Tokens are cloned when placed so the bank remains available.</div>
-    </div>
+    <h1>Code Shuffler – Syntax and Data Types</h1>
   </header>
 
-  <section class="card" id="puzzleCard" aria-live="polite">
-    <div id="puzzleMeta" class="description" role="region" aria-label="Puzzle description"></div>
-
-    <pre class="pseudocode" id="codeArea" aria-label="Pseudocode area"></pre>
-
-    <div class="bank-wrap card" aria-label="Token bank area">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <strong>Token bank</strong>
-        <div style="font-size:13px;color:var(--muted)">Tip: Use Tab to navigate tokens and blanks.</div>
-      </div>
-      <div id="bank" class="bank" role="list" aria-label="Tokens available for placing"></div>
-      <div class="hint">Press Enter to pick/place. Tokens stay in the bank and can be used multiple times.</div>
+  <section class="card">
+    <div id="puzzleMeta" class="description"></div>
+    <pre id="codeArea" class="pseudocode"></pre>
+    <div class="bank-wrap card">
+      <strong>Token bank</strong>
+      <div id="bank" class="bank"></div>
     </div>
-
-    <div class="controls" role="region" aria-label="Puzzle controls">
-      <button id="prevBtn" class="secondary" title="Previous question">◀ Prev</button>
-      <button id="nextBtn" class="secondary" title="Next question">Next ▶</button>
-
-      <label for="puzzleSelect" style="margin-left:6px;color:var(--muted);font-weight:600">Go to:</label>
-      <select id="puzzleSelect" aria-label="Select puzzle" style="padding:8px;border-radius:8px;border:1px solid #e6eefc;background:#fff;color:#07203a"></select>
-
+    <div class="controls">
+      <button id="prevBtn" class="secondary">◀ Prev</button>
+      <button id="nextBtn" class="secondary">Next ▶</button>
+      <label for="puzzleSelect" style="margin-left:6px;color:#555;font-weight:600">Go to:</label>
+      <select id="puzzleSelect"></select>
       <div style="flex:1"></div>
-
       <button id="submitBtn">Submit</button>
-      <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
-
-      <div id="status" class="status" aria-live="polite"></div>
+      <button id="resetBtn" class="secondary">Reset</button>
     </div>
-
-    <div style="margin-top:12px;color:var(--muted);font-size:13px">
-      <strong>Notes:</strong> Uses IGCSE-style pseudocode keywords and functions (Topics 2 &amp; 4 only). No loops or conditionals.
-    </div>
+    <div id="status" class="status"></div>
   </section>
-
-  <footer style="text-align:center;color:var(--muted);font-size:13px;margin-top:10px">
-    <div>Single-file, static, embeddable in Google Sites.</div>
-  </footer>
 </div>
 
 <script>
-/*
-  Code Shuffler – corrected final puzzle (removed unusable trailing blank)
-  - Puzzles include teacher-style descriptions.
-  - Bank tokens are cloned when placed (bank remains unchanged).
-  - Prev/Next/Dropdown/Reset/Submit available.
-*/
-
-/* ------------------------------
-   Puzzles (last puzzle corrected)
---------------------------------*/
 const puzzles = [
   {
-    title: "Simple output and quotes",
-    description: "No input. Task: Write code that outputs the text Hello. Fill the blanks so the program prints: Hello",
-    lines: ["___1___ ___2___Hello___3___"],
-    bank: ["OUTPUT", '"', "'", "PRINT", "OUTPUTS", "Hello", " "],
+    title: "Output a greeting",
+    description: "No input. Task: Write pseudocode that outputs the message \"Welcome to class\".",
+    lines: ["___1___ ___2___Welcome to class___3___"],
+    bank: ["OUTPUT", "PRINT", "DISPLAY", '"', "'", ":", "(", ")", "Welcome to class"],
     answers: {"1":"OUTPUT","2":'"',"3":'"'}
   },
   {
-    title: "Read and echo",
-    description: "Input: one name (single word). Task: Read a name into variable Name and then output that same Name.",
-    lines: ["___1___ Name","___2___ Name"],
-    bank: ["INPUT","OUTPUT","READ","PRINT","Name","Name:"],
-    answers: {"1":"INPUT","2":"OUTPUT"}
+    title: "Ask for name and display it",
+    description: "Input: a user's name. Task: Read the name and then output it in a sentence.",
+    lines: ["___1___ Name", "___2___ \"Hello, \" , ___3___"],
+    bank: ["INPUT","READ","OUTPUT","PRINT","Name","'","\"","=","+"],
+    answers: {"1":"INPUT","2":"OUTPUT","3":"Name"}
   },
   {
-    title: "Assignment and addition",
-    description: "No input. Task: Assign the value 5 to variable A, then calculate B = A + 3. After running, B should equal 8.",
-    lines: ["A ___1___ 5","B ___2___ A ___3___ 3"],
-    bank: ["←","+","=","-","5","3","<-"],
-    answers: {"1":"←","2":"←","3":"+"}
+    title: "Calculate total price",
+    description: "No input. Task: Assign 20 to Price and 5 to Quantity, then compute Total = Price * Quantity.",
+    lines: ["Price ___1___ 20", "Quantity ___2___ 5", "Total ___3___ Price ___4___ Quantity"],
+    bank: ["←","=","*","+","-","/","Price","Quantity","Total","20","5"],
+    answers: {"1":"←","2":"←","3":"←","4":"*"}
   },
   {
-    title: "String and number concatenation",
-    description: "No input. Task: Declare Name = \"Sam\" and Score = 10.0 then output the message: You scored 10 (use OUTPUT and concatenation).",
-    lines: ["Name ___1___ \"Sam\"","Score ___2___ 10.0","___3___ \"You scored \" , ___4___"],
-    bank: ["←", "=", "OUTPUT", "PRINT", "Score", "Name", "10.0"],
-    answers: {"1":"←","2":"←","3":"OUTPUT","4":"Score"}
+    title: "Combine text and number output",
+    description: "No input. Task: Create variables Name=\"Maya\" and Score=45, then output 'Maya scored 45 points'.",
+    lines: ["Name ___1___ ___2___Maya___3___", "Score ___4___ 45", "___5___ Name , \" scored \" , Score , \" points\""],
+    bank: ["←","=","OUTPUT","PRINT","'","\"","Name","Score","45","points"],
+    answers: {"1":"←","2":'"',"3":'"',"4":"←","5":"OUTPUT"}
   },
   {
-    title: "Char vs String literals",
-    description: "No input. Task: Declare Letter as the character 'A' and Word as the string \"A\". Then output Letter, the text ' vs ', and Word.",
-    lines: ["Letter ___1___ 'A'","Word ___2___ \"A\"","___3___ Letter , \" vs \" , Word"],
-    bank: ["←","=","OUTPUT","PRINT","'","\"","Letter","Word"],
+    title: "Demonstrate CHAR vs STRING",
+    description: "No input. Task: Declare Char='B' and Word=\"B\". Output them separated by ' and '.",
+    lines: ["Char ___1___ 'B'", "Word ___2___ \"B\"", "___3___ Char , \" and \" , Word"],
+    bank: ["←","=","OUTPUT","DISPLAY","PRINT","Char","Word","'","\""],
     answers: {"1":"←","2":"←","3":"OUTPUT"}
   },
   {
-    title: "DIV and MOD usage",
-    description: "No input. Task: Given Total = 17, compute GroupCount = Total DIV 4 and Remainder = Total MOD 4. After running, GroupCount should be 4 and Remainder 1.",
-    lines: ["Total ___1___ 17","GroupCount ___2___ Total ___3___ 4","Remainder ___4___ Total ___5___ 4"],
-    bank: ["←","=","DIV","MOD","/","4","17"],
+    title: "Use DIV and MOD",
+    description: "No input. Task: Given Total=25, calculate Quotient=Total DIV 6 and Remainder=Total MOD 6.",
+    lines: ["Total ___1___ 25","Quotient ___2___ Total ___3___ 6","Remainder ___4___ Total ___5___ 6"],
+    bank: ["←","=","DIV","MOD","/","6","25","%","//"],
     answers: {"1":"←","2":"←","3":"DIV","4":"←","5":"MOD"}
   },
   {
-    title: "SUBSTRING with indices",
-    description: "Input: Text (a string). Task: Set Part = SUBSTRING(Text, 2, 3) and then output Part. Example: Text=\"Hello\" → output \"ell\".",
-    lines: ["INPUT Text","Part ___1___ SUBSTRING ___2___ Text ___3___ 2 ___4___ 3 ___5___","OUTPUT Part"],
-    bank: ["←","SUBSTRING","(","Comma","Text",",",")","2","3"],
-    answers: {"1":"←","2":"SUBSTRING","3":"(","4":",","5":")"}
+    title: "Substring extraction",
+    description: "Input: Text. Task: Assign Part=SUBSTRING(Text,3,2) and output Part.",
+    lines: ["INPUT Text","Part ___1___ ___2___ ___3___ Text ___4___ 3 ___5___ 2 ___6___","___7___ Part"],
+    bank: ["←","=","SUBSTRING","OUTPUT","PRINT","(","Text",",",")","3","2"],
+    answers: {"1":"←","2":"SUBSTRING","3":"(","4":",","5":",","6":")","7":"OUTPUT"}
   },
   {
-    title: "Rounding REAL values",
-    description: "No input. Task: Set A = 4.7 and B = 3.2, compute Avg = (A + B) / 2.0 and then Result = ROUND(Avg).",
-    lines: ["A ___1___ 4.7","B ___2___ 3.2","Avg ___3___ ( A ___4___ B ) / 2.0","Result ___5___ ROUND ___6___ Avg ___7___"],
-    bank: ["←","=","(","+",")","/","2.0","ROUND","Avg","A","B"],
-    answers: {"1":"←","2":"←","3":"←","4":"+","5":"←","6":"ROUND","7":"Avg"}
+    title: "Rounding a calculated value",
+    description: "No input. Task: Assign A=5.3 and B=2.7, compute Avg=(A+B)/2, then Result=ROUND(Avg).",
+    lines: ["A ___1___ 5.3","B ___2___ 2.7","Avg ___3___ ( A ___4___ B ) / 2","Result ___5___ ___6___ ___7___ Avg ___8___"],
+    bank: ["←","=","ROUND","AVG","A","B","+","-","(","/","2",")"],
+    answers: {"1":"←","2":"←","3":"←","4":"+","5":"←","6":"ROUND","7":"(","8":")"}
   },
   {
-    title: "OUTPUT multiple values with commas",
-    description: "No input. Task: Declare Name = \"Ali\" and Lives = 3, then output: Name, \" has \", Lives, \" lives\" using OUTPUT with commas.",
-    lines: ["Name ___1___ \"Ali\"","Lives ___2___ 3","___3___ Name ___4___ \" has \" ___5___ Lives ___6___ \" lives\" ___7___"],
-    bank: ["←","=","OUTPUT",",","\" has \"","Lives","\" lives\"","Name"],
-    answers: {"1":"←","2":"←","3":"OUTPUT","4":",","5":",","6":"Lives","7":","}
+    title: "Concatenation challenge",
+    description: "No input. Task: Recreate the line OUTPUT \"Result: \" , X , \" + \" , Y , \" = \" , X + Y. Declare X=4, Y=7 first.",
+    lines: ["X ___1___ 4","Y ___2___ 7","___3___ \"Result: \" , X , \" + \" , Y , \" = \" , X ___4___ Y"],
+    bank: ["←","=","OUTPUT","DISPLAY","PRINT","+","-","*","/","X","Y","\"","'","Result:"],
+    answers: {"1":"←","2":"←","3":"OUTPUT","4":"+"}
   },
   {
-    title: "Complex expression with SUBSTRING and assignment",
-    description: "No input. Task: Set Text = \"X12Y\", then extract NumStr = SUBSTRING(Text,2,2). Finally assign Num = NumStr. Ensure correct punctuation and assignment symbols.",
-    // CORRECTED: removed unusable trailing blank — there are now 7 blanks
-    lines: ["Text ___1___ \"X12Y\"","NumStr ← ___2___ ( ___3___  ___4___ 2 ___5___ 2 ___6___","Num ___7___ NumStr"],
-    bank: ["←","=","SUBSTRING","(","Text",",",")","2","2","NumStr","Num","INT","'","\""],
-    answers: {"1":"←","2":"SUBSTRING","3":"Text","4":",","5":",","6":")","7":"←"}
+    title: "Advanced string and number mix",
+    description: "No input. Task: Rebuild full code: Text=\"X12Y\", NumStr=SUBSTRING(Text,2,2), Num=ROUND(NumStr) + 3, OUTPUT Num.",
+    lines: ["Text ___1___ ___2___X12Y___3___","NumStr ___4___ ___5___ ___6___ Text ___7___ 2 ___8___ 2 ___9___","Num ___10___ ___11___ ___12___ NumStr ___13___ ___14___ 3","___15___ Num"],
+    bank: ["←","=","SUBSTRING","ROUND","OUTPUT","(","Text",",",")","+","-","*","2","3","NumStr","Num","\"","'"],
+    answers: {"1":"←","2":'"',"3":'"',"4":"←","5":"SUBSTRING","6":"(","7":",","8":",","9":")","10":"←","11":"ROUND","12":"(","13":")","14":"+","15":"OUTPUT"}
   }
 ];
 
-/* ------------------------------
-   State and DOM refs
---------------------------------*/
 let puzzleIndex = 0;
 let selectedTokenValue = null;
 const bankEl = document.getElementById('bank');
 const codeArea = document.getElementById('codeArea');
 const metaEl = document.getElementById('puzzleMeta');
+const selectEl = document.getElementById('puzzleSelect');
 const submitBtn = document.getElementById('submitBtn');
 const resetBtn = document.getElementById('resetBtn');
 const nextBtn = document.getElementById('nextBtn');
 const prevBtn = document.getElementById('prevBtn');
-const selectEl = document.getElementById('puzzleSelect');
 const statusEl = document.getElementById('status');
 
-function escapeHtml(s){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
-function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function clearSelection(){ document.querySelectorAll('.token.selected').forEach(el=>el.classList.remove('selected')); selectedTokenValue=null; }
+function escapeHtml(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+function shuffleArray(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function clearSelection(){document.querySelectorAll('.token.selected').forEach(el=>el.classList.remove('selected'));selectedTokenValue=null;}
 
-/* ------------------------------
-   Populate dropdown
---------------------------------*/
 function populatePuzzleSelect(){
   selectEl.innerHTML = '';
   puzzles.forEach((p,i)=>{
-    const opt = document.createElement('option');
-    opt.value = String(i);
-    opt.textContent = `${i+1}. ${p.title}`;
+    const opt=document.createElement('option');
+    opt.value=i; opt.textContent=`${i+1}. ${p.title}`;
     selectEl.appendChild(opt);
   });
 }
 
-/* ------------------------------
-   Render puzzle
---------------------------------*/
 function renderPuzzle(index){
-  clearSelection();
-  statusEl.textContent = '';
-  puzzleIndex = index;
-  selectEl.value = String(index);
-  const p = puzzles[index];
-
-  metaEl.innerHTML = `<strong>${escapeHtml(p.title)}</strong><div style="margin-top:8px;color:${getComputedStyle(document.documentElement).getPropertyValue('--muted')}">${escapeHtml(p.description)}</div>`;
-
-  // render code lines with blanks
-  let rendered = '';
+  clearSelection(); statusEl.textContent=''; puzzleIndex=index; selectEl.value=index;
+  const p=puzzles[index];
+  metaEl.innerHTML=`<strong>${p.title}</strong><br><small>${p.description}</small>`;
+  let rendered='';
   for(const line of p.lines){
-    let out = escapeHtml(line);
-    out = out.replace(/___(\d+)___/g, function(_,n){
-      const id = `blank-${n}`;
-      return `<span tabindex="0" role="button" aria-label="Blank ${n}" class="blank empty" data-blank="${n}" id="${id}">___${n}___</span>`;
-    });
-    rendered += '<span class="line">' + out + '</span>\n';
+    rendered += line.replace(/___(\d+)___/g,(_,n)=>`<span class='blank' data-blank='${n}'>___${n}___</span>`) + "\n";
   }
-  codeArea.innerHTML = rendered;
-
-  // render bank (shuffled)
-  bankEl.innerHTML = '';
-  const bankTokens = shuffleArray(p.bank.slice());
+  codeArea.innerHTML=rendered;
+  bankEl.innerHTML='';
+  const bankTokens=shuffleArray(p.bank.slice());
   for(const t of bankTokens){
-    const tokenEl = document.createElement('div');
-    tokenEl.className = 'token';
-    tokenEl.tabIndex = 0;
-    tokenEl.setAttribute('role','listitem');
-    tokenEl.setAttribute('draggable','true');
-    tokenEl.dataset.value = t;
-    tokenEl.title = t;
-    tokenEl.innerHTML = `<span>${escapeHtml(String(t))}</span>`;
-    attachBankTokenEvents(tokenEl);
-    bankEl.appendChild(tokenEl);
+    const token=document.createElement('div');
+    token.className='token'; token.dataset.value=t; token.textContent=t;
+    token.draggable=true; token.tabIndex=0;
+    token.onclick=()=>{clearSelection();token.classList.add('selected');selectedTokenValue=t;};
+    token.addEventListener('dragstart',ev=>{ev.dataTransfer.setData('text/plain',t);});
+    bankEl.appendChild(token);
   }
-
-  // attach blank events
-  document.querySelectorAll('.blank').forEach(b => attachBlankEvents(b));
-
-  // update title for accessibility
-  document.title = `Code Shuffler – ${p.title}`;
-}
-
-/* ------------------------------
-   Bank token events (orig remain)
---------------------------------*/
-function attachBankTokenEvents(tokenEl){
-  tokenEl.addEventListener('dragstart', ev=>{
-    ev.dataTransfer.setData('text/plain', tokenEl.dataset.value);
-    ev.dataTransfer.effectAllowed = 'copy';
-    tokenEl.classList.add('dragging');
-    clearSelection();
-    tokenEl.classList.add('selected');
-    selectedTokenValue = tokenEl.dataset.value;
-  });
-  tokenEl.addEventListener('dragend', ev=>{
-    tokenEl.classList.remove('dragging');
-  });
-  tokenEl.addEventListener('click', ev=>{
-    const wasSelected = tokenEl.classList.contains('selected');
-    clearSelection();
-    if(!wasSelected){ tokenEl.classList.add('selected'); selectedTokenValue = tokenEl.dataset.value; }
-  });
-  tokenEl.addEventListener('keydown', ev=>{
-    if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault(); tokenEl.click(); }
-  });
-}
-
-/* ------------------------------
-   Blank events & placement (cloning)
---------------------------------*/
-function attachBlankEvents(blankEl){
-  blankEl.addEventListener('dragover', ev=>{ ev.preventDefault(); ev.dataTransfer.dropEffect='copy'; blankEl.classList.add('drag-over'); });
-  blankEl.addEventListener('dragleave', ev=>{ blankEl.classList.remove('drag-over'); });
-  blankEl.addEventListener('drop', ev=>{ ev.preventDefault(); blankEl.classList.remove('drag-over'); const val = ev.dataTransfer.getData('text/plain'); if(val) placeValueIntoBlankByValue(val, blankEl); });
-
-  blankEl.addEventListener('keydown', ev=>{
-    if(ev.key==='Enter' || ev.key===' '){ ev.preventDefault();
-      if(selectedTokenValue !== null){ placeValueIntoBlankByValue(selectedTokenValue, blankEl); }
-      else {
-        const placed = getPlacedCloneInBlank(blankEl);
-        if(placed){ placed.remove(); blankEl.innerHTML = `___${blankEl.dataset.blank}___`; blankEl.classList.add('empty'); attachBlankEvents(blankEl); }
-      }
-    }
-  });
-
-  blankEl.addEventListener('click', ev=>{
-    if(selectedTokenValue !== null){
-      placeValueIntoBlankByValue(selectedTokenValue, blankEl);
-    } else {
-      const placed = getPlacedCloneInBlank(blankEl);
-      if(placed) blankEl.focus();
-    }
-  });
-}
-
-function getPlacedCloneInBlank(blankEl){ return blankEl.querySelector('.placed-clone'); }
-
-function placeValueIntoBlankByValue(value, blankEl){
-  const existing = getPlacedCloneInBlank(blankEl);
-  if(existing) existing.remove();
-  const clone = document.createElement('span');
-  clone.className = 'placed-clone';
-  clone.dataset.value = value;
-  clone.tabIndex = -1;
-  clone.innerHTML = `<span>${escapeHtml(String(value))}</span>`;
-  clone.addEventListener('click', ev=>{
-    clone.remove();
-    blankEl.innerHTML = `___${blankEl.dataset.blank}___`;
-    blankEl.classList.add('empty');
-    attachBlankEvents(blankEl);
-  });
-  blankEl.innerHTML = '';
-  blankEl.appendChild(clone);
-  blankEl.classList.remove('empty','correct','incorrect');
-  clearSelection();
-}
-
-/* ------------------------------
-   Validation
---------------------------------*/
-function validateCurrent(){
-  const p = puzzles[puzzleIndex];
-  const answers = p.answers;
-  let allCorrect = true;
-  for(const key of Object.keys(answers)){
-    const blank = document.querySelector(`[data-blank="${key}"]`);
-    const expected = answers[key];
-    const placed = getPlacedCloneInBlank(blank);
-    const placedValue = placed ? placed.dataset.value : null;
-    if(placedValue === expected){
-      blank.classList.add('correct'); blank.classList.remove('incorrect','empty');
-    } else {
-      blank.classList.add('incorrect'); blank.classList.remove('correct');
-      allCorrect = false;
-    }
-  }
-  if(allCorrect){ statusEl.textContent = "All correct! Well done 🎉"; }
-  else { statusEl.textContent = "Some blanks are incorrect — incorrect blanks are highlighted red."; }
-  return allCorrect;
-}
-
-/* ------------------------------
-   Reset
---------------------------------*/
-function resetPuzzle(){
-  clearSelection();
-  statusEl.textContent = '';
   document.querySelectorAll('.blank').forEach(b=>{
-    const placed = getPlacedCloneInBlank(b);
-    if(placed) placed.remove();
-    b.innerHTML = `___${b.dataset.blank}___`;
-    b.classList.add('empty');
-    b.classList.remove('correct','incorrect');
-    attachBlankEvents(b);
+    b.onclick=()=>{if(selectedTokenValue){placeValueIntoBlank(selectedTokenValue,b);}};
+    b.addEventListener('drop',ev=>{ev.preventDefault();placeValueIntoBlank(ev.dataTransfer.getData('text/plain'),b);});
+    b.addEventListener('dragover',ev=>ev.preventDefault());
   });
-  const p = puzzles[puzzleIndex];
-  const tokens = shuffleArray(p.bank.slice());
-  bankEl.innerHTML = '';
-  for(const t of tokens){
-    const tokenEl = document.createElement('div');
-    tokenEl.className = 'token';
-    tokenEl.tabIndex = 0;
-    tokenEl.setAttribute('role','listitem');
-    tokenEl.setAttribute('draggable','true');
-    tokenEl.dataset.value = t;
-    tokenEl.title = t;
-    tokenEl.innerHTML = `<span>${escapeHtml(String(t))}</span>`;
-    attachBankTokenEvents(tokenEl);
-    bankEl.appendChild(tokenEl);
+}
+
+function placeValueIntoBlank(value,b){
+  b.innerHTML=`<span class='placed-clone' data-value='${value}'>${value}</span>`;
+  clearSelection();
+}
+
+function getPlacedValue(b){const c=b.querySelector('.placed-clone');return c?c.dataset.value:null;}
+
+function validate(){
+  const p=puzzles[puzzleIndex]; let all=true;
+  for(const [num,ans] of Object.entries(p.answers)){
+    const b=document.querySelector(`[data-blank="${num}"]`);
+    const val=getPlacedValue(b);
+    if(val===ans){b.classList.add('correct');b.classList.remove('incorrect');}
+    else{b.classList.add('incorrect');b.classList.remove('correct');all=false;}
   }
+  statusEl.textContent=all?"All correct! 🎉":"Some blanks are incorrect.";
 }
 
-/* ------------------------------
-   Navigation
---------------------------------*/
-function goToPrevious(){
-  const nextIndex = (puzzleIndex - 1 + puzzles.length) % puzzles.length;
-  renderPuzzle(nextIndex);
-}
-function goToNext(){
-  const nextIndex = (puzzleIndex + 1) % puzzles.length;
-  renderPuzzle(nextIndex);
-}
-function goToIndex(i){
-  if(i<0 || i>=puzzles.length) return;
-  renderPuzzle(i);
+function reset(){
+  renderPuzzle(puzzleIndex);
 }
 
-/* ------------------------------
-   Init
---------------------------------*/
+function goNext(){puzzleIndex=(puzzleIndex+1)%puzzles.length;renderPuzzle(puzzleIndex);}
+function goPrev(){puzzleIndex=(puzzleIndex-1+puzzles.length)%puzzles.length;renderPuzzle(puzzleIndex);}
+
 populatePuzzleSelect();
 renderPuzzle(0);
-
-prevBtn.addEventListener('click', ev => { goToPrevious(); });
-nextBtn.addEventListener('click', ev => { goToNext(); });
-submitBtn.addEventListener('click', ev => { validateCurrent(); });
-resetBtn.addEventListener('click', ev => { resetPuzzle(); });
-selectEl.addEventListener('change', ev => {
-  const idx = parseInt(selectEl.value,10);
-  if(!Number.isNaN(idx)) goToIndex(idx);
-});
-
-/* keyboard nicety */
-document.addEventListener('keydown', ev => { if(ev.key === 'Escape') clearSelection(); });
-
+submitBtn.onclick=validate;
+resetBtn.onclick=reset;
+nextBtn.onclick=goNext;
+prevBtn.onclick=goPrev;
+selectEl.onchange=()=>renderPuzzle(Number(selectEl.value));
 </script>
 </body>
 </html>

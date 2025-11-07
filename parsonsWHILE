@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Parsons — WHILE (Reorder mode)</title>
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#fff; --accent:#0568d6; --ok:#e6fbec; --bad:#ffecec;
+    --border:#dfe7f2; --muted:#556;
+  }
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); margin:20px; color:#122;}
+  .container{max-width:960px;margin:0 auto;}
+  header{display:flex;align-items:center;gap:16px;}
+  h1{margin:0;font-size:20px;}
+  .panel{background:var(--card);border:1px solid var(--border);padding:12px;border-radius:10px;margin-top:12px;}
+  .desc-box{border-radius:8px;padding:10px;border:1px solid #e2e8f0;background:#fff;margin-bottom:12px;}
+  .desc-title{font-weight:700;margin-bottom:6px;}
+  .desc-list{margin:6px 0 0 18px;color:#123;}
+  .example{font-family:monospace;background:#f3f9ff;padding:8px;border-radius:6px;border:1px solid #dbeeff;margin-top:8px;white-space:pre-wrap;}
+  .code-box{min-height:160px;border:2px dashed var(--border);background:#fff;padding:12px;border-radius:8px;display:flex;flex-direction:column;gap:8px;}
+  .block{user-select:none;padding:10px 12px;border-radius:8px;background:#f9fbff;border:1px solid #d0d9ef;cursor:grab;min-width:220px;box-shadow:0 1px 0 rgba(0,0,0,0.02);transition:transform .12s ease, background .18s;}
+  .block.dragging{opacity:0.6;transform:scale(0.98);}
+  .block.correct{background:var(--ok);border-color:#80d08a;}
+  .block.incorrect{background:var(--bad);border-color:#f3a3a3;}
+  .controls{display:flex;gap:8px;align-items:center;margin-top:12px;}
+  button{padding:8px 12px;border-radius:8px;border:0;font-weight:700;cursor:pointer;}
+  .btn-primary{background:var(--accent);color:white;}
+  .btn-secondary{background:#657; color:#fff; opacity:0.95}
+  .btn-ghost{background:#eef2f7;color:#223;border:1px solid #d6e0f4;}
+  select{padding:6px;border-radius:8px;border:1px solid #d7e0f5;}
+  #message{margin-top:10px;font-weight:700;color:#444;}
+  @media (max-width:700px){
+    .block{min-width:150px;}
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Parsons — WHILE (Reorder mode)</h1>
+    </header>
+
+    <div class="panel" id="puzzlePanel">
+      <div class="desc-box" id="descriptionBox">
+        <div class="desc-title" id="descTitle">Select a puzzle</div>
+        <ul class="desc-list" id="descBullets"></ul>
+        <div id="exampleBox" class="example" style="display:none;"></div>
+      </div>
+
+      <div id="codeBox" class="code-box" aria-label="Scrambled code lines" tabindex="0"></div>
+
+      <div class="controls" style="justify-content:flex-start;">
+        <button id="submitBtn" class="btn-primary">Submit</button>
+        <button id="revealHintBtn" class="btn-ghost">Reveal hint (3 left)</button>
+        <button id="resetBtn" class="btn-secondary">Reset (Reshuffle)</button>
+        <button id="nextBtn" class="btn-ghost">Next Puzzle</button>
+        <div style="margin-left:auto;">
+          <label> Puzzle:
+            <select id="puzzleSelect"></select>
+          </label>
+        </div>
+      </div>
+
+      <div id="message"></div>
+    </div>
+  </div>
+
+<script>
+/*
+ Parsons-style WHILE reorder page
+ - scrambled lines are placed inside codeBox on load
+ - drag-to-swap or click-to-swap
+ - Submit to mark correct/incorrect
+ - Reveal hint places one random incorrect line into its correct position (up to 3 per puzzle, in-session)
+ - Reset reshuffles current puzzle (does not reset hint counts)
+*/
+
+const MAX_HINTS_PER_PUZZLE = 3;
+
+const puzzles = [
+  {
+    title: "Basic WHILE Loop with Output",
+    bullets: ["No input — use a WHILE loop to print numbers 1 to 5, each on its own line."],
+    example: "1\n2\n3\n4\n5",
+    lines: [
+      "i = 1",
+      "WHILE i <= 5 DO",
+      "OUTPUT i",
+      "i = i + 1",
+      "ENDWHILE"
+    ]
+  },
+  {
+    title: "WHILE Loop with Counter Variable",
+    bullets: ["Use a WHILE loop and a variable starting at 1, increase by 1 each time, stop when it reaches 10."],
+    example: "1..10 (each on its own line)",
+    lines: [
+      "n = 1",
+      "WHILE n <= 10 DO",
+      "OUTPUT n",
+      "n = n + 1",
+      "ENDWHILE"
+    ]
+  },
+  {
+    title: "WHILE Loop Taking Input",
+    bullets: ["Ask the user to enter a number repeatedly. Continue until they enter 0."],
+    example: "User enters 4,2,0 → loop stops when 0 entered",
+    lines: [
+      "INPUT x",
+      "WHILE x <> 0 DO",
+      "INPUT x",
+      "ENDWHILE"
+    ]
+  },
+  {
+    title: "WHILE Loop with Input and Output",
+    bullets: ["Ask the user to enter a number and output it doubled. Repeat until the user enters -1."],
+    example: "Input 3 → Output 6; Input -1 → stop",
+    lines: [
+      "INPUT v",
+      "WHILE v <> -1 DO",
+      "OUTPUT v * 2",
+      "INPUT v",
+      "ENDWHILE"
+    ]
+  },
+  {
+    title: "WHILE Loop with Conditional Output",
+    bullets: ["Ask for a number repeatedly. Output 'Positive' if >0, 'Negative' if <0. Stop when user enters 0."],
+    example: "Input 3 → 'Positive'; Input -2 → 'Negative'; Input 0 → stop",
+    lines: [
+      "INPUT n",
+      "WHILE n <> 0 DO",
+      "IF n > 0 THEN",
+      "OUTPUT \"Positive\"",
+      "ELSE",
+      "OUTPUT \"Negative\"",
+      "ENDIF",
+      "INPUT n",
+      "ENDWHILE"
+    ]
+  },
+  {
+    title: "WHILE Loop with IF–ELSE Statement (age check)",
+    bullets: ["Ask for age repeatedly. If age >= 18 output 'Adult' else 'Child'. Stop when user enters -1."],
+    example: "Input 20 → 'Adult'; input 12 → 'Child'; -1 → stop",
+    lines: [
+      "INPUT age",
+      "WHILE age <> -1 DO",
+      "IF age >= 18 THEN",
+      "OUTPUT \"Adult\"",
+      "ELSE",
+      "OUTPUT \"Child\"",
+      "ENDIF",
+      "INPUT age",
+      "ENDWHILE"
+    ]
+  },
+  {
+    title: "WHILE Loop Counting Condition",
+    bullets: ["Keep asking for test scores and count how many are above 50. Stop when user enters -1, then output the count."],
+    example: "Inputs 55,40,60,-1 → Output: 2",
+    lines: [
+      "count = 0",
+      "INPUT s",
+      "WHILE s <> -1 DO",
+      "IF s > 50 THEN",
+      "count = count + 1",
+      "ENDIF",
+      "INPUT s",
+      "ENDWHILE",
+      "OUTPUT count"
+    ]
+  },
+  {
+    title: "WHILE Loop as Validation Check (password)",
+    bullets: ["Ask for a password repeatedly until the correct password 'Secret' is entered. When correct, output 'Access granted'."],
+    example: "Input 'x' → repeats; input 'Secret' → 'Access granted'",
+    lines: [
+      "INPUT pw",
+      "WHILE pw <> \"Secret\" DO",
+      "INPUT pw",
+      "ENDWHILE",
+      "OUTPUT \"Access granted\""
+    ]
+  },
+  {
+    title: "WHILE Loop with FOR Loop Inside",
+    bullets: ["Ask for a number N. Use a FOR loop inside the WHILE to output numbers 1..N. Continue asking until user enters 0."],
+    example: "Input 3 → outputs 1 2 3 ; Input 0 → stop",
+    lines: [
+      "INPUT N",
+      "WHILE N <> 0 DO",
+      "FOR i = 1 TO N DO",
+      "OUTPUT i",
+      "NEXT i",
+      "INPUT N",
+      "ENDWHILE"
+    ]
+  },
+  {
+    title: "WHILE Loop with FOR Loop and Conditional Statement",
+    bullets: ["Ask for N. Inside the WHILE, use a FOR loop to go 1..N and output only even numbers. Stop when N = 0."],
+    example: "Input 5 → outputs 2 and 4 ; Input 0 → stop",
+    lines: [
+      "INPUT N",
+      "WHILE N <> 0 DO",
+      "FOR i = 1 TO N DO",
+      "IF i MOD 2 = 0 THEN",
+      "OUTPUT i",
+      "ENDIF",
+      "NEXT i",
+      "INPUT N",
+      "ENDWHILE"
+    ]
+  }
+];
+
+// DOM refs
+const codeBox = document.getElementById('codeBox');
+const descTitle = document.getElementById('descTitle');
+const descBullets = document.getElementById('descBullets');
+const exampleBox = document.getElementById('exampleBox');
+const puzzleSelect = document.getElementById('puzzleSelect');
+const submitBtn = document.getElementById('submitBtn');
+const revealHintBtn = document.getElementById('revealHintBtn');
+const resetBtn = document.getElementById('resetBtn');
+const nextBtn = document.getElementById('nextBtn');
+const messageEl = document.getElementById('message');
+
+let current = 0;
+let pickedBlock = null;
+const usedHintsCount = {}; // in-session per puzzle
+
+// helpers
+function shuffleArray(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function populatePuzzleSelect(){
+  puzzleSelect.innerHTML = '';
+  puzzles.forEach((p,i)=>{
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${i+1}. ${p.title}`;
+    puzzleSelect.appendChild(opt);
+  });
+  puzzleSelect.value = 0;
+}
+
+// render description
+function renderDescription(idx){
+  const p = puzzles[idx];
+  descTitle.textContent = p.title;
+  descBullets.innerHTML = '';
+  p.bullets.forEach(b=>{
+    const li = document.createElement('li');
+    li.textContent = b;
+    descBullets.appendChild(li);
+  });
+  if(p.example && p.example.trim() !== ''){
+    exampleBox.style.display = 'block';
+    exampleBox.textContent = p.example;
+  } else {
+    exampleBox.style.display = 'none';
+  }
+  updateRevealHintBtn();
+}
+
+// build code box with scrambled lines
+function buildCodeBox(idx){
+  codeBox.innerHTML = '';
+  const p = puzzles[idx];
+  const items = p.lines.map((line, i) => ({line, idx:i}));
+  const shuffled = items.slice();
+  shuffleArray(shuffled);
+  shuffled.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'block';
+    el.draggable = true;
+    el.tabIndex = 0;
+    el.dataset.origIndex = String(item.idx); // original/correct index
+    el.textContent = item.line;
+    // dragstart
+    el.addEventListener('dragstart', e => {
+      el.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', el.dataset.origIndex);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
+    el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      const draggedOrig = e.dataTransfer.getData('text/plain');
+      const draggedEl = Array.from(codeBox.children).find(c => c.dataset.origIndex === String(draggedOrig) && c !== el && !c.classList.contains('placeholder'));
+      if(!draggedEl) return;
+      const children = Array.from(codeBox.children);
+      const a = children.indexOf(draggedEl);
+      const b = children.indexOf(el);
+      if(a < 0 || b < 0) return;
+      if(a < b){
+        codeBox.insertBefore(draggedEl, el.nextSibling);
+      } else {
+        codeBox.insertBefore(draggedEl, el);
+      }
+      el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:140});
+    });
+    el.addEventListener('click', onBlockClick);
+    codeBox.appendChild(el);
+  });
+  messageEl.textContent = '';
+  Array.from(codeBox.children).forEach(c => c.classList.remove('correct','incorrect'));
+  updateRevealHintBtn();
+}
+
+// click-to-swap handler
+function onBlockClick(e){
+  const el = e.currentTarget;
+  if(!pickedBlock){
+    pickedBlock = el;
+    el.style.outline = '3px solid rgba(5,104,214,0.18)';
+    return;
+  }
+  if(pickedBlock === el){
+    pickedBlock.style.outline = '';
+    pickedBlock = null;
+    return;
+  }
+  const children = Array.from(codeBox.children);
+  const aIndex = children.indexOf(pickedBlock);
+  const bIndex = children.indexOf(el);
+  if(aIndex < 0 || bIndex < 0){
+    pickedBlock.style.outline = ''; pickedBlock = null; return;
+  }
+  if(aIndex < bIndex){
+    codeBox.insertBefore(pickedBlock, el.nextSibling);
+  } else {
+    codeBox.insertBefore(pickedBlock, el);
+  }
+  el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:120});
+  pickedBlock.style.outline = '';
+  pickedBlock = null;
+}
+
+// check order
+function checkOrder(){
+  const p = puzzles[current];
+  const children = Array.from(codeBox.children);
+  let allCorrect = true;
+  children.forEach((c, i) => {
+    const correctIdx = Number(c.dataset.origIndex);
+    if(correctIdx === i){
+      c.classList.remove('incorrect'); c.classList.add('correct');
+    } else {
+      c.classList.remove('correct'); c.classList.add('incorrect');
+      allCorrect = false;
+    }
+  });
+  if(allCorrect){
+    messageEl.textContent = 'All correct — great job!';
+    messageEl.style.color = '#0b7';
+  } else {
+    messageEl.textContent = 'Some lines are in the wrong order. Incorrect blocks are highlighted.';
+    messageEl.style.color = '#b33';
+  }
+}
+
+// reset (reshuffle)
+function resetPuzzle(){
+  buildCodeBox(current);
+  messageEl.textContent = '';
+}
+
+// next puzzle
+function nextPuzzle(){
+  current = (current + 1) % puzzles.length;
+  puzzleSelect.value = current;
+  loadPuzzle(current);
+}
+
+// reveal hint: place a random incorrect block into its correct position
+function revealHint(){
+  const used = usedHintsCount[current] || 0;
+  if(used >= MAX_HINTS_PER_PUZZLE){
+    messageEl.textContent = `No hints left for this puzzle (max ${MAX_HINTS_PER_PUZZLE}).`;
+    messageEl.style.color = '#a00';
+    updateRevealHintBtn();
+    return;
+  }
+  const children = Array.from(codeBox.children);
+  const eligible = [];
+  children.forEach((c, idx) => {
+    const orig = Number(c.dataset.origIndex);
+    if(orig !== idx) eligible.push({el:c, orig});
+  });
+  if(eligible.length === 0){
+    messageEl.textContent = 'All lines are already correct.';
+    messageEl.style.color = '#444';
+    return;
+  }
+  const choice = eligible[Math.floor(Math.random()*eligible.length)];
+  const block = choice.el;
+  const targetPos = choice.orig;
+  const remaining = Array.from(codeBox.children).filter(n => n !== block);
+  if(targetPos >= remaining.length){
+    codeBox.appendChild(block);
+  } else {
+    codeBox.insertBefore(block, remaining[targetPos]);
+  }
+  block.classList.remove('incorrect'); block.classList.add('correct');
+  usedHintsCount[current] = used + 1;
+  messageEl.textContent = `Hint used: one line placed correctly (${usedHintsCount[current]} of ${MAX_HINTS_PER_PUZZLE}).`;
+  messageEl.style.color = '#0b5';
+  updateRevealHintBtn();
+}
+
+// update reveal button text/state
+function updateRevealHintBtn(){
+  const used = usedHintsCount[current] || 0;
+  const left = Math.max(0, MAX_HINTS_PER_PUZZLE - used);
+  if(left <= 0){
+    revealHintBtn.disabled = true;
+    revealHintBtn.textContent = `Reveal hint (used up)`;
+    revealHintBtn.style.opacity = '0.6';
+  } else {
+    revealHintBtn.disabled = false;
+    revealHintBtn.textContent = `Reveal hint (${left} left)`;
+    revealHintBtn.style.opacity = '1';
+  }
+}
+
+// load puzzle
+function loadPuzzle(idx){
+  current = idx;
+  puzzleSelect.value = idx;
+  renderDescription(idx);
+  buildCodeBox(idx);
+  messageEl.textContent = '';
+  if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
+}
+
+// init
+function init(){
+  populatePuzzleSelect();
+  renderDescription(0);
+  buildCodeBox(0);
+  submitBtn.addEventListener('click', checkOrder);
+  revealHintBtn.addEventListener('click', revealHint);
+  resetBtn.addEventListener('click', resetPuzzle);
+  nextBtn.addEventListener('click', nextPuzzle);
+  puzzleSelect.addEventListener('change', e => loadPuzzle(Number(e.target.value)));
+  codeBox.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      const first = codeBox.querySelector('.block');
+      if(first) first.focus();
+    }
+  });
+  updateRevealHintBtn();
+}
+
+init();
+
+</script>
+</body>
+</html>

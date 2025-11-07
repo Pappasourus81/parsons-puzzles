@@ -20,7 +20,7 @@
       color:#111;
     }
     h1{ margin: 0 0 14px 0; font-size: 20px; }
-    .controls{ display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
+    .controls{ display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; align-items:center }
     button{
       background:var(--accent);
       color:white;
@@ -82,7 +82,8 @@
     }
     .slot.dragover{ border-color: #0066cc; background: #eef6ff; }
     .message{ margin-top:10px; font-weight:600; }
-    .meta{ font-size:13px; color:#444; margin-bottom:8px; }
+    .meta{ font-size:14px; color:#444; margin-bottom:8px; }
+    .description{ font-size:13px; color:#666; margin-left:6px }
     .controls small{ display:block; color:#222; opacity:0.85; margin-top:6px; font-weight:500;}
     @media (max-width:900px){
       .layout{ grid-template-columns: 1fr; }
@@ -91,7 +92,10 @@
 </head>
 <body>
   <h1>Parsons Code Checker</h1>
-  <div class="meta">Drag lines from the pool into the slots in order. Submit to check.</div>
+  <div style="display:flex; gap:12px; align-items:flex-start;">
+    <div class="meta">Drag lines from the pool into the slots in order. Submit to check.</div>
+    <div class="description" id="puzzleDescription">Select a puzzle to see its description.</div>
+  </div>
 
   <div class="controls">
     <button id="submitBtn">Submit</button>
@@ -118,14 +122,20 @@
   </div>
 
 <script>
+/*
+  Updated behaviour:
+   - Each puzzle now has a 'description' field that explains what the puzzle does.
+   - Blank/empty lines have been removed from the puzzle "lines" so they are not offered as draggable pieces.
+   - The description is shown to the right of the instructions and updates when a puzzle is selected.
+*/
 const puzzles = [
   {
     title: "Basic IF (Pseudocode)",
+    description: "Asks the user for a number and outputs that the number is positive if it is greater than zero.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Enter a number: \"",
       "    INPUT number",
-      "",
       "    IF number > 0 THEN",
       "        OUTPUT \"The number is positive\"",
       "    ENDIF",
@@ -134,11 +144,11 @@ const puzzles = [
   },
   {
     title: "IF-ELSE (Pseudocode)",
+    description: "Reads a number and outputs whether it is even or odd using the MOD operator.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Enter a number: \"",
       "    INPUT number",
-      "",
       "    IF number MOD 2 = 0 THEN",
       "        OUTPUT \"The number is even\"",
       "    ELSE",
@@ -149,11 +159,11 @@ const puzzles = [
   },
   {
     title: "Nested IF (Pseudocode)",
+    description: "Checks whether a number is positive, and if so, whether it is greater than 100 — outputs a different message for large vs small positive numbers.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Enter a number: \"",
       "    INPUT number",
-      "",
       "    IF number > 0 THEN",
       "        IF number > 100 THEN",
       "            OUTPUT \"The number is large and positive\"",
@@ -166,11 +176,11 @@ const puzzles = [
   },
   {
     title: "Nested IF with ELSE (Pseudocode)",
+    description: "Classifies a number as large positive, small positive, negative, or zero using nested IF/ELSE blocks.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Enter a number: \"",
       "    INPUT number",
-      "",
       "    IF number > 0 THEN",
       "        IF number > 100 THEN",
       "            OUTPUT \"The number is large and positive\"",
@@ -194,13 +204,16 @@ const poolEl = document.getElementById('pool');
 const slotsEl = document.getElementById('slots');
 const messageEl = document.getElementById('message');
 const puzzleSelect = document.getElementById('puzzleSelect');
+const puzzleDescriptionEl = document.getElementById('puzzleDescription');
 
+// populate dropdown
 puzzles.forEach((p, i) => {
   const opt = document.createElement('option');
   opt.value = i;
   opt.textContent = `${i+1}. ${p.title}`;
   puzzleSelect.appendChild(opt);
 });
+
 puzzleSelect.addEventListener('change', e => {
   currentIndex = parseInt(e.target.value, 10);
   loadPuzzle(currentIndex);
@@ -363,6 +376,9 @@ function nextPuzzle() {
 
 function loadPuzzle(index) {
   currentIndex = index;
+  // update description
+  const p = puzzles[index];
+  puzzleDescriptionEl.textContent = p.description || '';
   resetPuzzle();
 }
 
@@ -370,7 +386,9 @@ document.getElementById('submitBtn').addEventListener('click', submitPuzzle);
 document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
 document.getElementById('nextBtn').addEventListener('click', nextPuzzle);
 
-loadPuzzle(currentIndex);
+// initial load
+puzzleSelect.value = 0;
+loadPuzzle(0);
 </script>
 </body>
 </html>

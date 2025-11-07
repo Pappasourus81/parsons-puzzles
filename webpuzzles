@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Reorder Mode- Conditionals</title>
+  <title>Parsons Code Checker — Reorder Mode</title>
   <style>
     :root{
       --gap: 12px;
@@ -124,7 +124,7 @@
 const puzzles = [
   {
     title: "Basic IF (Pseudocode)",
-    description: "Asks the user for a number and outputs that the number is positive if it is greater than zero.",
+    description: "Input: the user types a number. Output: if the number is greater than 0 the program shows a message saying the number is positive. For example, if the user enters 5 the program shows The number is positive.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Enter a number: \"",
@@ -137,7 +137,7 @@ const puzzles = [
   },
   {
     title: "IF-ELSE (Pseudocode)",
-    description: "Reads a number and outputs whether it is even or odd using the MOD operator.",
+    description: "Input: the user types a number. Output: the program checks if the number is even or odd using MOD. It prints The number is even when the remainder is 0, otherwise it prints The number is odd. For example, entering 4 prints The number is even.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Enter a number: \"",
@@ -152,7 +152,7 @@ const puzzles = [
   },
   {
     title: "Nested IF (Pseudocode)",
-    description: "Checks whether a number is positive, and if so, whether it is greater than 100 — outputs a different message for large vs small positive numbers.",
+    description: "Input: the user types a number. Output: first the program checks if the number is positive. If it is positive it then checks if it is greater than 100 and prints either The number is large and positive or The number is small but positive. For example, entering 150 prints The number is large and positive.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Enter a number: \"",
@@ -169,7 +169,7 @@ const puzzles = [
   },
   {
     title: "Nested IF with ELSE (Pseudocode)",
-    description: "Classifies a number as large positive, small positive, negative, or zero using nested IF/ELSE blocks.",
+    description: "Input: the user types a number. Output: the program classifies the number as large positive, small positive, negative, or zero. It first checks if the number is positive and then checks size; otherwise it checks for negative or zero. For example, entering 0 prints The number is zero.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Enter a number: \"",
@@ -192,7 +192,7 @@ const puzzles = [
   },
   {
     title: "Basic CASE (Pseudocode)",
-    description: "Uses a CASE statement to classify a small integer code into text labels.",
+    description: "Input: the user types a small code number (for example 1, 2 or 3). Output: the program uses a CASE statement to print a label depending on the code. For example, entering 2 prints Option Two. If the code is not 1–3 it prints Unknown code.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Enter code (1-3): \"",
@@ -208,7 +208,7 @@ const puzzles = [
   },
   {
     title: "CASE inside IF (Pseudocode)",
-    description: "Shows how a CASE can be nested inside an IF block to choose actions when the IF is true.",
+    description: "Input: the user types 1 for admin or 0 for not admin. Output: if the user is admin (value 1) the program enters a CASE inside the IF and shows an admin message. For example, entering 1 shows Welcome, admin.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Is the user admin? (1=yes,0=no): \"",
@@ -224,7 +224,7 @@ const puzzles = [
   },
   {
     title: "IF with different CASEs (Pseudocode)",
-    description: "Demonstrates an IF where the true branch uses one CASE and the false branch uses another CASE.",
+    description: "Input: the user enters a level number. Output: if the level is 2 or higher the program runs one CASE block; otherwise it runs a different CASE block in the ELSE branch. Example: entering 3 runs the first CASE and prints Level three actions.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Enter level (1-3): \"",
@@ -246,7 +246,7 @@ const puzzles = [
   },
   {
     title: "Two separate IF-ELSE statements (Pseudocode)",
-    description: "Shows two independent IF-ELSE checks executed one after the other.",
+    description: "Input: the user types a temperature value. Output: the program checks two independent conditions in sequence. First it tells if it is hot (temp > 30) and then it tells if it is freezing (temp < 0). For example, entering -5 prints It is not hot and then Freezing.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Enter temperature: \"",
@@ -266,7 +266,7 @@ const puzzles = [
   },
   {
     title: "IF using SUBSTRING (Pseudocode)",
-    description: "Uses the SUBSTRING function to check part of a string and act accordingly.",
+    description: "Input: the user types a word. Output: the program checks the first three letters using SUBSTRING and tells if the word starts with pre. For example, entering prevent results in Word starts with pre.",
     lines: [
       "BEGIN",
       "    OUTPUT \"Enter a word: \"",
@@ -281,7 +281,7 @@ const puzzles = [
   },
   {
     title: "CASE using SUBSTRING, ROUND and RANDOM (Pseudocode)",
-    description: "Combines SUBSTRING, ROUND and RANDOM: uses a name prefix and a rounded random value to decide output via nested CASE statements.",
+    description: "Input: this example uses a name and a random number. Output: it checks the name prefix and may use a rounded random value in a nested CASE to decide what to show. For example, for name Alice the prefix is Ali so it prints Hello Ali; otherwise a rounded random score may produce Top grade or Excellent.",
     lines: [
       "BEGIN",
       "    name = \"Alice\"",

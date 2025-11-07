@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Parsons Code Checker</title>
+  <title>Parsons Code Checker — Reorder Mode</title>
   <style>
     :root{
       --gap: 12px;
@@ -29,11 +29,12 @@
       border-radius:8px;
       cursor:pointer;
       font-weight:600;
+      font-size:14px;
     }
     button.secondary{ background:#666; }
     .layout{
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 18px;
       align-items:start;
     }
@@ -43,14 +44,26 @@
       border-radius:10px;
       box-shadow: 0 2px 6px rgba(10,10,20,0.03);
     }
-    .pool{
+    .puzzle-box{
+      margin:10px 0 12px 0;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #d1d7df;
+      background:#ffffff; /* keep clean white */
+      box-shadow:0 1px 3px rgba(10,10,20,0.04);
+      font-size:14px;
+      font-weight:600;
+      color:#222;
+    }
+    .scrambled-box{
       display:flex;
       flex-direction:column;
-      gap:var(--gap);
-      min-height:120px;
-      padding:8px;
+      gap:6px;
+      padding:10px;
       border: 2px dashed var(--slot-border);
+      min-height: 120px;
       border-radius:8px;
+      background: #fff;
     }
     .piece{
       padding:8px 10px;
@@ -62,39 +75,32 @@
       white-space:pre-wrap;
       font-family: "Courier New", monospace;
       font-size: 13px;
+      border:1px solid transparent;
+      transition: transform 200ms ease, background-color 200ms ease, border-color 200ms ease;
     }
-    .slots{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
+    .piece.dragover{ outline:2px dashed #0066cc; }
+    .piece.picked{ transform: scale(1.02); box-shadow:0 4px 10px rgba(0,0,0,0.08); }
+    .swap-anim {
+      animation: swapFlash 280ms ease;
     }
-    .slot{
-      min-height:34px;
-      padding:6px;
-      border: 2px dashed var(--slot-border);
-      border-radius:6px;
-      background: linear-gradient(180deg,#fff,#fbfdff);
-      display:flex;
-      align-items:center;
-      justify-content:flex-start;
-      font-family: "Courier New", monospace;
-      font-size:13px;
+    @keyframes swapFlash {
+      0% { transform: translateY(0) scale(1); }
+      25% { transform: translateY(-6px) scale(1.02); }
+      60% { transform: translateY(2px) scale(.995); }
+      100% { transform: translateY(0) scale(1); }
     }
-    .slot.dragover{ border-color: #0066cc; background: #eef6ff; }
     .message{ margin-top:10px; font-weight:600; }
     .meta{ font-size:14px; color:#444; margin-bottom:8px; }
     .description{ font-size:13px; color:#666; margin-left:6px }
-    .controls small{ display:block; color:#222; opacity:0.85; margin-top:6px; font-weight:500;}
     @media (max-width:900px){
       .layout{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <h1>Parsons Code Checker</h1>
+  <h1>Parsons Code Checker — Reorder Mode</h1>
   <div style="display:flex; gap:12px; align-items:flex-start;">
-    <div class="meta">Drag lines from the pool into the slots in order. Submit to check.</div>
-    <div class="description" id="puzzleDescription">Select a puzzle to see its description.</div>
+    <div class="meta">Drag lines to reorder them. Drop a line onto another to swap places. Submit to check.</div>
   </div>
 
   <div class="controls">
@@ -108,20 +114,22 @@
     </div>
   </div>
 
+  <!-- Description box placed here, above the scrambled code -->
+  <div class="puzzle-box" id="puzzleDescription">Select a puzzle to see its description.</div>
+
   <div class="layout">
     <div class="panel">
-      <strong>Pool (drag from here)</strong>
-      <div id="pool" class="pool" aria-label="pool of code lines"></div>
-    </div>
-
-    <div class="panel">
-      <strong>Slots (place code in order)</strong>
-      <div id="slots" class="slots" aria-label="slots to drop code lines"></div>
+      <strong>Scrambled code (reorder here)</strong>
+      <div id="scrambled" class="scrambled-box" aria-label="scrambled code lines"></div>
       <div id="message" class="message" role="status"></div>
     </div>
   </div>
 
 <script>
+/* Reorder mode with swap animation
+   - Description box now appears above the scrambled area (styled).
+   - Small animation plays on swapped pieces for visual feedback.
+*/
 const puzzles = [
   {
     title: "Basic IF (Pseudocode)",
@@ -194,8 +202,8 @@ const puzzles = [
 ];
 
 let currentIndex = 0;
-const poolEl = document.getElementById('pool');
-const slotsEl = document.getElementById('slots');
+let currentOrder = []; // mutable array of lines in current scrambled order
+const scrambledEl = document.getElementById('scrambled');
 const messageEl = document.getElementById('message');
 const puzzleSelect = document.getElementById('puzzleSelect');
 const puzzleDescriptionEl = document.getElementById('puzzleDescription');
@@ -220,144 +228,117 @@ function shuffle(array) {
   }
 }
 
-function makePiece(text, id) {
-  const el = document.createElement('div');
-  el.className = 'piece';
-  el.draggable = true;
-  el.id = 'piece-' + id;
-  el.textContent = text;
-  el.dataset.line = text;
-  el.addEventListener('dragstart', onDragStart);
-  el.addEventListener('touchstart', onTouchStart, {passive:false});
-  return el;
-}
+function renderScrambled() {
+  scrambledEl.innerHTML = '';
+  currentOrder.forEach((line, idx) => {
+    const el = document.createElement('div');
+    el.className = 'piece';
+    el.draggable = true;
+    el.dataset.index = idx;
+    el.dataset.line = line;
+    el.textContent = line;
 
-function makeSlot(index) {
-  const s = document.createElement('div');
-  s.className = 'slot';
-  s.dataset.index = index;
-  s.tabIndex = 0;
-  s.addEventListener('dragover', onDragOver);
-  s.addEventListener('dragleave', onDragLeave);
-  s.addEventListener('drop', onDrop);
-  s.addEventListener('click', onSlotClick);
-  s.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') clearSlot(s);
+    // dragstart stores the index
+    el.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', idx);
+      e.dataTransfer.effectAllowed = 'move';
+      // mark source for keyboard/touch clarity
+      el.classList.add('picked');
+    });
+
+    el.addEventListener('dragend', () => el.classList.remove('picked'));
+
+    el.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      el.classList.add('dragover');
+    });
+    el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      el.classList.remove('dragover');
+      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      const toIdx = parseInt(el.dataset.index, 10);
+      if (!Number.isNaN(fromIdx) && !Number.isNaN(toIdx) && fromIdx !== toIdx) {
+        swapItems(fromIdx, toIdx);
+        // add a small animation class to both swapped elements
+        renderScrambled();
+        // find the two elements and animate
+        setTimeout(() => {
+          const children = Array.from(scrambledEl.children);
+          const a = children[toIdx];
+          const b = children[fromIdx];
+          if (a) { a.classList.add('swap-anim'); setTimeout(()=>a.classList.remove('swap-anim'), 300); }
+          if (b) { b.classList.add('swap-anim'); setTimeout(()=>b.classList.remove('swap-anim'), 300); }
+        }, 10);
+      }
+    });
+
+    // click-to-swap behaviour for touch/keyboard: select one then another
+    el.addEventListener('click', () => {
+      const prev = scrambledEl.querySelector('.picked');
+      if (prev && prev !== el) {
+        const i1 = parseInt(prev.dataset.index,10);
+        const i2 = parseInt(el.dataset.index,10);
+        swapItems(i1,i2);
+        prev.classList.remove('picked');
+        renderScrambled();
+        // animate
+        setTimeout(()=>{
+          const children = Array.from(scrambledEl.children);
+          const a = children[i1];
+          const b = children[i2];
+          if (a) { a.classList.add('swap-anim'); setTimeout(()=>a.classList.remove('swap-anim'), 300); }
+          if (b) { b.classList.add('swap-anim'); setTimeout(()=>b.classList.remove('swap-anim'), 300); }
+        },10);
+      } else {
+        // mark this as picked
+        scrambledEl.querySelectorAll('.picked').forEach(x=>x.classList.remove('picked'));
+        el.classList.add('picked');
+      }
+    });
+
+    scrambledEl.appendChild(el);
   });
-  return s;
 }
 
-function clearSlot(slot) {
-  if (slot.firstChild) {
-    poolEl.appendChild(slot.firstChild);
-  }
-  slot.style.background = '';
-  slot.style.borderColor = '';
-  slot.classList.remove('dragover');
-}
-
-let draggedId = null;
-
-function onDragStart(e) {
-  draggedId = e.target.id;
-  e.dataTransfer.setData('text/plain', draggedId);
-  e.dataTransfer.effectAllowed = 'move';
-}
-function onDragOver(e) {
-  e.preventDefault();
-  this.classList.add('dragover');
-  e.dataTransfer.dropEffect = 'move';
-}
-function onDragLeave(e) {
-  this.classList.remove('dragover');
-}
-function onDrop(e) {
-  e.preventDefault();
-  this.classList.remove('dragover');
-  const id = e.dataTransfer.getData('text/plain') || draggedId;
-  const piece = document.getElementById(id);
-  if (!piece) return;
-  if (this.firstChild) {
-    poolEl.appendChild(this.firstChild);
-  }
-  this.appendChild(piece);
-}
-
-function onSlotClick(e) {
-  clearSlot(e.currentTarget);
-}
-
-poolEl.addEventListener('dragover', function(e) { e.preventDefault(); });
-poolEl.addEventListener('drop', function(e) {
-  e.preventDefault();
-  const id = e.dataTransfer.getData('text/plain') || draggedId;
-  const piece = document.getElementById(id);
-  if (piece) poolEl.appendChild(piece);
-});
-
-let touchPickup = null;
-function onTouchStart(e){
-  e.preventDefault();
-  touchPickup = e.currentTarget;
-  document.addEventListener('touchend', onTouchEnd, {once:true});
-}
-function onTouchEnd(e){
-  if(!touchPickup) return;
-  const touch = e.changedTouches[0];
-  const target = document.elementFromPoint(touch.clientX, touch.clientY);
-  const slot = target && target.closest('.slot');
-  if (slot) {
-    if (slot.firstChild) poolEl.appendChild(slot.firstChild);
-    slot.appendChild(touchPickup);
-  } else {
-    poolEl.appendChild(touchPickup);
-  }
-  touchPickup = null;
+function swapItems(i, j) {
+  const tmp = currentOrder[i];
+  currentOrder[i] = currentOrder[j];
+  currentOrder[j] = tmp;
 }
 
 function resetPuzzle() {
   const puzzle = puzzles[currentIndex];
-  const lines = puzzle.lines.slice();
-  shuffle(lines);
-  poolEl.innerHTML = '';
-  slotsEl.innerHTML = '';
-  lines.forEach((ln, i) => poolEl.appendChild(makePiece(ln, 'p' + i + '-' + Math.random().toString(36).slice(2))));
-  for (let i = 0; i < puzzle.lines.length; i++) {
-    slotsEl.appendChild(makeSlot(i));
-  }
+  currentOrder = puzzle.lines.slice();
+  shuffle(currentOrder);
+  renderScrambled();
   messageEl.textContent = '';
 }
 
 function submitPuzzle() {
   const puzzle = puzzles[currentIndex];
   const correct = puzzle.lines;
-  const slotNodes = Array.from(slotsEl.children);
   let allCorrect = true;
-  slotNodes.forEach((slot, i) => {
-    slot.style.background = '';
-    slot.style.borderColor = '';
-    const child = slot.firstChild;
-    if (!child) {
-      slot.style.background = 'var(--bad)';
-      slot.style.borderColor = '#c44';
-      allCorrect = false;
-      return;
-    }
-    const text = child.dataset.line.trim();
+  const pieces = Array.from(scrambledEl.children);
+  pieces.forEach((p, i) => {
+    p.style.background = '';
+    p.style.borderColor = '';
+    const text = p.dataset.line.trim();
     if (text === correct[i].trim()) {
-      slot.style.background = 'var(--ok)';
-      slot.style.borderColor = '#2a9a4a';
+      p.style.background = 'var(--ok)';
+      p.style.borderColor = '#2a9a4a';
     } else {
-      slot.style.background = 'var(--bad)';
-      slot.style.borderColor = '#c44';
+      p.style.background = 'var(--bad)';
+      p.style.borderColor = '#c44';
       allCorrect = false;
     }
   });
   if (allCorrect) {
-    messageEl.textContent = "All correct! Well done 🎉";
+    messageEl.textContent = 'All correct! Well done 🎉';
     messageEl.style.color = '#1a7f3a';
   } else {
-    messageEl.textContent = "Some lines are incorrect — incorrect slots are highlighted red.";
+    messageEl.textContent = 'Some lines are incorrect — incorrect lines are highlighted.';
     messageEl.style.color = '#a00';
   }
 }
@@ -370,12 +351,11 @@ function nextPuzzle() {
 
 function loadPuzzle(index) {
   currentIndex = index;
-  // update description
-  const p = puzzles[index];
-  puzzleDescriptionEl.textContent = p.description || '';
+  puzzleDescriptionEl.textContent = puzzles[index].description || '';
   resetPuzzle();
 }
 
+// wire buttons
 document.getElementById('submitBtn').addEventListener('click', submitPuzzle);
 document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
 document.getElementById('nextBtn').addEventListener('click', nextPuzzle);

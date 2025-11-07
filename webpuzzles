@@ -92,10 +92,7 @@
 </head>
 <body>
   <h1>Parsons Code Checker</h1>
-  <div style="display:flex; gap:12px; align-items:flex-start;">
-    <div class="meta">Drag lines from the pool into the slots in order. Submit to check.</div>
-    <div class="description" id="puzzleDescription">Select a puzzle to see its description.</div>
-  </div>
+  <div class="meta">Drag lines from the pool into the slots in order. Submit to check.</div>
 
   <div class="controls">
     <button id="submitBtn">Submit</button>
@@ -111,6 +108,7 @@
   <div class="layout">
     <div class="panel">
       <strong>Pool (drag from here)</strong>
+      <div class="description" id="puzzleDescription">Select a puzzle to see its description.</div>
       <div id="pool" class="pool" aria-label="pool of code lines"></div>
     </div>
 

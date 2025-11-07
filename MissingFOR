@@ -17,8 +17,6 @@
   .desc-bullets{ margin:6px 0 8px 18px; color:#222; }
   .hint{ margin-top:6px; font-style:italic; color:#374151; }
   .example-box{ margin-top:8px; padding:8px; background:#f7fbff; border:1px solid #d9eefc; border-radius:6px; font-family: "Courier New", monospace; color:#0b3b66; display:none; white-space:pre-line; }
-  .teacher-controls{ margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .teacher-note{ margin-top:6px; color:#6b6b6b; font-size:13px; }
   .code-area{ font-family: "Courier New", monospace; background:#fff; padding:10px; border-radius:8px; border:1px dashed #ccc; min-height:140px; }
   .code-line{ padding:6px 4px; white-space:pre-wrap; }
   .blank{ display:inline-flex; align-items:center; justify-content:center; min-width:56px; padding:4px 8px; margin:0 4px; background:#f2f6fb; border-radius:4px; border:1px dashed #9fb8e6; cursor:pointer; outline:none; color:#111; font-weight:600; }
@@ -31,7 +29,7 @@
   .controls{ display:flex; gap:8px; margin-top:12px; align-items:center; }
   button.action{ background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
   button.secondary{ background:#666; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
-  button.small{ padding:6px 10px; font-size:13px; border-radius:6px; }
+  .small{ padding:6px 10px; font-size:13px; border-radius:6px; }
   #message{ margin-top:10px; font-weight:600; }
   .keyboard-hint{ color:var(--muted); font-size:13px; margin-top:6px; }
   @media (max-width:700px){ .bank{ gap:6px; } .blank{ min-width:44px; } .token{ min-width:32px; padding:6px 8px;} }
@@ -46,14 +44,11 @@
       <div id="descTitle" style="font-weight:700; margin-bottom:6px;">Select a puzzle to see its description</div>
       <ul id="descBullets" class="desc-bullets"></ul>
       <div id="teacherHint" class="hint"></div>
-      <div class="teacher-controls">
+      <div style="margin-top:8px;">
         <button id="toggleExample" class="small">Show example output</button>
-        <button id="revealHintBtn" class="small">Reveal hint (fill one blank)</button>
-        <button id="teacherRevealAllBtn" class="small">Teacher: Reveal all answers</button>
-        <button id="teacherLogoutBtn" class="small" style="display:none;">Teacher: Logout</button>
+        <button id="revealHintBtn" class="small" style="margin-left:8px;">Reveal hint (3 left)</button>
       </div>
       <div id="exampleBox" class="example-box" role="region" aria-hidden="true"></div>
-      <div class="teacher-note" id="teacherNote">Teacher toggle is protected by a password saved in localStorage on this browser. This is a convenience only — localStorage is not strongly secure. Use a simple password and keep it safe.</div>
     </div>
 
     <div class="code-area" id="codeArea" aria-live="polite"></div>
@@ -78,105 +73,199 @@
 
 <script>
 /*
- Teacher "Reveal All" with simple password prompt stored in localStorage.
- - First-time use: set a password (confirmed).
- - Afterwards: enter password to authenticate.
- - If authentication succeeds, the Teacher: Reveal all answers button toggles to "Hide answers".
- - When revealing, the current blanks state is saved so it can be restored when hiding.
- - Note: localStorage is not secure; the feature is convenience for a teacher on a shared public page.
+ Reverted student-facing version with:
+  - bullets, short hint, example toggle
+  - Reveal hint fills a random eligible blank
+  - Up to 3 reveal hints per puzzle (tracked per puzzle in-session)
+  - Tokens remain in bank (reusable)
 */
 
-const STORAGE_KEY = 'parsons_teacher_pw'; // stored password key (simple)
+const MAX_HINTS_PER_PUZZLE = 3;
+
 const puzzles = [
   {
     title: "Simple FOR output 1 to 3",
-    bullets: ["No input — print numbers 1 to 3 using a FOR loop.", "Each number should appear on its own line."],
+    bullets: [
+      "No input — print numbers 1 to 3 using a FOR loop.",
+      "Each number should appear on its own line."
+    ],
     hint: "Use a loop variable (i). OUTPUT i each iteration.",
     example: "1\n2\n3",
-    lines: ["___1___ i = ___2___ TO ___3___ DO","OUTPUT ___4___","NEXT ___5___"],
+    lines: [
+      "___1___ i = ___2___ TO ___3___ DO",
+      "OUTPUT ___4___",
+      "NEXT ___5___"
+    ],
     answers: ["FOR","1","3","i","i"],
     bank: ["FOR","NEXT","i","1","3","TO","OUTPUT","2"]
   },
   {
     title: "FOR with STEP 3",
-    bullets: ["No input — output every third number from 1 up to 10.","Use STEP to change how much the loop increases each time."],
+    bullets: [
+      "No input — output every third number from 1 up to 10.",
+      "Use STEP to change how much the loop increases each time."
+    ],
     hint: "Start at 1, end at 10, use STEP 3.",
     example: "1\n4\n7\n10",
-    lines: ["___1___ i = ___2___ ___3___ ___4___ ___5___","OUTPUT i","NEXT i"],
+    lines: [
+      "___1___ i = ___2___ ___3___ ___4___ ___5___",
+      "OUTPUT i",
+      "NEXT i"
+    ],
     answers: ["FOR","1","TO","10","3"],
     bank: ["1","2","3","10","FOR","TO","STEP","OUTPUT","i","NEXT","4"]
   },
   {
     title: "Descending FOR loop",
-    bullets: ["No input — count down from 5 to 1.","Use a negative STEP so the loop decreases."],
+    bullets: [
+      "No input — count down from 5 to 1.",
+      "Use a negative STEP so the loop decreases."
+    ],
     hint: "Set STEP to -1 to decrement the loop variable.",
     example: "5\n4\n3\n2\n1",
-    lines: ["___1___ k = ___2___ ___3___ ___4___ ___5___","OUTPUT k","NEXT k"],
+    lines: [
+      "___1___ k = ___2___ ___3___ ___4___ ___5___",
+      "OUTPUT k",
+      "NEXT k"
+    ],
     answers: ["FOR","5","TO","1","-1"],
     bank: ["FOR","k","5","1","-1","TO","STEP","OUTPUT","NEXT","i","0"]
   },
   {
     title: "Sum a few values",
-    bullets: ["Input: prompt user for 3 numbers (one per iteration).","Add each number to a running total and print the total after the loop."],
+    bullets: [
+      "Input: prompt user for 3 numbers (one per iteration).",
+      "Add each number to a running total and print the total after the loop."
+    ],
     hint: "Initialise total to 0 before the loop and add each input to total.",
     example: "Input: 1, 2, 3  → Output: 6",
-    lines: ["___1___ = ___2___","___3___ ___4___ ___5___ ___6___ ___7___","INPUT ___8___","___9___ = ___9___ ___10___ ___8___","NEXT ___11___","OUTPUT ___9___"],
+    lines: [
+      "___1___ = ___2___",
+      "___3___ ___4___ ___5___ ___6___ ___7___",
+      "INPUT ___8___",
+      "___9___ = ___9___ ___10___ ___8___",
+      "NEXT ___11___",
+      "OUTPUT ___9___"
+    ],
     answers: ["total","0","FOR","i","=","1","TO","n","total","+","i"],
     bank: ["total","sum","0","1","2","+","-","*","FOR","i","j","TO","STEP","OUTPUT","INPUT","n","=","NEXT"]
   },
   {
     title: "Double input values",
-    bullets: ["Input: prompt the user 4 times for a number.","For each entered number, print twice its value."],
+    bullets: [
+      "Input: prompt the user 4 times for a number.",
+      "For each entered number, print twice its value."
+    ],
     hint: "Multiply the input by 2 before outputting.",
     example: "Input: 2 → Output: 4",
-    lines: ["___1___ ___2___ ___3___ ___4___","INPUT ___5___","OUTPUT ___5___ ___6___ ___7___","NEXT ___8___"],
+    lines: [
+      "___1___ ___2___ ___3___ ___4___",
+      "INPUT ___5___",
+      "OUTPUT ___5___ ___6___ ___7___",
+      "NEXT ___8___"
+    ],
     answers: ["FOR","i","=","1","value","*","2","i"],
     bank: ["FOR","i","=","1","4","2","*","/","+","INPUT","OUTPUT","value","NEXT"]
   },
   {
     title: "Output only even numbers",
-    bullets: ["Input: prompt the user 4 times for a number.","Output the number only if it is even (divisible by 2)."],
+    bullets: [
+      "Input: the user enters 4 numbers.",
+      "Output the number only if it is even (divisible by 2)."
+    ],
     hint: "Use MOD to test remainder when dividing by 2.",
     example: "Input: 2,3,4,5 → Output:\n2\n4",
-    lines: ["___1___ i = ___2___ ___3___ ___4___","INPUT ___5___","IF ___5___ ___6___ ___7___ ___8___","OUTPUT ___5___","ENDIF","NEXT ___1___"],
+    lines: [
+      "___1___ i = ___2___ ___3___ ___4___",
+      "INPUT ___5___",
+      "IF ___5___ ___6___ ___7___ ___8___",
+      "OUTPUT ___5___",
+      "ENDIF",
+      "NEXT ___1___"
+    ],
     answers: ["FOR","1","TO","4","num","MOD","2","= 0"],
     bank: ["FOR","1","2","3","4","TO","STEP","MOD","%","=","= 0","num","n","INPUT","OUTPUT","IF","THEN","ENDIF","NEXT"]
   },
   {
     title: "Count values above threshold",
-    bullets: ["Input: prompt the user 5 times for a number.","Count how many of the entered numbers are greater than 10 and print the count."],
+    bullets: [
+      "Input: prompt the user 5 times for a number.",
+      "Count how many of the entered numbers are greater than 10 and print the count."
+    ],
     hint: "Initialise a counter at 0; when value > 10, increment the counter.",
     example: "Input: 12,9,15,6,11 → Output: 3",
-    lines: ["___1___ = ___2___","___3___ ___4___ ___5___ ___6___","INPUT ___7___","IF ___7___ ___8___ ___9___ ___10___","___1___ = ___1___ + 1","ENDIF","NEXT ___5___","OUTPUT ___1___"],
+    lines: [
+      "___1___ = ___2___",
+      "___3___ ___4___ ___5___ ___6___",
+      "INPUT ___7___",
+      "IF ___7___ ___8___ ___9___ ___10___",
+      "___1___ = ___1___ + 1",
+      "ENDIF",
+      "NEXT ___5___",
+      "OUTPUT ___1___"
+    ],
     answers: ["count","0","FOR","i","1","TO","v",">","10","THEN"],
     bank: ["count","cnt","0","1","5","10","TO","FOR","i","j","v","INPUT","OUTPUT",">","<","=","THEN","IF","NEXT","+","-"]
   },
   {
     title: "FOR with variable step expression",
-    bullets: ["No input. Assign a variable stepSize (e.g. 2) and use it in the STEP clause of a FOR loop.","The loop should print values from 1 to 5 stepping by stepSize."],
+    bullets: [
+      "No input. Assign a variable stepSize (e.g. 2) and use it in the STEP clause of a FOR loop.",
+      "The loop should print values from 1 to 5 stepping by stepSize."
+    ],
     hint: "Declare stepSize, then use STEP stepSize in the FOR header.",
     example: "With stepSize = 2 → Output:\n1\n3\n5",
-    lines: ["___1___ = ___2___","___3___ ___4___ ___5___ ___6___ ___7___ ___8___","OUTPUT ___4___","NEXT ___4___"],
+    lines: [
+      "___1___ = ___2___",
+      "___3___ ___4___ ___5___ ___6___ ___7___ ___8___",
+      "OUTPUT ___4___",
+      "NEXT ___4___"
+    ],
     answers: ["stepSize","2","FOR","i","=","1","TO","5"],
     bank: ["stepSize","step","2","1","5","FOR","i","j","=","TO","STEP","OUTPUT","NEXT","rand"]
   },
   {
     title: "NEXT variable mismatch (attention to names)",
-    bullets: ["No input. Print the numbers 1 to 3 using a FOR loop.","Be careful that the variable name in NEXT matches the FOR variable."],
+    bullets: [
+      "No input. Print the numbers 1 to 3 using a FOR loop.",
+      "Be careful that the variable name in NEXT matches the FOR variable."
+    ],
     hint: "If you use FOR index = 1 TO 3, then write NEXT index (not NEXT i).",
     example: "1\n2\n3",
-    lines: ["___1___ ___2___ ___3___ ___4___ ___5___","OUTPUT ___2___","NEXT ___6___"],
+    lines: [
+      "___1___ ___2___ ___3___ ___4___ ___5___",
+      "OUTPUT ___2___",
+      "NEXT ___6___"
+    ],
     answers: ["FOR","index","=","1","3","index"],
     bank: ["FOR","index","i","=","1","3","NEXT","OUTPUT","TO","STEP","j"]
   },
   {
     title: "Nested FOR to build pairs (mostly blanks)",
-    bullets: ["No input. Use nested FOR loops to produce ordered pairs (i, j): i from 1 to 2 and j from 1 to 3.","Print each pair (i, j) so that all six pairs are produced."],
+    bullets: [
+      "No input. Use nested FOR loops to produce ordered pairs (i, j): i from 1 to 2 and j from 1 to 3.",
+      "Print each pair (i, j) so that all six pairs are produced."
+    ],
     hint: "Outer loop: FOR i = 1 TO 2 DO; inner loop: FOR j = 1 TO 3 DO; OUTPUT i , j; NEXT j; NEXT i.",
     example: "1 , 1\n1 , 2\n1 , 3\n2 , 1\n2 , 2\n2 , 3",
-    lines: ["___1___ ___2___ ___3___ ___4___ ___5___","___6___ ___7___ ___8___ ___9___ ___10___","___11___ ___12___ ___13___ ___14___ ___15___","___16___ ___17___ ___18___ ___19___ ___20___","___21___ ___22___ ___23___ ___24___ ___25___"],
-    answers: ["FOR","i","=","1","TO","2","FOR","j","=","1","TO","3","DO","OUTPUT","i",",","j","NEXT","j","NEXT","i"],
-    bank: ["FOR","NEXT","i","j","=","1","2","3","TO","STEP","DO","OUTPUT",",",";","INPUT","OUTPUT","FORWARD","END","NEXT i","NEXT j","rand","value","k","OUTPUT i","OUTPUT j"]
+    lines: [
+      "___1___ ___2___ ___3___ ___4___ ___5___",
+      "___6___ ___7___ ___8___ ___9___ ___10___",
+      "___11___ ___12___ ___13___ ___14___ ___15___",
+      "___16___ ___17___ ___18___ ___19___ ___20___",
+      "___21___ ___22___ ___23___ ___24___ ___25___"
+    ],
+    answers: [
+      "FOR","i","=","1","TO",
+      "2","FOR","j","=","1",
+      "TO","3","DO","OUTPUT","i",
+      ",","j","NEXT","j","NEXT",
+      "i"
+    ],
+    bank: [
+      "FOR","NEXT","i","j","=","1","2","3","TO","STEP","DO","OUTPUT",",",";","INPUT","OUTPUT","FORWARD","END","NEXT i","NEXT j",
+      "rand","value","k","OUTPUT i","OUTPUT j"
+    ]
   }
 ];
 
@@ -188,25 +277,23 @@ const descBullets = document.getElementById('descBullets');
 const teacherHint = document.getElementById('teacherHint');
 const toggleExample = document.getElementById('toggleExample');
 const revealHintBtn = document.getElementById('revealHintBtn');
-const teacherRevealAllBtn = document.getElementById('teacherRevealAllBtn');
-const teacherLogoutBtn = document.getElementById('teacherLogoutBtn');
 const exampleBox = document.getElementById('exampleBox');
 const msgEl = document.getElementById('message');
 const puzzleSelect = document.getElementById('puzzleSelect');
 
 let currentIndex = 0;
 let selectedToken = null;
-let teacherAuthenticated = false;
-const usedHintForPuzzle = {}; // one hint per puzzle
-const prevStateForReveal = {}; // store previous blanks state to restore after hide
+// track used hints count per puzzle (in-memory)
+const usedHintsCount = {}; // e.g. usedHintsCount[0] = 1
 
-// --- utility ---
+// Helpers
 function shuffleArray(a){
   for(let i=a.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
     [a[i],a[j]]=[a[j],a[i]];
   }
 }
+
 function populatePuzzleSelect(){
   puzzles.forEach((p,i)=>{
     const opt = document.createElement('option');
@@ -216,7 +303,7 @@ function populatePuzzleSelect(){
   });
 }
 
-// --- DESCRIPTION & EXAMPLE toggle ---
+// Render description (bullets, hint, example toggle)
 function renderDescription(p){
   descTitle.textContent = p.title || '';
   descBullets.innerHTML = '';
@@ -237,11 +324,10 @@ function renderDescription(p){
     exampleBox.style.display = 'none';
     exampleBox.setAttribute('aria-hidden','true');
   }
-  // teacher controls UI state
-  updateTeacherButtons();
+  updateRevealHintBtn();
 }
 
-// --- example toggle ---
+// Toggle example visibility
 toggleExample.addEventListener('click', ()=>{
   const visible = exampleBox.style.display !== 'none';
   if(visible){
@@ -255,37 +341,7 @@ toggleExample.addEventListener('click', ()=>{
   }
 });
 
-// --- bank rendering ---
-function renderBank(tokens){
-  bankEl.innerHTML = '';
-  const arr = tokens.slice();
-  shuffleArray(arr);
-  arr.forEach(tok=>{
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'token';
-    b.textContent = tok;
-    b.setAttribute('aria-pressed','false');
-    b.draggable = true;
-    b.tabIndex = 0;
-    b.addEventListener('click', ()=> toggleSelectToken(b, tok));
-    b.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggleSelectToken(b,tok); }});
-    b.addEventListener('dragstart', (e)=> e.dataTransfer.setData('text/plain', tok));
-    bankEl.appendChild(b);
-  });
-}
-
-// --- selection for tokens ---
-function toggleSelectToken(el, val){
-  if(selectedToken && selectedToken.el === el){
-    el.setAttribute('aria-pressed','false'); selectedToken = null; return;
-  }
-  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
-  el.setAttribute('aria-pressed','true');
-  selectedToken = {el, val};
-}
-
-// --- render code area with blanks ---
+// Render code area with blanks
 function renderCode(puzzle){
   codeArea.innerHTML = '';
   puzzle.lines.forEach(line=>{
@@ -306,7 +362,7 @@ function renderCode(puzzle){
       span.dataset.filled = 'false';
       span.dataset.token = '';
       span.textContent = `___${num}___`;
-      // drag drop
+      // drag & drop
       span.addEventListener('dragover', e => { e.preventDefault(); span.classList.add('dragover'); });
       span.addEventListener('dragleave', ()=> span.classList.remove('dragover'));
       span.addEventListener('drop', e => {
@@ -315,7 +371,7 @@ function renderCode(puzzle){
         const tok = e.dataTransfer.getData('text/plain');
         placeTokenInBlank(tok, span);
       });
-      // click / keyboard to place selected token
+      // click / keyboard place selected token
       span.addEventListener('click', ()=> { if(selectedToken) placeTokenInBlank(selectedToken.val, span); });
       span.addEventListener('keydown', (e)=> { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); if(selectedToken) placeTokenInBlank(selectedToken.val, span); }});
       lineDiv.appendChild(span);
@@ -327,7 +383,36 @@ function renderCode(puzzle){
   });
 }
 
-// --- place token into blank (tokens are reusable) ---
+// Render bank (tokens remain after use)
+function renderBank(tokens){
+  bankEl.innerHTML = '';
+  const arr = tokens.slice();
+  shuffleArray(arr);
+  arr.forEach(tok=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'token';
+    b.textContent = tok;
+    b.setAttribute('aria-pressed','false');
+    b.draggable = true;
+    b.tabIndex = 0;
+    b.addEventListener('click', ()=> toggleSelectToken(b, tok));
+    b.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggleSelectToken(b,tok); }});
+    b.addEventListener('dragstart', (e)=> e.dataTransfer.setData('text/plain', tok));
+    bankEl.appendChild(b);
+  });
+}
+
+function toggleSelectToken(el, val){
+  if(selectedToken && selectedToken.el === el){
+    el.setAttribute('aria-pressed','false'); selectedToken = null; return;
+  }
+  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  el.setAttribute('aria-pressed','true');
+  selectedToken = {el, val};
+}
+
+// Place token into blank — tokens are reusable
 function placeTokenInBlank(tokenValue, blankEl){
   if(!blankEl) return;
   blankEl.dataset.token = tokenValue;
@@ -339,7 +424,7 @@ function placeTokenInBlank(tokenValue, blankEl){
   selectedToken = null;
 }
 
-// --- reset puzzle (clears blanks, reshuffles bank) ---
+// Reset current puzzle: clear blanks, reshuffle bank
 function resetCurrent(){
   const p = puzzles[currentIndex];
   document.querySelectorAll('.blank').forEach(b=>{
@@ -352,13 +437,13 @@ function resetCurrent(){
   msgEl.textContent = '';
   document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
   selectedToken = null;
-  // hide example on reset
+  // do not reset used hint counts unless you want that; currently we keep counts per puzzle
+  updateRevealHintBtn();
+  // hide example
   exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
-  // teacher reveal state: do not auto-disable teacher buttons here beyond their existing logic
-  updateTeacherButtons();
 }
 
-// --- check answers ---
+// Check answers and mark blanks
 function checkAnswers(){
   const p = puzzles[currentIndex];
   const answers = p.answers || [];
@@ -368,7 +453,7 @@ function checkAnswers(){
     const placed = b.dataset.filled === 'true' ? b.dataset.token : '';
     const correct = answers[i] !== undefined ? String(answers[i]) : '';
     if(correct === '' || correct === undefined) {
-      b.classList.remove('correct','incorrect');
+      b.classList.remove('correct','incorrect'); // not checked
       return;
     }
     const placedTrim = placed !== null ? placed.toString().trim() : '';
@@ -387,234 +472,20 @@ function checkAnswers(){
   }
 }
 
-// --- single-blank reveal hint (existing feature) ---
-function revealOneBlank(){
-  if(usedHintForPuzzle[currentIndex]) return;
+// Reveal a random eligible blank, up to MAX_HINTS_PER_PUZZLE
+function revealRandomBlank(){
+  const used = usedHintsCount[currentIndex] || 0;
+  if(used >= MAX_HINTS_PER_PUZZLE){
+    msgEl.textContent = `No hints left for this puzzle (max ${MAX_HINTS_PER_PUZZLE}).`;
+    msgEl.style.color = '#a00';
+    updateRevealHintBtn();
+    return;
+  }
   const p = puzzles[currentIndex];
   const answers = p.answers || [];
   const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
-  for(let i=0;i<blanks.length;i++){
-    const b = blanks[i];
+  // collect eligible indices where a correct answer exists and the placed token is not already correct
+  const eligible = [];
+  blanks.forEach((b, i)=>{
     const correct = answers[i] !== undefined ? String(answers[i]) : '';
-    if(!correct) continue;
-    const placed = b.dataset.filled === 'true' ? (b.dataset.token || '') : '';
-    if(placed.trim() !== correct.trim()){
-      b.dataset.token = correct;
-      b.dataset.filled = 'true';
-      b.textContent = correct;
-      b.classList.remove('incorrect'); b.classList.add('correct');
-      usedHintForPuzzle[currentIndex] = true;
-      revealHintBtn.disabled = true; revealHintBtn.textContent = 'Reveal hint (used)'; revealHintBtn.style.opacity='0.6';
-      msgEl.textContent = 'Hint used: one correct blank filled.'; msgEl.style.color='#0b5';
-      return;
-    }
-  }
-  // nothing to reveal
-  usedHintForPuzzle[currentIndex] = true;
-  revealHintBtn.disabled = true; revealHintBtn.textContent = 'Reveal hint (used)'; revealHintBtn.style.opacity='0.6';
-  msgEl.textContent = 'No eligible blank found to reveal.'; msgEl.style.color='#a00';
-}
-
-// --- TEACHER AUTHENTICATION & REVEAL ALL ---
-function teacherIsPasswordSet(){
-  return !!localStorage.getItem(STORAGE_KEY);
-}
-function setTeacherPassword(pw){
-  try {
-    localStorage.setItem(STORAGE_KEY, pw);
-    return true;
-  } catch (e) {
-    console.error('localStorage error', e);
-    return false;
-  }
-}
-function checkTeacherPassword(pw){
-  const stored = localStorage.getItem(STORAGE_KEY);
-  return stored !== null && pw === stored;
-}
-function authenticateTeacherFlow(callbackIfAuthenticated){
-  // If no pw set, ask teacher to set one (with confirmation)
-  if(!teacherIsPasswordSet()){
-    const pw = prompt('No teacher password found. Enter a new password to protect teacher controls (leave blank to cancel):');
-    if(!pw){ alert('Teacher password setup cancelled.'); return; }
-    const pw2 = prompt('Confirm new password:');
-    if(pw !== pw2){ alert('Passwords did not match. Setup cancelled.'); return; }
-    const ok = setTeacherPassword(pw);
-    if(!ok){ alert('Could not save password in localStorage (maybe blocked).'); return; }
-    alert('Password saved. Keep it safe. Teacher controls are now protected.');
-    teacherAuthenticated = true;
-    teacherLogoutBtn.style.display = 'inline-block';
-    if(callbackIfAuthenticated) callbackIfAuthenticated();
-    updateTeacherButtons();
-    return;
-  }
-  // Password exists: ask for it
-  const pw = prompt('Enter teacher password (leave blank to cancel):');
-  if(!pw){ return; }
-  if(checkTeacherPassword(pw)){
-    teacherAuthenticated = true;
-    teacherLogoutBtn.style.display = 'inline-block';
-    if(callbackIfAuthenticated) callbackIfAuthenticated();
-    updateTeacherButtons();
-  } else {
-    alert('Incorrect password.');
-  }
-}
-
-// Update teacher button states
-function updateTeacherButtons(){
-  // If not authenticated, show the reveal button but in auth-required state. If authenticated, label toggles depending on reveal state.
-  if(!teacherAuthenticated){
-    teacherRevealAllBtn.textContent = 'Teacher: Reveal all answers';
-    teacherRevealAllBtn.disabled = false;
-    teacherRevealAllBtn.style.opacity = '1';
-    teacherLogoutBtn.style.display = 'none';
-  } else {
-    teacherLogoutBtn.style.display = 'inline-block';
-    // if currently in teacher-revealed mode for this puzzle -> label "Hide answers", else "Teacher: Reveal all answers"
-    const state = prevStateForReveal[currentIndex];
-    if(state && state.revealed === true){
-      teacherRevealAllBtn.textContent = 'Teacher: Hide answers';
-      teacherRevealAllBtn.disabled = false;
-      teacherRevealAllBtn.style.opacity = '1';
-    } else {
-      teacherRevealAllBtn.textContent = 'Teacher: Reveal all answers';
-      teacherRevealAllBtn.disabled = false;
-      teacherRevealAllBtn.style.opacity = '1';
-    }
-  }
-}
-
-// Save current blanks state (to restore when hiding teacher reveal)
-function snapshotCurrentBlanks(){
-  const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
-  const snapshot = blanks.map(b => ({ token: b.dataset.token || '', filled: b.dataset.filled === 'true' }));
-  prevStateForReveal[currentIndex] = { snapshot, revealed: false };
-}
-
-// Restore blanks from snapshot
-function restoreSnapshotForPuzzle(){
-  const state = prevStateForReveal[currentIndex];
-  if(!state || !state.snapshot) return;
-  const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
-  state.snapshot.forEach((s,i)=>{
-    const b = blanks[i];
-    if(!b) return;
-    if(s.filled){
-      b.dataset.token = s.token;
-      b.dataset.filled = 'true';
-      b.textContent = s.token;
-      b.classList.remove('incorrect'); b.classList.add('filled'); // don't mark correct/incorrect when restoring
-    } else {
-      b.dataset.token = '';
-      b.dataset.filled = 'false';
-      b.textContent = `___${b.dataset.blank}___`;
-      b.classList.remove('filled','correct','incorrect');
-    }
-  });
-}
-
-// Reveal all answers (teacher only)
-function teacherToggleRevealAll(){
-  if(!teacherAuthenticated){
-    authenticateTeacherFlow( () => {
-      // once authed, immediately reveal
-      teacherPerformRevealToggle();
-    });
-    return;
-  }
-  teacherPerformRevealToggle();
-}
-function teacherPerformRevealToggle(){
-  const state = prevStateForReveal[currentIndex];
-  if(state && state.revealed === true){
-    // currently revealed -> hide (restore previous)
-    restoreSnapshotForPuzzle();
-    prevStateForReveal[currentIndex].revealed = false;
-    msgEl.textContent = 'Teacher: answers hidden (restored previous state).';
-    msgEl.style.color = '#444';
-    updateTeacherButtons();
-    return;
-  }
-  // not revealed: snapshot current then fill blanks with answers
-  snapshotCurrentBlanks();
-  const p = puzzles[currentIndex];
-  const answers = p.answers || [];
-  const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
-  blanks.forEach((b,i)=>{
-    const correct = answers[i] !== undefined ? String(answers[i]) : '';
-    if(!correct || correct === '') return;
-    b.dataset.token = correct;
-    b.dataset.filled = 'true';
-    b.textContent = correct;
-    b.classList.remove('incorrect'); b.classList.add('correct');
-  });
-  prevStateForReveal[currentIndex].revealed = true;
-  msgEl.textContent = 'Teacher: all answers revealed for this puzzle.';
-  msgEl.style.color = '#0b5';
-  updateTeacherButtons();
-}
-
-// Teacher logout
-function teacherLogout(){
-  teacherAuthenticated = false;
-  teacherLogoutBtn.style.display = 'none';
-  msgEl.textContent = 'Teacher logged out.';
-  msgEl.style.color = '#444';
-  updateTeacherButtons();
-}
-
-// --- events wiring for UI ---
-document.getElementById('submitBtn').addEventListener('click', checkAnswers);
-document.getElementById('resetBtn').addEventListener('click', resetCurrent);
-document.getElementById('nextBtn').addEventListener('click', ()=> {
-  currentIndex = (currentIndex + 1) % puzzles.length;
-  puzzleSelect.value = currentIndex;
-  loadPuzzle(currentIndex);
-});
-puzzleSelect.addEventListener('change', (e)=> loadPuzzle(Number(e.target.value)));
-revealHintBtn.addEventListener('click', revealOneBlank);
-teacherRevealAllBtn.addEventListener('click', teacherToggleRevealAll);
-teacherLogoutBtn.addEventListener('click', teacherLogout);
-
-// --- Reveal hint button initial state logic ---
-function updateRevealHintBtn(){
-  if(usedHintForPuzzle[currentIndex]){
-    revealHintBtn.disabled = true;
-    revealHintBtn.textContent = 'Reveal hint (used)';
-    revealHintBtn.style.opacity='0.6';
-  } else {
-    revealHintBtn.disabled = false;
-    revealHintBtn.textContent = 'Reveal hint (fill one blank)';
-    revealHintBtn.style.opacity='1';
-  }
-}
-
-// --- load puzzle ---
-function loadPuzzle(idx){
-  if(idx < 0 || idx >= puzzles.length) idx = 0;
-  currentIndex = idx;
-  const p = puzzles[currentIndex];
-  // render description
-  renderDescription(p);
-  renderCode(p);
-  renderBank(p.bank.slice());
-  msgEl.textContent = '';
-  // reset selection
-  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
-  selectedToken = null;
-  // reveal hint state
-  updateRevealHintBtn();
-  // teacher button reflect reveal state
-  updateTeacherButtons();
-  // hide example by default
-  exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
-}
-
-// --- init ---
-populatePuzzleSelect();
-loadPuzzle(0);
-
-</script>
-</body>
-</html>
+    if(!correct ||

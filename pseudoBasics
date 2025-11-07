@@ -106,31 +106,30 @@ const puzzles = [
     answers:{"1":"A","2":"←","3":"B","4":"←","5":"Avg","6":"←","7":"A","8":"+","9":"B","10":"Result","11":"←","12":"ROUND","13":"Avg"}
   },
   {
-  title: "Concatenation challenge",
-  description: "No input. Task: Rebuild the full code. Declare X=4, Y=7 then output: \"Result:\" , X , \"+\" , Y , \"=\" , X + Y.",
-  lines: [
-    "___1___ ___2___ 4",
-    "___3___ ___4___ 7",
-    "___5___ ___6___ ___7___ ___8___ ___9___ ___10___ ___11___ ___12___ ___13___ ___14___ ___15___ ___16___ ___17___ ___18___"
-  ],
-  bank: [
-    "X","Y","←","=","OUTPUT",
-    "\"Result:\"","\",\"",",","\"+\"","\"=\"",
-    "4","7","+"
-  ],
-  answers: {
-    "1":"X","2":"←",
-    "3":"Y","4":"←",
-    "5":"OUTPUT","6":"\"Result:\"",
-    "7":",","8":"X",
-    "9":",","10":"\"+\"",
-    "11":",","12":"Y",
-    "13":",","14":"\"=\"",
-    "15":",","16":"X",
-    "17":"+","18":"Y"
-  }
-}
-
+    title:"Concatenation challenge",
+    description:"No input. Task: Rebuild the full code. Declare X=4, Y=7 then output: \"Result:\" , X , \"+\" , Y , \"=\" , X + Y.",
+    lines:[
+      "___1___ ___2___ 4",
+      "___3___ ___4___ 7",
+      "___5___ ___6___ ___7___ ___8___ ___9___ ___10___ ___11___ ___12___ ___13___ ___14___ ___15___ ___16___ ___17___ ___18___"
+    ],
+    bank:[
+      "X","Y","←","=","OUTPUT",
+      "\"Result:\"","\",\"",",","\"+\"","\"=\"",
+      "4","7","+"
+    ],
+    answers:{
+      "1":"X","2":"←",
+      "3":"Y","4":"←",
+      "5":"OUTPUT","6":"\"Result:\"",
+      "7":",","8":"X",
+      "9":",","10":"\"+\"",
+      "11":",","12":"Y",
+      "13":",","14":"\"=\"",
+      "15":",","16":"X",
+      "17":"+","18":"Y"
+    }
+  },
   {
     title:"Advanced string and number mix",
     description:"No input. Task: Rebuild all lines: Text=\"X12Y\", NumStr=SUBSTRING(Text,2,2), Num=ROUND(NumStr)+3, OUTPUT Num.",
@@ -148,7 +147,6 @@ const metaEl=document.getElementById('puzzleMeta');
 const selectEl=document.getElementById('puzzleSelect');
 const statusEl=document.getElementById('status');
 
-function escapeHtml(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function clearSelection(){document.querySelectorAll('.token.selected').forEach(el=>el.classList.remove('selected'));selectedTokenValue=null;}
 
@@ -164,4 +162,21 @@ function renderPuzzle(i){
   document.querySelectorAll('.blank').forEach(b=>{
     b.onclick=()=>{if(selectedTokenValue)place(selectedTokenValue,b);};
     b.addEventListener('drop',ev=>{ev.preventDefault();place(ev.dataTransfer.getData('text/plain'),b);});
-    b.add
+    b.addEventListener('dragover',ev=>ev.preventDefault());
+  });
+  selectEl.innerHTML=puzzles.map((pz,idx)=>`<option value="${idx}" ${idx===i?"selected":""}>${idx+1}. ${pz.title}</option>`).join("");
+}
+
+function place(v,b){b.innerHTML=`<span class='placed-clone' data-value='${v}'>${v}</span>`;clearSelection();}
+function getValue(b){const c=b.querySelector('.placed-clone');return c?c.dataset.value:null;}
+function validate(){const p=puzzles[puzzleIndex];let ok=true;for(const [n,a] of Object.entries(p.answers)){const b=document.querySelector(`[data-blank="${n}"]`);const v=getValue(b);if(v===a){b.classList.add('correct');b.classList.remove('incorrect');}else{b.classList.add('incorrect');b.classList.remove('correct');ok=false;}}statusEl.textContent=ok?"All correct! 🎉":"Some blanks are incorrect.";}
+function reset(){renderPuzzle(puzzleIndex);}
+document.getElementById('submitBtn').onclick=validate;
+document.getElementById('resetBtn').onclick=reset;
+document.getElementById('nextBtn').onclick=()=>{puzzleIndex=(puzzleIndex+1)%puzzles.length;renderPuzzle(puzzleIndex);};
+document.getElementById('prevBtn').onclick=()=>{puzzleIndex=(puzzleIndex-1+puzzles.length)%puzzles.length;renderPuzzle(puzzleIndex);};
+selectEl.onchange=()=>renderPuzzle(Number(selectEl.value));
+renderPuzzle(0);
+</script>
+</body>
+</html>

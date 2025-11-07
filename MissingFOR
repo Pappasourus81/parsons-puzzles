@@ -13,7 +13,10 @@
   h1{ margin:0 0 12px 0; font-size:20px; }
   .meta{ color:#444; margin-bottom:12px; }
   .panel{ background:var(--panel); padding:12px; border-radius:10px; margin-bottom:12px; }
-  .desc-box{ padding:10px; border-radius:8px; background:#fff; border:1px solid #d1d7df; margin-bottom:10px; }
+  .desc-box{ padding:10px; border-radius:8px; background:#fff; border:1px solid #d1d7df; margin-bottom:10px; white-space:normal; }
+  .desc-bullets{ margin:6px 0 8px 18px; color:#222; }
+  .hint{ margin-top:6px; font-style:italic; color:#374151; }
+  .example-box{ margin-top:8px; padding:8px; background:#f7fbff; border:1px solid #d9eefc; border-radius:6px; font-family: "Courier New", monospace; color:#0b3b66; display:none; white-space:pre-line; }
   .code-area{ font-family: "Courier New", monospace; background:#fff; padding:10px; border-radius:8px; border:1px dashed #ccc; min-height:140px; }
   .code-line{ padding:6px 4px; white-space:pre-wrap; }
   .blank{ display:inline-flex; align-items:center; justify-content:center; min-width:56px; padding:4px 8px; margin:0 4px; background:#f2f6fb; border-radius:4px; border:1px dashed #9fb8e6; cursor:pointer; outline:none; color:#111; font-weight:600; }
@@ -26,6 +29,7 @@
   .controls{ display:flex; gap:8px; margin-top:12px; align-items:center; }
   button.action{ background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
   button.secondary{ background:#666; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+  .small{ padding:6px 10px; font-size:13px; }
   #message{ margin-top:10px; font-weight:600; }
   .keyboard-hint{ color:var(--muted); font-size:13px; margin-top:6px; }
   @media (max-width:700px){ .bank{ gap:6px; } .blank{ min-width:44px; } .token{ min-width:32px; padding:6px 8px;} }
@@ -36,11 +40,17 @@
   <div class="meta">Place the correct token into each blank. Use drag & drop, or keyboard: Tab to token → Enter to pick → Tab to blank → Enter to place. Tokens remain available after use. Difficulty increases across puzzles — later puzzles have more blanks and distractors.</div>
 
   <div class="panel">
-    <div id="desc" class="desc-box">Select a puzzle to see its description</div>
+    <div id="desc" class="desc-box">
+      <div id="descTitle" style="font-weight:700; margin-bottom:6px;">Select a puzzle to see its description</div>
+      <ul id="descBullets" class="desc-bullets"></ul>
+      <div id="teacherHint" class="hint"></div>
+      <button id="toggleExample" class="small" style="margin-top:8px; display:none;">Show example output</button>
+      <div id="exampleBox" class="example-box" role="region" aria-hidden="true"></div>
+    </div>
 
     <div class="code-area" id="codeArea" aria-live="polite"></div>
 
-    <div class="bank" id="bank"></div>
+    <div class="bank" id="bank" aria-label="token bank"></div>
 
     <div class="keyboard-hint">Tip: click a token to select it, then click a blank to place it. You can reuse tokens freely.</div>
 
@@ -60,16 +70,22 @@
 
 <script>
 /*
- Progressive difficulty: more blanks + distractors as puzzle index increases.
- Fill-in-the-blanks FOR-loop puzzles. Tokens are reusable.
- answers array maps ___1___ → answers[0], etc.
+ Updated puzzles with:
+ - short bullet points for teacher-style instructions
+ - one-line hint for each puzzle
+ - example output text (hidden by default, toggled by button)
+ Functionality unchanged otherwise.
 */
 
 const puzzles = [
-  // Puzzle 1 — few blanks, few distractors
   {
     title: "Simple FOR output 1 to 3",
-    description: "No input. Use a FOR loop to output numbers 1 to 3. Example output: 1 2 3.",
+    bullets: [
+      "No input — print numbers 1 to 3 using a FOR loop.",
+      "Each number should appear on its own line."
+    ],
+    hint: "Use a loop variable (i). OUTPUT i each iteration.",
+    example: "1\n2\n3",
     lines: [
       "___1___ i = ___2___ TO ___3___ DO",
       "OUTPUT ___4___",
@@ -78,39 +94,46 @@ const puzzles = [
     answers: ["FOR","1","3","i","i"],
     bank: ["FOR","NEXT","i","1","3","TO","OUTPUT","2"]
   },
-
-  // Puzzle 2 — slightly more blanks/distractors
   {
     title: "FOR with STEP 3",
-    description: "No input. Use STEP to output every third number from 1 to 10. Example: 1 4 7 10.",
+    bullets: [
+      "No input — output every third number from 1 up to 10.",
+      "Use STEP to change how much the loop increases each time."
+    ],
+    hint: "Start at 1, end at 10, use STEP 3.",
+    example: "1\n4\n7\n10",
     lines: [
       "___1___ i = ___2___ ___3___ ___4___ ___5___",
       "OUTPUT i",
       "NEXT i"
     ],
-    // blanks: ___1___=FOR, ___2___=1, ___3___=TO, ___4___=10, ___5___=STEP 3 (we break into two blanks STEP and 3)
     answers: ["FOR","1","TO","10","3"],
     bank: ["1","2","3","10","FOR","TO","STEP","OUTPUT","i","NEXT","4"]
   },
-
-  // Puzzle 3 — more blanks
   {
     title: "Descending FOR loop",
-    description: "No input. Loop from 5 down to 1 using a negative STEP. Example: 5 4 3 2 1.",
+    bullets: [
+      "No input — count down from 5 to 1.",
+      "Use a negative STEP so the loop decreases."
+    ],
+    hint: "Set STEP to -1 to decrement the loop variable.",
+    example: "5\n4\n3\n2\n1",
     lines: [
       "___1___ k = ___2___ ___3___ ___4___ ___5___",
       "OUTPUT k",
       "NEXT k"
     ],
-    // blanks: FOR, 5, TO, 1, -1
     answers: ["FOR","5","TO","1","-1"],
     bank: ["FOR","k","5","1","-1","TO","STEP","OUTPUT","NEXT","i","0"]
   },
-
-  // Puzzle 4 — accumulating sum, more blanks than before
   {
     title: "Sum a few values",
-    description: "Input: ask the user for 3 numbers, add them to total and output the result after the loop. Example: entering 1,2,3 outputs 6.",
+    bullets: [
+      "Input: prompt user for 3 numbers (one per iteration).",
+      "Add each number to a running total and print the total after the loop."
+    ],
+    hint: "Initialise total to 0 before the loop and add each input to total.",
+    example: "Input: 1, 2, 3  → Output: 6",
     lines: [
       "___1___ = ___2___",
       "___3___ ___4___ ___5___ ___6___ ___7___",
@@ -119,31 +142,35 @@ const puzzles = [
       "NEXT ___11___",
       "OUTPUT ___9___"
     ],
-    // map blanks:
-    // 1 total, 2 0, 3 FOR, 4 i, 5 =, 6 1, 7 TO, 8 n, 9 total, 10 +, 11 i
+    // 11 blanks; answers ordered by blank number
     answers: ["total","0","FOR","i","=","1","TO","n","total","+","i"],
     bank: ["total","sum","0","1","2","+","-","*","FOR","i","j","TO","STEP","OUTPUT","INPUT","n","=","NEXT"]
   },
-
-  // Puzzle 5 — doubling inputs, more blanks/distractors
   {
     title: "Double input values",
-    description: "Input: the user enters 4 numbers. For each number output twice its value. Example: entering 2 prints 4.",
+    bullets: [
+      "Input: prompt the user 4 times for a number.",
+      "For each entered number, print twice its value."
+    ],
+    hint: "Multiply the input by 2 before outputting.",
+    example: "Input: 2 → Output: 4",
     lines: [
       "___1___ ___2___ ___3___ ___4___",
       "INPUT ___5___",
       "OUTPUT ___5___ ___6___ ___7___",
       "NEXT ___8___"
     ],
-    // 1 FOR, 2 i, 3 =, 4 1 TO 4 -> but split into blanks as defined
     answers: ["FOR","i","=","1","value","*","2","i"],
     bank: ["FOR","i","=","1","4","2","*","/","+","INPUT","OUTPUT","value","NEXT"]
   },
-
-  // Puzzle 6 — check even numbers using MOD (introduce more blanks)
   {
     title: "Output only even numbers",
-    description: "Input: the user enters 4 numbers. Output only those that are even using MOD. Example: entering 2,3,4,5 outputs 2 and 4.",
+    bullets: [
+      "Input: prompt the user 4 times for a number.",
+      "Output the number only if it is even (divisible by 2)."
+    ],
+    hint: "Use MOD to test remainder when dividing by 2.",
+    example: "Input: 2,3,4,5 → Output:\n2\n4",
     lines: [
       "___1___ i = ___2___ ___3___ ___4___",
       "INPUT ___5___",
@@ -155,11 +182,14 @@ const puzzles = [
     answers: ["FOR","1","TO","4","num","MOD","2","= 0"],
     bank: ["FOR","1","2","3","4","TO","STEP","MOD","%","=","= 0","num","n","INPUT","OUTPUT","IF","THEN","ENDIF","NEXT"]
   },
-
-  // Puzzle 7 — counting above threshold
   {
     title: "Count values above threshold",
-    description: "Input: user enters 5 values. Count how many are greater than 10 and output the count after the loop. Example: entering 12,9,15,6,11 outputs 3.",
+    bullets: [
+      "Input: prompt the user 5 times for a number.",
+      "Count how many of the entered numbers are greater than 10 and print the count."
+    ],
+    hint: "Initialise a counter at 0; when value > 10, increment the counter.",
+    example: "Input: 12,9,15,6,11 → Output: 3",
     lines: [
       "___1___ = ___2___",
       "___3___ ___4___ ___5___ ___6___",
@@ -170,15 +200,17 @@ const puzzles = [
       "NEXT ___5___",
       "OUTPUT ___1___"
     ],
-    // map: 1=count,2=0,3=FOR,4=i,5=1,6=TO,7=v,8=>,9=10,10=THEN
     answers: ["count","0","FOR","i","1","TO","v",">","10","THEN"],
     bank: ["count","cnt","0","1","5","10","TO","FOR","i","j","v","INPUT","OUTPUT",">","<","=","THEN","IF","NEXT","+","-"]
   },
-
-  // Puzzle 8 — variable STEP (increase blanks heavily)
   {
     title: "FOR with variable step expression",
-    description: "No input. Use a variable stepSize in the STEP clause to progress the loop. Example: if stepSize=2 and upper bound 5, output 1 3 5.",
+    bullets: [
+      "No input. Assign a variable stepSize (e.g. 2) and use it in the STEP clause of a FOR loop.",
+      "The loop should print values from 1 to 5 stepping by stepSize."
+    ],
+    hint: "Declare stepSize, then use STEP stepSize in the FOR header.",
+    example: "With stepSize = 2 → Output:\n1\n3\n5",
     lines: [
       "___1___ = ___2___",
       "___3___ ___4___ ___5___ ___6___ ___7___ ___8___",
@@ -188,25 +220,30 @@ const puzzles = [
     answers: ["stepSize","2","FOR","i","=","1","TO","5"],
     bank: ["stepSize","step","2","1","5","FOR","i","j","=","TO","STEP","OUTPUT","NEXT","rand"]
   },
-
-  // Puzzle 9 — NEXT var mismatch and nested complexity (mostly blanks)
   {
     title: "NEXT variable mismatch (attention to names)",
-    description: "Ensure NEXT uses the same variable name as FOR. No input. Example: prints 1 2 3.",
+    bullets: [
+      "No input. Print the numbers 1 to 3 using a FOR loop.",
+      "Be careful that the variable name in NEXT matches the FOR variable."
+    ],
+    hint: "If you use FOR index = 1 TO 3, then write NEXT index (not NEXT i).",
+    example: "1\n2\n3",
     lines: [
       "___1___ ___2___ ___3___ ___4___ ___5___",
       "OUTPUT ___2___",
       "NEXT ___6___"
     ],
-    // blanks map: 1=FOR,2=index,3==,4=1,5=3,6=index
     answers: ["FOR","index","=","1","3","index"],
     bank: ["FOR","index","i","=","1","3","NEXT","OUTPUT","TO","STEP","j"]
   },
-
-  // Puzzle 10 — mostly blanks; heavy blanks and many distractors
   {
     title: "Nested FOR to build pairs (mostly blanks)",
-    description: "No input. Use nested FOR loops to output pairs (i,j) for i=1..2 and j=1..3. This puzzle intentionally leaves most tokens blank.",
+    bullets: [
+      "No input. Use nested FOR loops to produce ordered pairs (i, j): i from 1 to 2 and j from 1 to 3.",
+      "Print each pair (i, j) so that all six pairs are produced."
+    ],
+    hint: "Outer loop: FOR i = 1 TO 2 DO; inner loop: FOR j = 1 TO 3 DO; OUTPUT i , j; NEXT j; NEXT i.",
+    example: "1 , 1\n1 , 2\n1 , 3\n2 , 1\n2 , 2\n2 , 3",
     lines: [
       "___1___ ___2___ ___3___ ___4___ ___5___",
       "___6___ ___7___ ___8___ ___9___ ___10___",
@@ -214,12 +251,6 @@ const puzzles = [
       "___16___ ___17___ ___18___ ___19___ ___20___",
       "___21___ ___22___ ___23___ ___24___ ___25___"
     ],
-    // We'll fill these blanks in reading order: want to reconstruct:
-    // FOR i = 1 TO 2 DO
-    // FOR j = 1 TO 3 DO
-    // OUTPUT i , j
-    // NEXT j
-    // NEXT i
     answers: [
       "FOR","i","=","1","TO",
       "2","FOR","j","=","1",
@@ -237,7 +268,11 @@ const puzzles = [
 // UI elements
 const bankEl = document.getElementById('bank');
 const codeArea = document.getElementById('codeArea');
-const descEl = document.getElementById('desc');
+const descTitle = document.getElementById('descTitle');
+const descBullets = document.getElementById('descBullets');
+const teacherHint = document.getElementById('teacherHint');
+const toggleExample = document.getElementById('toggleExample');
+const exampleBox = document.getElementById('exampleBox');
 const msgEl = document.getElementById('message');
 const puzzleSelect = document.getElementById('puzzleSelect');
 
@@ -261,7 +296,44 @@ function populatePuzzleSelect(){
   });
 }
 
-// Render code with blanks
+// Render description: bullets, hint, example toggle
+function renderDescription(p){
+  descTitle.textContent = p.title || '';
+  descBullets.innerHTML = '';
+  (p.bullets || []).forEach(b => {
+    const li = document.createElement('li');
+    li.textContent = b;
+    descBullets.appendChild(li);
+  });
+  teacherHint.textContent = p.hint || '';
+  if(p.example && p.example.trim().length > 0){
+    toggleExample.style.display = 'inline-block';
+    exampleBox.textContent = p.example;
+    exampleBox.style.display = 'none';
+    exampleBox.setAttribute('aria-hidden','true');
+    toggleExample.textContent = 'Show example output';
+  } else {
+    toggleExample.style.display = 'none';
+    exampleBox.style.display = 'none';
+    exampleBox.setAttribute('aria-hidden','true');
+  }
+}
+
+// Toggle example visibility
+toggleExample.addEventListener('click', ()=>{
+  const visible = exampleBox.style.display !== 'none';
+  if(visible){
+    exampleBox.style.display = 'none';
+    exampleBox.setAttribute('aria-hidden','true');
+    toggleExample.textContent = 'Show example output';
+  } else {
+    exampleBox.style.display = 'block';
+    exampleBox.setAttribute('aria-hidden','false');
+    toggleExample.textContent = 'Hide example output';
+  }
+});
+
+// Render code area with blanks
 function renderCode(puzzle){
   codeArea.innerHTML = '';
   puzzle.lines.forEach(line=>{
@@ -303,7 +375,7 @@ function renderCode(puzzle){
   });
 }
 
-// Render bank (tokens remain available after use)
+// Render bank (tokens remain)
 function renderBank(tokens){
   bankEl.innerHTML = '';
   const arr = tokens.slice();
@@ -332,20 +404,19 @@ function toggleSelectToken(el, val){
   selectedToken = {el, val};
 }
 
-// Place token into blank — tokens are reusable so we don't remove from bank
+// Place token into blank — tokens are reusable
 function placeTokenInBlank(tokenValue, blankEl){
   if(!blankEl) return;
-  // replace existing if any
   blankEl.dataset.token = tokenValue;
   blankEl.dataset.filled = 'true';
   blankEl.textContent = tokenValue;
   blankEl.classList.add('filled');
-  // clear selection
+  // clear token selection
   document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
   selectedToken = null;
 }
 
-// Reset puzzle: clear blanks and reshuffle bank
+// Reset puzzle
 function resetCurrent(){
   const p = puzzles[currentIndex];
   document.querySelectorAll('.blank').forEach(b=>{
@@ -358,6 +429,8 @@ function resetCurrent(){
   msgEl.textContent = '';
   document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
   selectedToken = null;
+  // hide example
+  exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
 }
 
 // Check answers
@@ -373,7 +446,6 @@ function checkAnswers(){
       b.classList.remove('correct','incorrect'); // not checked
       return;
     }
-    // treat minor formatting differences: trim both
     const placedTrim = placed !== null ? placed.toString().trim() : '';
     const correctTrim = correct.toString().trim();
     if(placedTrim === correctTrim){
@@ -395,12 +467,14 @@ function loadPuzzle(idx){
   if(idx < 0 || idx >= puzzles.length) idx = 0;
   currentIndex = idx;
   const p = puzzles[currentIndex];
-  descEl.textContent = p.description;
+  renderDescription(p);
   renderCode(p);
   renderBank(p.bank.slice());
   msgEl.textContent = '';
   document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
   selectedToken = null;
+  // hide example initially
+  exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
 }
 
 // Events
@@ -416,7 +490,6 @@ puzzleSelect.addEventListener('change', (e)=> loadPuzzle(Number(e.target.value))
 // Init
 populatePuzzleSelect();
 loadPuzzle(0);
-
 </script>
 </body>
 </html>

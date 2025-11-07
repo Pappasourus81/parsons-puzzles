@@ -11,7 +11,16 @@
   .card{background:white;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.1);padding:20px;margin-bottom:20px;}
   .description{background:#eef4ff;border-left:4px solid #003366;padding:10px;margin-bottom:12px;}
   .pseudocode{background:#0f1724;color:#e6eefc;padding:14px;border-radius:8px;font-family:Consolas,monospace;white-space:pre;}
-  .blank{display:inline-block;min-width:70px;padding:5px 8px;border:1px dashed #88a;border-radius:5px;margin:2px;color:#ccc;}
+  .blank{
+    display:inline-block;
+    padding:5px 8px;
+    border:1px dashed #88a;
+    border-radius:5px;
+    margin:2px;
+    color:#ccc;
+    min-width:auto;
+    transition:all 0.2s ease;
+  }
   .blank.correct{background:#d1fae5;color:#064e3b;border:1px solid #059669;}
   .blank.incorrect{background:#fee2e2;color:#7f1d1d;border:1px solid #dc2626;}
   .token{display:inline-block;background:#fff;border:1px solid #ccc;border-radius:6px;padding:6px 8px;margin:3px;cursor:grab;box-shadow:0 2px 5px rgba(0,0,0,0.1);}
@@ -133,7 +142,7 @@ const puzzles = [
   {
     title:"Advanced string and number mix",
     description:"No input. Task: Write pseudocode that extracts part of a text, converts it into a number, adds 3 to it, rounds the result, and then outputs the final value.",
-    lines:["___1___ ___2___ ___3___X12Y___4___","___5___ ___6___ ___7___ ___8___ ___9___ ___10___ 2 ___11___ 2 ___12___","___13___ ___14___ ___15___ ___16___ ___17___ ) + 3","___18___ ___19___"],
+    lines:["___1___ ___2___ ___3___X12Y___4___","___5___ ___6___ ___7___ ___8___ ___9___ ___10___ 2 ___11___ 2 ___12___","___13___ ___14___ ___15___ ___16___ ( ___17___ ) + 3","___18___ ___19___"],
     bank:["Text","NumStr","Num","←","=","SUBSTRING","ROUND","OUTPUT","(","Text",",",")","+","-","*","2","3","\"","'"],
     answers:{"1":"Text","2":"←","3":'"',"4":'"',"5":"NumStr","6":"←","7":"SUBSTRING","8":"(","9":"Text","10":",","11":",","12":")","13":"Num","14":"←","15":"ROUND","16":"(","17":"NumStr","18":"OUTPUT","19":"Num"}
   }
@@ -167,10 +176,33 @@ function renderPuzzle(i){
   selectEl.innerHTML=puzzles.map((pz,idx)=>`<option value="${idx}" ${idx===i?"selected":""}>${idx+1}. ${pz.title}</option>`).join("");
 }
 
-function place(v,b){b.innerHTML=`<span class='placed-clone' data-value='${v}'>${v}</span>`;clearSelection();}
+function place(v,b){
+  b.innerHTML = `<span class='placed-clone' data-value='${v}'>${v}</span>`;
+  b.style.minWidth = "auto";
+  b.style.width = "auto";
+  b.style.display = "inline-block";
+  clearSelection();
+}
+
 function getValue(b){const c=b.querySelector('.placed-clone');return c?c.dataset.value:null;}
-function validate(){const p=puzzles[puzzleIndex];let ok=true;for(const [n,a] of Object.entries(p.answers)){const b=document.querySelector(`[data-blank="${n}"]`);const v=getValue(b);if(v===a){b.classList.add('correct');b.classList.remove('incorrect');}else{b.classList.add('incorrect');b.classList.remove('correct');ok=false;}}statusEl.textContent=ok?"All correct! 🎉":"Some blanks are incorrect.";}
-function reset(){renderPuzzle(puzzleIndex);}
+
+function validate(){
+  const p=puzzles[puzzleIndex];let ok=true;
+  for(const [n,a] of Object.entries(p.answers)){
+    const b=document.querySelector(`[data-blank="${n}"]`);
+    const v=getValue(b);
+    if(v===a){b.classList.add('correct');b.classList.remove('incorrect');}
+    else{b.classList.add('incorrect');b.classList.remove('correct');ok=false;}
+  }
+  statusEl.textContent=ok?"All correct! 🎉":"Some blanks are incorrect.";
+}
+
+function reset(){
+  renderPuzzle(puzzleIndex);
+  // Reapply default blank size for visibility
+  document.querySelectorAll('.blank').forEach(b=>{b.style.minWidth="70px";});
+}
+
 document.getElementById('submitBtn').onclick=validate;
 document.getElementById('resetBtn').onclick=reset;
 document.getElementById('nextBtn').onclick=()=>{puzzleIndex=(puzzleIndex+1)%puzzles.length;renderPuzzle(puzzleIndex);};

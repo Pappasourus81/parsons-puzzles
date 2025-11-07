@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Code Shuffler – FOR Loops</title>
+  <style>
+    :root{
+      --gap: 12px;
+      --card-bg: #f8f9fb;
+      --slot-border: #ccccd6;
+      --ok: #d4f7d9;
+      --bad: #ffd6d6;
+      --accent: #0066cc;
+    }
+    body{
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin: 18px;
+      background: #ffffff;
+      color:#111;
+    }
+    h1{ margin: 0 0 14px 0; font-size: 20px; }
+    .controls{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center }
+    button{
+      background:var(--accent);
+      color:white;
+      border: none;
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:14px;
+    }
+    button.secondary{ background:#666; }
+    .layout{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      align-items:start;
+    }
+    .panel{
+      background:var(--card-bg);
+      padding:12px;
+      border-radius:10px;
+      box-shadow: 0 2px 6px rgba(10,10,20,0.03);
+    }
+    .puzzle-box{
+      margin:10px 0 12px 0;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #d1d7df;
+      background:#ffffff;
+      box-shadow:0 1px 3px rgba(10,10,20,0.04);
+      font-size:14px;
+      font-weight:600;
+      color:#222;
+    }
+    .scrambled-box{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      padding:10px;
+      border: 2px dashed var(--slot-border);
+      min-height: 120px;
+      border-radius:8px;
+      background: #fff;
+    }
+    .piece{
+      padding:8px 10px;
+      background:white;
+      border-radius:6px;
+      box-shadow:0 1px 2px rgba(0,0,0,0.05);
+      cursor:grab;
+      user-select:none;
+      white-space:pre-wrap;
+      font-family: "Courier New", monospace;
+      font-size: 13px;
+      border:1px solid transparent;
+      transition: transform 200ms ease, background-color 200ms ease, border-color 200ms ease;
+    }
+    .piece.dragover{ outline:2px dashed #0066cc; }
+    .piece.picked{ transform: scale(1.02); box-shadow:0 4px 10px rgba(0,0,0,0.08); }
+    .swap-anim {
+      animation: swapFlash 280ms ease;
+    }
+    @keyframes swapFlash {
+      0% { transform: translateY(0) scale(1); }
+      25% { transform: translateY(-6px) scale(1.02); }
+      60% { transform: translateY(2px) scale(.995); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    .message{ margin-top:10px; font-weight:600; }
+    .meta{ font-size:14px; color:#444; margin-bottom:8px; }
+    @media (max-width:900px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Code Shuffler – FOR Loops</h1>
+  <div class="meta">Drag lines to reorder them. Drop a line onto another to swap places. Submit to check.</div>
+
+  <div class="puzzle-box" id="puzzleDescription">Select a puzzle to see its description.</div>
+
+  <div class="layout">
+    <div class="panel">
+      <strong>Scrambled code (reorder here)</strong>
+      <div id="scrambled" class="scrambled-box" aria-label="scrambled code lines"></div>
+      <div class="controls">
+        <button id="submitBtn">Submit</button>
+        <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
+        <button id="nextBtn">New Puzzle</button>
+        <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+          <label style="font-size:13px; color:#333">Puzzle:
+            <select id="puzzleSelect" style="margin-left:6px; padding:6px; border-radius:6px;"></select>
+          </label>
+        </div>
+      </div>
+      <div id="message" class="message" role="status"></div>
+    </div>
+  </div>
+
+<script>
+const puzzles = [
+  {
+    title: "Basic Output Loop",
+    description: "Task: use a FOR loop to print the numbers 1 to 5. No input required. Example output: 1 2 3 4 5 (each number on its own line).",
+    lines: [
+      "BEGIN",
+      "    FOR i = 1 TO 5 DO",
+      "    OUTPUT i",
+      "    NEXT i",
+      "END"
+    ]
+  },
+  {
+    title: "Output with Arithmetic",
+    description: "Task: use a FOR loop to output the square of each number from 1 to 5. No input required. Example output: 1 4 9 16 25.",
+    lines: [
+      "BEGIN",
+      "    FOR i = 1 TO 5 DO",
+      "    OUTPUT i * i",
+      "    NEXT i",
+      "END"
+    ]
+  },
+  {
+    title: "FOR Loop with Input and Output",
+    description: "Task: ask the user to enter 5 numbers and output each one doubled. Input: the user types 5 numbers when prompted. Example: entering 3 prints 6.",
+    lines: [
+      "BEGIN",
+      "    FOR i = 1 TO 5 DO",
+      "    OUTPUT \"Enter number:\"",
+      "    INPUT n",
+      "    OUTPUT n * 2",
+      "    NEXT i",
+      "END"
+    ]
+  },
+  {
+    title: "FOR Loop with Accumulation",
+    description: "Task: ask the user to enter 4 numbers, add them together inside the loop, and output the total after the loop ends. Example: entering 1,2,3,4 outputs 10.",
+    lines: [
+      "BEGIN",
+      "    total = 0",
+      "    FOR i = 1 TO 4 DO",
+      "    INPUT num",
+      "    total = total + num",
+      "    NEXT i",
+      "    OUTPUT total",
+      "END"
+    ]
+  },
+  {
+    title: "FOR Loop with Conditional Output",
+    description: "Task: ask the user to enter 5 numbers and output only the even numbers. Input: 5 numbers. Example: entering 2,3,4,5,6 outputs 2,4,6.",
+    lines: [
+      "BEGIN",
+      "    FOR i = 1 TO 5 DO",
+      "    INPUT val",
+      "    IF val MOD 2 = 0 THEN",
+      "    OUTPUT val",
+      "    ENDIF",
+      "    NEXT i",
+      "END"
+    ]
+  },
+  {
+    title: "FOR Loop Containing IF–ELSE",
+    description: "Task: ask the user to enter 5 numbers and for each print Even if the number is even, otherwise print Odd. Example: entering 4 prints Even.",
+    lines: [
+      "BEGIN",
+      "    FOR i = 1 TO 5 DO",
+      "    INPUT x",
+      "    IF x MOD 2 = 0 THEN",
+      "    OUTPUT \"Even\"",
+      "    ELSE",
+      "    OUTPUT \"Odd\"",
+      "    ENDIF",
+      "    NEXT i",
+      "END"
+    ]
+  },
+  {
+    title: "FOR Loop Counting Specific Values",
+    description: "Task: ask the user to enter 5 test scores and count how many are greater than 50. After the loop output the count. Example: entering 60,45,70,50,55 outputs 3.",
+    lines: [
+      "BEGIN",
+      "    count = 0",
+      "    FOR i = 1 TO 5 DO",
+      "    INPUT score",
+      "    IF score > 50 THEN",
+      "    count = count + 1",
+      "    ENDIF",
+      "    NEXT i",
+      "    OUTPUT count",
+      "END"
+    ]
+  },
+  {
+    title: "FOR Loop with Step Increment",
+    description: "Task: use a FOR loop with a STEP to output every second number from 2 to 10. No input required. Example output: 2 4 6 8 10.",
+    lines: [
+      "BEGIN",
+      "    FOR i = 2 TO 10 STEP 2 DO",
+      "    OUTPUT i",
+      "    NEXT i",
+      "END"
+    ]
+  },
+  {
+    title: "Nested FOR Loop – Grid Pattern",
+    description: "Task: use nested FOR loops to output a 3×3 grid of * characters (three rows of three stars). No input required. Example output:\n*\n*\n* (three stars per row, three rows).",
+    lines: [
+      "BEGIN",
+      "    FOR r = 1 TO 3 DO",
+      "    FOR c = 1 TO 3 DO",
+      "    OUTPUT \"*\"",
+      "    NEXT c",
+      "    NEXT r",
+      "END"
+    ]
+  },
+  {
+    title: "Nested FOR Loop with Logic – Number Triangle",
+    description: "Task: use nested FOR loops to output a growing number triangle: first row 1, second row 12, third 123, fourth 1234. No input required. Example output: 1 on first line, 12 on second, etc.",
+    lines: [
+      "BEGIN",
+      "    FOR i = 1 TO 4 DO",
+      "    FOR j = 1 TO i DO",
+      "    OUTPUT j",
+      "    NEXT j",
+      "    NEXT i",
+      "END"
+    ]
+  }
+];
+
+let currentIndex = 0;
+let currentOrder = [];
+const scrambledEl = document.getElementById('scrambled');
+const messageEl = document.getElementById('message');
+const puzzleSelect = document.getElementById('puzzleSelect');
+const puzzleDescriptionEl = document.getElementById('puzzleDescription');
+
+puzzles.forEach((p, i) => {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `${i+1}. ${p.title}`;
+  puzzleSelect.appendChild(opt);
+});
+
+puzzleSelect.addEventListener('change', e => {
+  currentIndex = parseInt(e.target.value, 10);
+  loadPuzzle(currentIndex);
+});
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function renderScrambled() {
+  scrambledEl.innerHTML = '';
+  currentOrder.forEach((line, idx) => {
+    const el = document.createElement('div');
+    el.className = 'piece';
+    el.draggable = true;
+    el.dataset.index = idx;
+    el.dataset.line = line;
+    el.textContent = line;
+
+    el.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', idx);
+      e.dataTransfer.effectAllowed = 'move';
+      el.classList.add('picked');
+    });
+
+    el.addEventListener('dragend', () => el.classList.remove('picked'));
+
+    el.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      el.classList.add('dragover');
+    });
+    el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      el.classList.remove('dragover');
+      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      const toIdx = parseInt(el.dataset.index, 10);
+      if (!Number.isNaN(fromIdx) && !Number.isNaN(toIdx) && fromIdx !== toIdx) {
+        swapItems(fromIdx, toIdx);
+        renderScrambled();
+        setTimeout(() => {
+          const children = Array.from(scrambledEl.children);
+          const a = children[toIdx];
+          const b = children[fromIdx];
+          if (a) { a.classList.add('swap-anim'); setTimeout(()=>a.classList.remove('swap-anim'), 300); }
+          if (b) { b.classList.add('swap-anim'); setTimeout(()=>b.classList.remove('swap-anim'), 300); }
+        }, 10);
+      }
+    });
+
+    el.addEventListener('click', () => {
+      const prev = scrambledEl.querySelector('.picked');
+      if (prev && prev !== el) {
+        const i1 = parseInt(prev.dataset.index,10);
+        const i2 = parseInt(el.dataset.index,10);
+        swapItems(i1,i2);
+        prev.classList.remove('picked');
+        renderScrambled();
+        setTimeout(()=>{
+          const children = Array.from(scrambledEl.children);
+          const a = children[i1];
+          const b = children[i2];
+          if (a) { a.classList.add('swap-anim'); setTimeout(()=>a.classList.remove('swap-anim'), 300); }
+          if (b) { b.classList.add('swap-anim'); setTimeout(()=>b.classList.remove('swap-anim'), 300); }
+        },10);
+      } else {
+        scrambledEl.querySelectorAll('.picked').forEach(x=>x.classList.remove('picked'));
+        el.classList.add('picked');
+      }
+    });
+
+    scrambledEl.appendChild(el);
+  });
+}
+
+function swapItems(i, j) {
+  const tmp = currentOrder[i];
+  currentOrder[i] = currentOrder[j];
+  currentOrder[j] = tmp;
+}
+
+function resetPuzzle() {
+  const puzzle = puzzles[currentIndex];
+  currentOrder = puzzle.lines.slice();
+  shuffle(currentOrder);
+  renderScrambled();
+  messageEl.textContent = '';
+}
+
+function submitPuzzle() {
+  const puzzle = puzzles[currentIndex];
+  const correct = puzzle.lines;
+  let allCorrect = true;
+  const pieces = Array.from(scrambledEl.children);
+  pieces.forEach((p, i) => {
+    p.style.background = '';
+    p.style.borderColor = '';
+    const text = p.dataset.line.trim();
+    if (text === correct[i].trim()) {
+      p.style.background = 'var(--ok)';
+      p.style.borderColor = '#2a9a4a';
+    } else {
+      p.style.background = 'var(--bad)';
+      p.style.borderColor = '#c44';
+      allCorrect = false;
+    }
+  });
+  if (allCorrect) {
+    messageEl.textContent = 'All correct! Well done 🎉';
+    messageEl.style.color = '#1a7f3a';
+  } else {
+    messageEl.textContent = 'Some lines are incorrect — incorrect lines are highlighted.';
+    messageEl.style.color = '#a00';
+  }
+}
+
+function nextPuzzle() {
+  currentIndex = (currentIndex + 1) % puzzles.length;
+  puzzleSelect.value = currentIndex;
+  loadPuzzle(currentIndex);
+}
+
+function loadPuzzle(index) {
+  currentIndex = index;
+  puzzleDescriptionEl.textContent = puzzles[index].description || '';
+  resetPuzzle();
+}
+
+document.getElementById('submitBtn').addEventListener('click', submitPuzzle);
+document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
+document.getElementById('nextBtn').addEventListener('click', nextPuzzle);
+
+puzzleSelect.value = 0;
+loadPuzzle(0);
+</script>
+</body>
+</html>

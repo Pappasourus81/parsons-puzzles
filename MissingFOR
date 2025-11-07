@@ -37,7 +37,7 @@
 </head>
 <body>
   <h1>FOR Loops- Fill in the blanks</h1>
-  <div class="meta">Place the correct token into each blank. Use drag & drop, or keyboard: Tab to token → Enter to pick → Tab to blank → Enter to place. Tokens remain available after use. Difficulty increases across puzzles — later puzzles have more blanks and distractors.</div>
+  <div class="meta">Place the correct token into each blank. Use drag & drop, or keyboard: Tab to token → Enter to pick → Tab to blank → Enter to place.</div>
 
   <div class="panel">
     <div id="desc" class="desc-box">
@@ -55,7 +55,7 @@
 
     <div class="bank" id="bank" aria-label="token bank"></div>
 
-    <div class="keyboard-hint">Tip: click a token to select it, then click a blank to place it. You can reuse tokens freely.</div>
+    <div class="keyboard-hint">Tip: click a token to select it, then click a blank to place it.</div>
 
     <div class="controls">
       <button id="submitBtn" class="action">Submit</button>
@@ -72,12 +72,9 @@
   </div>
 
 <script>
-/*
- Reverted student-facing version with:
-  - bullets, short hint, example toggle
-  - Reveal hint fills a random eligible blank
-  - Up to 3 reveal hints per puzzle (tracked per puzzle in-session)
-  - Tokens remain in bank (reusable)
+/* Student-facing version
+   - Random reveal hint up to 3 per puzzle
+   - Removed the sentence you requested from the instructions text
 */
 
 const MAX_HINTS_PER_PUZZLE = 3;
@@ -269,7 +266,7 @@ const puzzles = [
   }
 ];
 
-// UI elements
+// Elements
 const bankEl = document.getElementById('bank');
 const codeArea = document.getElementById('codeArea');
 const descTitle = document.getElementById('descTitle');
@@ -283,8 +280,7 @@ const puzzleSelect = document.getElementById('puzzleSelect');
 
 let currentIndex = 0;
 let selectedToken = null;
-// track used hints count per puzzle (in-memory)
-const usedHintsCount = {}; // e.g. usedHintsCount[0] = 1
+const usedHintsCount = {}; // in-memory per puzzle
 
 // Helpers
 function shuffleArray(a){
@@ -295,15 +291,17 @@ function shuffleArray(a){
 }
 
 function populatePuzzleSelect(){
+  puzzleSelect.innerHTML = '';
   puzzles.forEach((p,i)=>{
     const opt = document.createElement('option');
     opt.value = i;
     opt.textContent = `${i+1}. ${p.title}`;
     puzzleSelect.appendChild(opt);
   });
+  puzzleSelect.value = 0; // ensure the first puzzle is selected by default
 }
 
-// Render description (bullets, hint, example toggle)
+// Render description & hint
 function renderDescription(p){
   descTitle.textContent = p.title || '';
   descBullets.innerHTML = '';
@@ -327,7 +325,7 @@ function renderDescription(p){
   updateRevealHintBtn();
 }
 
-// Toggle example visibility
+// Example toggle
 toggleExample.addEventListener('click', ()=>{
   const visible = exampleBox.style.display !== 'none';
   if(visible){
@@ -362,7 +360,7 @@ function renderCode(puzzle){
       span.dataset.filled = 'false';
       span.dataset.token = '';
       span.textContent = `___${num}___`;
-      // drag & drop
+      // drag/drop
       span.addEventListener('dragover', e => { e.preventDefault(); span.classList.add('dragover'); });
       span.addEventListener('dragleave', ()=> span.classList.remove('dragover'));
       span.addEventListener('drop', e => {
@@ -371,7 +369,7 @@ function renderCode(puzzle){
         const tok = e.dataTransfer.getData('text/plain');
         placeTokenInBlank(tok, span);
       });
-      // click / keyboard place selected token
+      // click / keyboard
       span.addEventListener('click', ()=> { if(selectedToken) placeTokenInBlank(selectedToken.val, span); });
       span.addEventListener('keydown', (e)=> { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); if(selectedToken) placeTokenInBlank(selectedToken.val, span); }});
       lineDiv.appendChild(span);
@@ -383,7 +381,7 @@ function renderCode(puzzle){
   });
 }
 
-// Render bank (tokens remain after use)
+// Render token bank
 function renderBank(tokens){
   bankEl.innerHTML = '';
   const arr = tokens.slice();
@@ -424,7 +422,7 @@ function placeTokenInBlank(tokenValue, blankEl){
   selectedToken = null;
 }
 
-// Reset current puzzle: clear blanks, reshuffle bank
+// Reset puzzle (clear blanks and reshuffle tokens)
 function resetCurrent(){
   const p = puzzles[currentIndex];
   document.querySelectorAll('.blank').forEach(b=>{
@@ -437,13 +435,12 @@ function resetCurrent(){
   msgEl.textContent = '';
   document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
   selectedToken = null;
-  // do not reset used hint counts unless you want that; currently we keep counts per puzzle
+  // keep used hint counts (intentional)
   updateRevealHintBtn();
-  // hide example
   exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
 }
 
-// Check answers and mark blanks
+// Check answers
 function checkAnswers(){
   const p = puzzles[currentIndex];
   const answers = p.answers || [];
@@ -453,7 +450,7 @@ function checkAnswers(){
     const placed = b.dataset.filled === 'true' ? b.dataset.token : '';
     const correct = answers[i] !== undefined ? String(answers[i]) : '';
     if(correct === '' || correct === undefined) {
-      b.classList.remove('correct','incorrect'); // not checked
+      b.classList.remove('correct','incorrect');
       return;
     }
     const placedTrim = placed !== null ? placed.toString().trim() : '';
@@ -472,7 +469,7 @@ function checkAnswers(){
   }
 }
 
-// Reveal a random eligible blank, up to MAX_HINTS_PER_PUZZLE
+// Reveal a random eligible blank (up to MAX_HINTS_PER_PUZZLE)
 function revealRandomBlank(){
   const used = usedHintsCount[currentIndex] || 0;
   if(used >= MAX_HINTS_PER_PUZZLE){
@@ -484,8 +481,96 @@ function revealRandomBlank(){
   const p = puzzles[currentIndex];
   const answers = p.answers || [];
   const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
-  // collect eligible indices where a correct answer exists and the placed token is not already correct
   const eligible = [];
   blanks.forEach((b, i)=>{
     const correct = answers[i] !== undefined ? String(answers[i]) : '';
-    if(!correct ||
+    if(!correct || correct.trim()==='') return;
+    const placed = b.dataset.filled === 'true' ? (b.dataset.token || '') : '';
+    if(placed.toString().trim() !== correct.toString().trim()){
+      eligible.push(i);
+    }
+  });
+  if(eligible.length === 0){
+    msgEl.textContent = 'All blanks are already correct or there are no defined answers to reveal.';
+    msgEl.style.color = '#444';
+    return;
+  }
+  const randIdx = eligible[Math.floor(Math.random()*eligible.length)];
+  const targetBlank = blanks[randIdx];
+  const correctVal = answers[randIdx];
+  targetBlank.dataset.token = correctVal;
+  targetBlank.dataset.filled = 'true';
+  targetBlank.textContent = correctVal;
+  targetBlank.classList.remove('incorrect'); targetBlank.classList.add('correct');
+  usedHintsCount[currentIndex] = used + 1;
+  msgEl.textContent = `Hint used: a blank has been filled (${usedHintsCount[currentIndex]} of ${MAX_HINTS_PER_PUZZLE}).`;
+  msgEl.style.color = '#0b5';
+  updateRevealHintBtn();
+}
+
+// Update reveal button label
+function updateRevealHintBtn(){
+  const used = usedHintsCount[currentIndex] || 0;
+  const left = Math.max(0, MAX_HINTS_PER_PUZZLE - used);
+  if(left <= 0){
+    revealHintBtn.disabled = true;
+    revealHintBtn.textContent = `Reveal hint (used up)`;
+    revealHintBtn.style.opacity = '0.6';
+  } else {
+    revealHintBtn.disabled = false;
+    revealHintBtn.textContent = `Reveal hint (${left} left)`;
+    revealHintBtn.style.opacity = '1';
+  }
+}
+
+// Load puzzle
+function loadPuzzle(idx){
+  if(idx < 0 || idx >= puzzles.length) idx = 0;
+  currentIndex = idx;
+  const p = puzzles[currentIndex];
+  // description
+  descTitle.textContent = p.title || '';
+  descBullets.innerHTML = '';
+  (p.bullets || []).forEach(b => {
+    const li = document.createElement('li');
+    li.textContent = b;
+    descBullets.appendChild(li);
+  });
+  teacherHint.textContent = p.hint || '';
+  if(p.example && p.example.trim().length > 0){
+    toggleExample.style.display = 'inline-block';
+    exampleBox.textContent = p.example;
+    exampleBox.style.display = 'none';
+    exampleBox.setAttribute('aria-hidden','true');
+    toggleExample.textContent = 'Show example output';
+  } else {
+    toggleExample.style.display = 'none';
+    exampleBox.style.display = 'none';
+    exampleBox.setAttribute('aria-hidden','true');
+  }
+  renderCode(p);
+  renderBank(p.bank.slice());
+  msgEl.textContent = '';
+  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  selectedToken = null;
+  updateRevealHintBtn();
+  exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
+}
+
+// Events
+document.getElementById('submitBtn').addEventListener('click', checkAnswers);
+document.getElementById('resetBtn').addEventListener('click', resetCurrent);
+document.getElementById('nextBtn').addEventListener('click', ()=> {
+  currentIndex = (currentIndex + 1) % puzzles.length;
+  puzzleSelect.value = currentIndex;
+  loadPuzzle(currentIndex);
+});
+puzzleSelect.addEventListener('change', (e)=> loadPuzzle(Number(e.target.value)));
+revealHintBtn.addEventListener('click', revealRandomBlank);
+
+// Init
+populatePuzzleSelect();
+loadPuzzle(0);
+</script>
+</body>
+</html>

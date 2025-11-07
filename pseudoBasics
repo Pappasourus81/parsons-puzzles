@@ -1,714 +1,637 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Missing Code- Pseudocode Basics</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    :root{
-      --bg:#0f1724;
-      --card:#0b1220;
-      --accent:#0ea5a4;
-      --muted:#94a3b8;
-      --glass: rgba(255,255,255,0.03);
-      --success: #16a34a;
-      --danger: #ef4444;
-      --white: #eef2ff;
-      --shadow: 0 10px 30px rgba(2,6,23,0.7);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
-    html,body{height:100%}
-    body{
-      margin:0;
-      min-height:100%;
-      background: linear-gradient(180deg,#071029 0%, #071b2a 60%, #041020 100%);
-      color:var(--white);
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      padding:28px;
-      -webkit-font-smoothing:antialiased;
-    }
-
-    .wrap{
-      width:100%;
-      max-width:1100px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius:12px;
-      padding:20px;
-      box-shadow:var(--shadow);
-      border:1px solid rgba(255,255,255,0.03);
-      backdrop-filter: blur(4px);
-    }
-
-    header h1{
-      margin:0 0 6px 0;
-      font-size:20px;
-      letter-spacing:0.2px;
-    }
-    header p.lead{
-      margin:0 0 16px 0;
-      color:var(--muted);
-      font-size:14px;
-    }
-
-    .controls{
-      display:flex;
-      gap:10px;
-      margin-bottom:14px;
-      flex-wrap:wrap;
-    }
-    button{
-      background:var(--glass);
-      color:var(--white);
-      border:1px solid rgba(255,255,255,0.04);
-      padding:8px 12px;
-      border-radius:8px;
-      cursor:pointer;
-      font-weight:600;
-    }
-    button.primary{background:linear-gradient(90deg,var(--accent), #06b6d4); color:#022;}
-    button:active{transform:translateY(1px)}
-    .muted{color:var(--muted); font-size:13px}
-
-    .panel{
-      display:grid;
-      grid-template-columns: 1fr 360px;
-      gap:18px;
-      align-items:start;
-    }
-
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
-      border-radius:12px;
-      padding:14px;
-      border:1px solid rgba(255,255,255,0.03);
-    }
-
-    .description{
-      font-size:14px;
-      color:var(--muted);
-      margin-bottom:8px;
-      line-height:1.45;
-    }
-    .example{
-      background: rgba(255,255,255,0.02);
-      padding:10px;
-      border-radius:8px;
-      font-family: "Courier New", monospace;
-      font-size:13px;
-      color:var(--white);
-      margin-top:8px;
-    }
-
-    /* Scrambled lines area */
-    .scramble-area{
-      min-height: 220px;
-      display:flex;
-      gap:12px;
-      align-items:flex-start;
-      flex-direction:column;
-    }
-
-    .lines{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    .line{
-      background: linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
-      padding:10px;
-      border-radius:8px;
-      border:1px solid rgba(255,255,255,0.02);
-      display:flex;
-      gap:10px;
-      align-items:center;
-      cursor:grab;
-      user-select:none;
-      font-family: "Courier New", monospace;
-      font-size:13px;
-    }
-    .line.dragging{opacity:0.6; transform:scale(1.01)}
-    .line .idx{
-      opacity:0.6;
-      width:28px;
-      text-align:center;
-      font-weight:700;
-      color:var(--muted);
-    }
-    .placeholder{
-      opacity:0.5;
-      color:var(--muted);
-      font-style:italic;
-    }
-
-    .bank{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:10px;
-    }
-    .token{
-      background:rgba(255,255,255,0.03);
-      padding:6px 9px;
-      border-radius:6px;
-      border:1px solid rgba(255,255,255,0.03);
-      cursor:grab;
-      font-family: "Courier New", monospace;
-      font-size:13px;
-    }
-
-    .blank-drop{
-      display:inline-block;
-      min-width:36px;
-      padding:2px 6px;
-      border-bottom:2px dashed rgba(255,255,255,0.12);
-      margin:0 6px;
-      color:var(--muted);
-      font-weight:700;
-    }
-    .blank-drop.filled{
-      border-bottom-style:solid;
-      color:var(--white);
-    }
-
-    .status{
-      margin-top:8px;
-      font-weight:700;
-    }
-
-    .tokens-column{
-      max-height:420px;
-      overflow:auto;
-    }
-
-    .footer{
-      margin-top:16px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-    }
-
-    .legend{
-      display:flex;
-      gap:8px;
-      align-items:center;
-    }
-    .swatch{width:12px; height:12px; border-radius:3px; display:inline-block}
-
-    /* success / danger */
-    .line.correct{
-      border-color: rgba(22,163,74,0.4);
-      background: linear-gradient(90deg, rgba(16,185,129,0.07), rgba(255,255,255,0.01));
-      box-shadow: 0 6px 16px rgba(16,185,129,0.06);
-    }
-    .line.incorrect{
-      border-color: rgba(239,68,68,0.22);
-      background: linear-gradient(90deg, rgba(239,68,68,0.03), rgba(255,255,255,0.01));
-    }
-
-    @media (max-width:980px){
-      .panel{grid-template-columns: 1fr}
-      .tokens-column{max-height:none}
-    }
-
-    .fade-in { animation: fadeIn .35s ease both; }
-    @keyframes fadeIn { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none} }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Code Shuffler – Syntax and Data Types</title>
+<style>
+  :root{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --accent:#0b66ff;
+    --muted:#6b7280;
+    --good:#d1fae5;
+    --bad:#fee2e2;
+    --bank-gap:8px;
+    --shadow: 0 6px 18px rgba(13,30,60,0.08);
+    --radius:12px;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#f8fbff, #f6f8fb);}
+  .wrap{max-width:980px;margin:28px auto;padding:20px;}
+  header{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+  h1{font-size:20px;margin:0;color:#07203a}
+  .meta{color:var(--muted);font-size:13px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+  .description{background:linear-gradient(90deg,#ffffff,#fbfdff);border-radius:10px;padding:12px;border:1px solid #e6eefc}
+  .pseudocode{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;background:#0f1724;color:#e6eefc;padding:12px;border-radius:8px;margin-top:12px;white-space:pre;line-height:1.6;display:block;}
+  .line{display:block}
+  .controls{display:flex;gap:8px;align-items:center;margin-top:12px}
+  button{background:var(--accent);color:white;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600;box-shadow:0 6px 12px rgba(11,102,255,0.12)}
+  button.secondary{background:#eef3ff;color:var(--accent);box-shadow:none}
+  button:disabled{opacity:0.6;cursor:not-allowed}
+  .bank{display:flex;flex-wrap:wrap;gap:var(--bank-gap);margin-top:12px}
+  .token{display:inline-block;padding:8px 10px;border-radius:8px;background:#fff;border:1px solid #e6eefc;cursor:grab;box-shadow:0 4px 10px rgba(11,102,255,0.06);min-width:36px;text-align:center}
+  .token:active{cursor:grabbing}
+  .token[draggable="true"]{user-select:none}
+  .blank{display:inline-block;min-width:64px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.12);margin:0 4px;vertical-align:middle;color:#fff}
+  .blank.empty{opacity:0.7}
+  .blank.correct{background:var(--good);color:#064e3b;border-style:solid;border-color:#86efac}
+  .blank.incorrect{background:var(--bad);color:#7f1d1d;border-style:solid;border-color:#fca5a5}
+  .bank-wrap{margin-top:12px}
+  .hint{color:var(--muted);font-size:13px;margin-top:8px}
+  .status{margin-top:12px;font-weight:600}
+  /* focus outlines for accessibility */
+  .token:focus, .blank:focus, button:focus {outline:3px solid rgba(11,102,255,0.12);outline-offset:3px}
+  /* subtle animations */
+  .token{transition:transform .12s ease, box-shadow .12s ease}
+  .token:active{transform:scale(.98)}
+  .token.to-bank{animation:pop .18s ease}
+  @keyframes pop{0%{transform:scale(.85)}100%{transform:scale(1)}}
+  /* responsive */
+  @media (max-width:640px){
+    .wrap{padding:12px}
+    .token{padding:8px}
+  }
+  /* visually-hidden for screen-readers only */
+  .sr-only{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <h1>Missing Code- Pseudocode Basics</h1>
-      <p class="lead">Short syntax puzzles — no BEGIN/END lines. Reorder any scrambled lines (usually 1–2 lines) and drag tokens into the blanks. Press <strong>Submit</strong>.</p>
-    </header>
+<div class="wrap" id="app">
+  <header>
+    <div>
+      <h1>Code Shuffler – Syntax and Data Types</h1>
+      <div class="meta">Fill the numbered blanks using tokens from the bank. Drag or keyboard-place tokens. Focusable and accessible.</div>
+    </div>
+  </header>
 
-    <div class="controls">
-      <button id="resetBtn">Reset (reshuffle)</button>
-      <button id="submitBtn" class="primary">Submit</button>
-      <button id="nextBtn">Next Puzzle ➜</button>
+  <section class="card" id="puzzleCard" aria-live="polite">
+    <div id="puzzleMeta" class="description" role="region" aria-label="Puzzle description">
+      <!-- description injected here -->
+    </div>
+
+    <pre class="pseudocode" id="codeArea" aria-label="Pseudocode area">
+      <!-- pseudocode lines injected here -->
+    </pre>
+
+    <div class="bank-wrap card" aria-label="Token bank area">
+      <div><strong>Token bank</strong></div>
+      <div id="bank" class="bank" role="list" aria-label="Tokens available for placing"></div>
+      <div class="hint">Tip: Use Tab to navigate tokens and blanks. Press Enter to pick/place.</div>
+    </div>
+
+    <div class="controls" role="region" aria-label="Puzzle controls">
+      <button id="submitBtn">Submit</button>
+      <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
+      <button id="nextBtn" class="secondary">Next Puzzle</button>
       <div style="flex:1"></div>
-      <div class="muted">Puzzle <span id="pIndex">1</span> / 10</div>
+      <div id="status" class="status" aria-live="polite"></div>
     </div>
 
-    <div class="panel">
-      <div class="card fade-in">
-        <div id="pTitle" style="font-weight:800; margin-bottom:6px">Title</div>
-        <div id="pDesc" class="description">Description</div>
-        <div id="pExample" class="example"></div>
-
-        <div style="margin-top:12px; font-weight:700; margin-bottom:8px">Scrambled code — drag to reorder</div>
-        <div class="scramble-area">
-          <div class="lines" id="linesContainer"></div>
-        </div>
-
-        <div class="footer">
-          <div class="legend">
-            <div><span class="swatch" style="background:var(--success)"></span> correct</div>
-            <div><span class="swatch" style="background:var(--danger)"></span> incorrect</div>
-          </div>
-          <div id="feedback" class="muted">Reorder lines and fill blanks, then Submit.</div>
-        </div>
-      </div>
-
-      <div class="card tokens-column fade-in">
-        <div style="font-weight:800">Token bank (drag tokens into blanks)</div>
-        <div class="muted" style="font-size:13px; margin-bottom:8px">Tokens include correct answers + distractors. Click a filled blank to return its token to the bank.</div>
-        <div id="bank" class="bank"></div>
-
-        <div style="margin-top:12px; font-weight:700">Token hints</div>
-        <div id="tokenInfo" class="muted" style="font-size:13px; margin-top:6px"></div>
-      </div>
+    <div style="margin-top:12px;color:var(--muted);font-size:13px">
+      <strong>Notes:</strong> This activity uses tokens and pseudocode style consistent with the IGCSE pseudocode guide (Topics 2 and 4). No loops or conditionals are used.
     </div>
+  </section>
 
-  </div>
+  <footer style="text-align:center;color:var(--muted);font-size:13px;margin-top:10px">
+    <div>Made for classroom use — single-file, static, embeddable in Google Sites.</div>
+  </footer>
+</div>
 
-  <script>
-    // small helper: create element
-    function el(tag, attrs={}, text=''){ const e=document.createElement(tag); for(const k in attrs) e.setAttribute(k, attrs[k]); if(text) e.textContent=text; return e; }
+<script>
+/*
+  Code Shuffler – Syntax and Data Types
+  - Single-file static page with 10 puzzles using Topics 2 and 4 from the provided IGCSE pseudocode guide.
+  - How to modify puzzles: edit the `puzzles` array below.
+    Each puzzle must include:
+      - title (string)
+      - description (string)
+      - lines (array of strings) : each pseudocode line (no indentation). Use ___1___, ___2___ etc as placeholders.
+      - bank (array of token strings) : tokens are single items shown inside the bank (include correct tokens and distractors)
+      - answers (object mapping blank number (1-based string) to the exact expected token string)
+  - The UI handles drag-and-drop, click-to-select, keyboard (Tab + Enter) placement, swapping and validation.
+*/
 
-    // shuffle
-    function shuffle(arr){
-      const a = arr.slice();
-      for(let i=a.length-1;i>0;i--){
-        const j = Math.floor(Math.random()*(i+1));
-        [a[i],a[j]] = [a[j],a[i]];
-      }
-      return a;
+/* ------------------------------
+   PUZZLES DEFINITION (10 puzzles)
+   - All puzzles contain only syntax, data types, assignments, INPUT/OUTPUT or function calls (no IF/LOOP).
+   - Blanks use the format ___1___, ___2___ ... in reading order (left-to-right, top-to-bottom).
+--------------------------------*/
+const puzzles = [
+  // Puzzle 1: Very simple OUTPUT with missing keyword and quotes (3 blanks)
+  {
+    title: "Simple output and quotes",
+    description: "Expected: no input. Outputs the text Hello. Example output: Hello",
+    lines: [
+      "___1___ ___2___Hello___3___"
+    ],
+    bank: ["OUTPUT", '"', "'", "PRINT", "OUTPUTS", "Hello", " "],
+    answers: {"1":"OUTPUT","2":'"',"3":'"'}
+  },
+
+  // Puzzle 2: INPUT into a variable and OUTPUT (3 blanks)
+  {
+    title: "Read and echo",
+    description: "Input one word (a name). The program then outputs that name. Example: input Ali → output Ali",
+    lines: [
+      "___1___ Name",
+      "___2___ Name"
+    ],
+    bank: ["INPUT","OUTPUT","READ","PRINT","Name","Name:"],
+    answers: {"1":"INPUT","2":"OUTPUT"}
+  },
+
+  // Puzzle 3: Assignment with arithmetic and correct assignment arrow (4 blanks)
+  {
+    title: "Assignment and addition",
+    description: "No input. Assign 5 to A then add 3 and store in B. Example final B = 8",
+    lines: [
+      "A ___1___ 5",
+      "B ___2___ A ___3___ 3"
+    ],
+    bank: ["←","+","=","-","5","3","<-"],
+    answers: {"1":"←","2":"←","3":"+"}
+  },
+
+  // Puzzle 4: Mixed types — concatenation in OUTPUT (4 blanks)
+  {
+    title: "String and number concatenation",
+    description: "Assume Name = \"Sam\" and Score = 10. Output should be: You scored 10. Example: You scored 10",
+    lines: [
+      "Name ___1___ \"Sam\"",
+      "Score ___2___ 10.0",
+      "___3___ \"You scored \" , ___4___"
+    ],
+    bank: ["←", "=", "OUTPUT", "PRINT", "Score", "Name", "10.0"],
+    answers: {"1":"←","2":"←","3":"OUTPUT","4":"Score"}
+  },
+
+  // Puzzle 5: Types and literals (CHAR vs STRING) (5 blanks)
+  {
+    title: "Char vs String literals",
+    description: "Shows the difference between CHAR (single quotes) and STRING (double quotes). Outputs a char and a string.",
+    lines: [
+      "Letter ___1___ 'A'",
+      "Word ___2___ \"A\"",
+      "___3___ Letter , \" vs \" , Word"
+    ],
+    bank: ["←","=","OUTPUT","PRINT","'","\"","Letter","Word"],
+    answers: {"1":"←","2":"←","3":"OUTPUT"}
+  },
+
+  // Puzzle 6: Integer division and MOD (5 blanks)
+  {
+    title: "DIV and MOD usage",
+    description: "Given Total = 17, compute how many full groups of 4 (GroupCount) and the remainder (Remainder). Example: GroupCount=4, Remainder=1",
+    lines: [
+      "Total ___1___ 17",
+      "GroupCount ___2___ Total ___3___ 4",
+      "Remainder ___4___ Total ___5___ 4"
+    ],
+    bank: ["←","=","DIV","MOD","/","4","17"],
+    answers: {"1":"←","2":"←","3":"DIV","4":"←","5":"MOD"}
+  },
+
+  // Puzzle 7: SUBSTRING usage with parentheses and commas (6 blanks)
+  {
+    title: "SUBSTRING with indices",
+    description: "INPUT Text. Output the substring from position 2 for length 3. Example: Text=\"Hello\" → SUBSTRING(Text,2,3) returns \"ell\"",
+    lines: [
+      "INPUT Text",
+      "Part ___1___ SUBSTRING ___2___ Text ___3___ 2 ___4___ 3 ___5___",
+      "OUTPUT Part"
+    ],
+    bank: ["←","SUBSTRING","(","Comma","Text",",",")","2","3"],
+    answers: {"1":"←","2":"SUBSTRING","3":"(","4":",","5":")"}
+    // Note: the expected tokens place parentheses and comma in the correct blanks; later validation expects exact matches.
+  },
+
+  // Puzzle 8: ROUND and REAL arithmetic (6 blanks)
+  {
+    title: "Rounding REAL values",
+    description: "Compute average of two REAL numbers and ROUND the result. Example: 4.7 and 3.2 → average 3.95 → ROUND(3.95) = 4",
+    lines: [
+      "A ___1___ 4.7",
+      "B ___2___ 3.2",
+      "Avg ___3___ ( A ___4___ B ) / 2.0",
+      "Result ___5___ ROUND ___6___ Avg ___7___"
+    ],
+    bank: ["←","=","(","+",")","/","2.0","ROUND","Avg","A","B"],
+    answers: {"1":"←","2":"←","3":"←","4":"+","5":"←","6":"ROUND","7":"Avg"}
+  },
+
+  // Puzzle 9: Careful punctuation — OUTPUT multiple values and commas (7 blanks)
+  {
+    title: "OUTPUT multiple values with commas",
+    description: "Given Name and Lives, output: Name, \" has \", Lives, \" lives\". Example: Ali has 3 lives",
+    lines: [
+      "Name ___1___ \"Ali\"",
+      "Lives ___2___ 3",
+      "___3___ Name ___4___ \" has \" ___5___ Lives ___6___ \" lives\" ___7___"
+    ],
+    bank: ["←","=","OUTPUT",",","\" has \"","Lives","\" lives\"","Name"],
+    answers: {"1":"←","2":"←","3":"OUTPUT","4":",","5":",","6":"Lives","7":","}
+  },
+
+  // Puzzle 10: Harder — nested function-style tokens and multiple blanks (8 blanks)
+  {
+    title: "Complex expression with SUBSTRING, ROUND and arithmetic",
+    description: "No user input. Extract digits, compute, and round. Example operations use parentheses, SUBSTRING and ROUND. This tests quotes, parentheses and punctuation.",
+    lines: [
+      "Text ___1___ \"X12Y\"",
+      "NumStr ___2___ SUBSTRING ___3___ Text ___4___ 2 ___5___ 2 ___6___",
+      "Num ___7___ NumStr ___8___"
+    ],
+    bank: ["←","=","SUBSTRING","(","Text",",",")","2","2","NumStr","Num","INT","'","\""],
+    answers: {"1":"←","2":"←","3":"SUBSTRING","4":"Text","5":"2","6":"2","7":"←","8":"NumStr"}
+  }
+]; /* end puzzles */
+
+/* ------------------------------
+   Basic state and DOM refs
+--------------------------------*/
+let puzzleIndex = 0;
+let selectedToken = null; // {el, value}
+const bankEl = document.getElementById('bank');
+const codeArea = document.getElementById('codeArea');
+const metaEl = document.getElementById('puzzleMeta');
+const submitBtn = document.getElementById('submitBtn');
+const resetBtn = document.getElementById('resetBtn');
+const nextBtn = document.getElementById('nextBtn');
+const statusEl = document.getElementById('status');
+
+function escapeHtml(s){
+  return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+}
+
+/* ------------------------------
+   Helpers: Shuffle, create elements
+--------------------------------*/
+function shuffleArray(a){
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function clearSelection(){
+  if(selectedToken){
+    selectedToken.el.classList.remove('selected');
+  }
+  selectedToken = null;
+}
+
+/* ------------------------------
+   Render puzzle
+--------------------------------*/
+function renderPuzzle(index){
+  clearSelection();
+  statusEl.textContent = '';
+  const p = puzzles[index];
+  // meta
+  metaEl.innerHTML = `<strong>${escapeHtml(p.title)}</strong><div style="margin-top:6px;color:${getComputedStyle(document.documentElement).getPropertyValue('--muted')}">${escapeHtml(p.description)}</div>`;
+  // code lines: we show blanks as focusable inline spans
+  // We must parse lines and replace every ___n___ with a blank span
+  let rendered = '';
+  for(const line of p.lines){
+    // replace placeholders preserving order
+    let out = escapeHtml(line);
+    // match placeholders like ___1___
+    out = out.replace(/___(\d+)___/g, function(_,n){
+      const id = `blank-${n}`;
+      return `<span tabindex="0" role="button" aria-label="Blank ${n}" class="blank empty" data-blank="${n}" id="${id}">___${n}___</span>`;
+    });
+    rendered += '<span class="line">' + out + '</span>\n';
+  }
+  codeArea.innerHTML = rendered;
+
+  // build bank: clone array to avoid modifying original
+  const bankTokens = shuffleArray(p.bank.slice());
+  bankEl.innerHTML = '';
+  for(const t of bankTokens){
+    // show tokens visually; token value may be quotes or special chars
+    const tokenEl = document.createElement('div');
+    tokenEl.className = 'token';
+    tokenEl.tabIndex = 0;
+    tokenEl.setAttribute('role','listitem');
+    tokenEl.setAttribute('draggable','true');
+    tokenEl.dataset.value = t;
+    tokenEl.title = t;
+    // display token label with some escaping
+    tokenEl.innerHTML = `<span>${escapeHtml(String(t))}</span>`;
+    attachTokenEvents(tokenEl);
+    bankEl.appendChild(tokenEl);
+  }
+
+  // attach blank events
+  document.querySelectorAll('.blank').forEach(b => {
+    attachBlankEvents(b);
+  });
+
+  // clear statuses (visual)
+  document.querySelectorAll('.blank').forEach(b => b.classList.remove('correct','incorrect'));
+}
+
+/* ------------------------------
+   Events for tokens and blanks
+--------------------------------*/
+function attachTokenEvents(tokenEl){
+  tokenEl.addEventListener('dragstart', ev => {
+    ev.dataTransfer.setData('text/plain', tokenEl.dataset.value);
+    // mark the dragged element's id to allow swap on drop
+    ev.dataTransfer.effectAllowed = 'move';
+    // store a reference via global selectedToken for keyboard mode as well
+    selectedToken = {el: tokenEl, value: tokenEl.dataset.value};
+    tokenEl.classList.add('dragging');
+  });
+  tokenEl.addEventListener('dragend', ev => {
+    tokenEl.classList.remove('dragging');
+    clearSelection();
+  });
+
+  // click selection / keyboard: Enter toggles selection
+  tokenEl.addEventListener('click', ev => {
+    // clicking selects token (for keyboard placement)
+    if(selectedToken && selectedToken.el === tokenEl){
+      // deselect
+      tokenEl.classList.remove('selected');
+      selectedToken = null;
+    } else {
+      // deselect previous
+      clearSelection();
+      selectedToken = {el: tokenEl, value: tokenEl.dataset.value};
+      tokenEl.classList.add('selected');
     }
-
-    // === PUZZLES: NO BEGIN/END; 1-2 code lines each ===
-    const puzzles = [
-      // 1
-      {
-        title: "Declare a Variable",
-        description: "Declare variable total of type INTEGER. One line only.",
-        example: "DECLARE total : INTEGER",
-        lines: [
-          "___1___ total ___2___ ___3___"
-        ],
-        solution: [
-          "DECLARE total : INTEGER"
-        ],
-        blanks: { "1":"DECLARE", "2":":", "3":"INTEGER" },
-        bank: ["DECLARE","SET","total","TOTAL",":","=","INTEGER","STRING","REAL",";"]
-      },
-
-      // 2
-      {
-        title: "Assign a Number",
-        description: "Assign 7 to total using the assignment arrow.",
-        example: "total ← 7",
-        lines: [
-          "total ___1___ ___2___"
-        ],
-        solution: [
-          "total ← 7"
-        ],
-        blanks: { "1":"←", "2":"7" },
-        bank: ["=","←",":=","7","5","\"7\"","total","<-"]
-      },
-
-      // 3
-      {
-        title: "Declare a String",
-        description: "Declare name as STRING (one line).",
-        example: "DECLARE name : STRING",
-        lines: [
-          "___1___ name ___2___ ___3___"
-        ],
-        solution: [
-          "DECLARE name : STRING"
-        ],
-        blanks: { "1":"DECLARE", "2":":", "3":"STRING" },
-        bank: ["DECLARE","VAR","name",":","STRING","INTEGER","'STRING'","\"STRING\""]
-      },
-
-      // 4
-      {
-        title: "Concatenate Names",
-        description: "Create fullName by concatenating FirstName, a space, and LastName.",
-        example: 'fullName ← FirstName , " " , LastName',
-        lines: [
-          "fullName ___1___ FirstName ___2___ \" \" ___3___ LastName"
-        ],
-        solution: [
-          "fullName ← FirstName , \" \" , LastName"
-        ],
-        blanks: { "1":"←", "2":",", "3":"," },
-        bank: ["←",":=","=","FirstName","LastName",",","\" \"","CONCAT"]
-      },
-
-      // 5
-      {
-        title: "Types: REAL and INTEGER",
-        description: "Declare price as REAL and quantity as INTEGER. Two separate lines.",
-        example: "DECLARE price : REAL",
-        lines: [
-          "DECLARE price ___1___ ___2___",
-          "DECLARE quantity ___3___ ___4___"
-        ],
-        solution: [
-          "DECLARE price : REAL",
-          "DECLARE quantity : INTEGER"
-        ],
-        blanks: { "1":":", "2":"REAL", "3":":", "4":"INTEGER" },
-        bank: ["REAL","INTEGER","STRING","DECLARE",":",",",";"]
-      },
-
-      // 6
-      {
-        title: "Arithmetic: multiplication and addition",
-        description: "Compute total = price * quantity + tax (one line). Use assignment arrow.",
-        example: "total ← price * quantity + tax",
-        lines: [
-          "total ___1___ price ___2___ quantity ___3___ tax"
-        ],
-        solution: [
-          "total ← price * quantity + tax"
-        ],
-        blanks: { "1":"←", "2":"*", "3":"+" },
-        bank: ["←","=","*","+","/","-","price","quantity","tax"]
-      },
-
-      // 7
-      {
-        title: "DIV operator",
-        description: "Integer division: groups ← total DIV size (one line).",
-        example: "groups ← total DIV size",
-        lines: [
-          "groups ___1___ total ___2___ size"
-        ],
-        solution: [
-          "groups ← total DIV size"
-        ],
-        blanks: { "1":"←", "2":"DIV" },
-        bank: ["←","=","DIV","MOD","total","size","groups"]
-      },
-
-      // 8
-      {
-        title: "Parentheses in Expression",
-        description: "Use parentheses to group (quantity + tax) before multiplying by price.",
-        example: "total ← price * ( quantity + tax )",
-        lines: [
-          "total ___1___ price ___2___ ( quantity ___3___ tax )"
-        ],
-        solution: [
-          "total ← price * ( quantity + tax )"
-        ],
-        blanks: { "1":"←", "2":"*", "3":"+" },
-        bank: ["←","=","*","+","(",")","quantity","tax"]
-      },
-
-      // 9
-      {
-        title: "Numeric vs String Literal",
-        description: "Assign age the number 14 (INTEGER). Avoid using \"14\" which is a STRING.",
-        example: "age ← 14",
-        lines: [
-          "age ___1___ ___2___"
-        ],
-        solution: [
-          "age ← 14"
-        ],
-        blanks: { "1":"←", "2":"14" },
-        bank: ["←","=","14","\"14\"","AGE","age"]
-      },
-
-      // 10
-      {
-        title: "Punctuation: colon vs comma",
-        description: "Declare score as INTEGER. Use colon before type; comma is a distractor.",
-        example: "DECLARE score : INTEGER",
-        lines: [
-          "DECLARE score ___1___ ___2___"
-        ],
-        solution: [
-          "DECLARE score : INTEGER"
-        ],
-        blanks: { "1":":", "2":"INTEGER" },
-        bank: [":",",","INTEGER","STRING","DECLARE","score",";"]
-      }
-    ];
-
-    // --- State ---
-    let current = 0;
-    let currentOrder = []; // displayed order of lines
-    const pIndex = document.getElementById('pIndex');
-    const pTitle = document.getElementById('pTitle');
-    const pDesc = document.getElementById('pDesc');
-    const pExample = document.getElementById('pExample');
-    const linesContainer = document.getElementById('linesContainer');
-    const bankDiv = document.getElementById('bank');
-    const feedback = document.getElementById('feedback');
-
-    // render puzzle
-    function renderPuzzle(i){
-      const pu = puzzles[i];
-      pIndex.textContent = (i+1);
-      pTitle.textContent = pu.title;
-      pDesc.textContent = pu.description;
-      pExample.textContent = pu.example;
-
-      // scramble all lines (no BEGIN/END)
-      currentOrder = shuffle(pu.lines.slice());
-
-      // render lines
-      linesContainer.innerHTML = '';
-      currentOrder.forEach((lineText, idx) => {
-        const row = el('div', { class: 'line', draggable: true });
-        row.dataset.index = idx;
-        row.appendChild(el('div', { class: 'idx' }, String(idx+1)));
-
-        // replace blanks like ___1___ with droppable spans
-        const inner = document.createElement('div');
-        inner.style.flex = '1';
-        const htmlParts = lineText.split(/(___\d+___)/).map(part => {
-          if(/^___\d+___$/.test(part)){
-            const num = part.replace(/[^0-9]/g,'');
-            return `<span class="blank-drop" data-blank="${num}">___${num}___</span>`;
-          } else {
-            return part.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-          }
-        }).join('');
-        inner.innerHTML = htmlParts;
-        row.appendChild(inner);
-
-        addDragHandlers(row);
-        linesContainer.appendChild(row);
-      });
-
-      // render bank tokens (shuffled)
-      bankDiv.innerHTML = '';
-      const tokens = shuffle(pu.bank.slice());
-      tokens.forEach(tok => {
-        const t = el('div', { class: 'token', draggable: true }, tok);
-        t.dataset.token = tok;
-        addTokenDragHandlers(t);
-        bankDiv.appendChild(t);
-      });
-
-      feedback.textContent = 'Arrange lines (if more than one) and fill blanks, then Submit.';
+  });
+  tokenEl.addEventListener('keydown', ev => {
+    if(ev.key === 'Enter' || ev.key === ' '){
+      ev.preventDefault();
+      tokenEl.click();
     }
+  });
+}
 
-    // drag handlers for lines
-    function addDragHandlers(row){
-      row.addEventListener('dragstart', (e)=>{
-        row.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', row.dataset.index);
-        if(e.dataTransfer.setDragImage){
-          const crt = row.cloneNode(true);
-          crt.style.position = 'absolute'; crt.style.top='-9999px';
-          document.body.appendChild(crt);
-          e.dataTransfer.setDragImage(crt, 10, 10);
-          setTimeout(()=>document.body.removeChild(crt), 0);
-        }
-      });
-      row.addEventListener('dragend', ()=> row.classList.remove('dragging'));
-
-      row.addEventListener('dragover', (e)=>{
-        e.preventDefault();
-        const dragging = document.querySelector('.line.dragging');
-        if(!dragging || dragging === row) return;
-        const rect = row.getBoundingClientRect();
-        const after = (e.clientY - rect.top) > rect.height/2;
-        if(after){
-          row.parentNode.insertBefore(dragging, row.nextSibling);
-        } else {
-          row.parentNode.insertBefore(dragging, row);
-        }
-        Array.from(linesContainer.children).forEach((r, idx)=> r.querySelector('.idx').textContent = idx+1);
-      });
+function attachBlankEvents(blankEl){
+  blankEl.addEventListener('dragover', ev => {
+    ev.preventDefault();
+    ev.dataTransfer.dropEffect = 'move';
+    blankEl.classList.add('drag-over');
+  });
+  blankEl.addEventListener('dragleave', ev => {
+    blankEl.classList.remove('drag-over');
+  });
+  blankEl.addEventListener('drop', ev => {
+    ev.preventDefault();
+    blankEl.classList.remove('drag-over');
+    const val = ev.dataTransfer.getData('text/plain');
+    if(!val) return;
+    // find token element in bank with this value that is draggable (first match)
+    const tokenEl = findBankTokenByValue(val);
+    if(tokenEl){
+      placeTokenIntoBlank(tokenEl, blankEl);
+    } else {
+      // if token not found (maybe it was selected via keyboard), use selectedToken
+      if(selectedToken) placeTokenIntoBlank(selectedToken.el, blankEl);
     }
+  });
 
-    // token drag handlers
-    function addTokenDragHandlers(tokenEl){
-      tokenEl.addEventListener('dragstart', (e)=>{
-        e.dataTransfer.setData('text/token', tokenEl.dataset.token);
-        tokenEl.classList.add('dragging');
-      });
-      tokenEl.addEventListener('dragend', ()=> tokenEl.classList.remove('dragging'));
-    }
-
-    // make blanks droppable (observer will re-run this)
-    function refreshBlankDroppables(){
-      const blanks = document.querySelectorAll('.blank-drop');
-      blanks.forEach(b=>{
-        b.addEventListener('dragover', (e)=>{ e.preventDefault(); });
-        b.addEventListener('drop', (e)=>{
-          e.preventDefault();
-          const tok = e.dataTransfer.getData('text/token');
-          if(!tok) return;
-          b.textContent = tok;
-          b.classList.add('filled');
-          b.dataset.filled = tok;
-          // remove first matching token from bank
-          const tokenNodes = Array.from(bankDiv.children);
-          const match = tokenNodes.find(n => n.dataset.token === tok);
-          if(match) match.parentNode.removeChild(match);
-        });
-      });
-    }
-
-    // observe changes in linesContainer to refresh droppables
-    const observer = new MutationObserver(()=> refreshBlankDroppables());
-    observer.observe(linesContainer, { childList:true, subtree:true });
-
-    // Submit: compare displayed lines (with filled blanks) to solution
-    function checkSubmit(){
-      const pu = puzzles[current];
-      // build displayed lines
-      const displayed = Array.from(linesContainer.children).map(r => {
-        const inner = r.querySelector('div:nth-child(2)');
-        const clone = inner.cloneNode(true);
-        clone.querySelectorAll('.blank-drop').forEach(sp=>{
-          const val = sp.dataset.filled ? sp.dataset.filled : sp.textContent;
-          const txt = document.createTextNode(val);
-          sp.parentNode.replaceChild(txt, sp);
-        });
-        return clone.textContent.trim();
-      });
-
-      // Compare to solution (solution may have specific order)
-      // We consider puzzle correct when displayed line texts equal solution lines in order
-      const sol = pu.solution.slice();
-      Array.from(linesContainer.children).forEach((r, idx)=>{
-        const sline = sol[idx] || '';
-        const dline = displayed[idx] || '';
-        if(sline.trim() === dline.trim()){
-          r.classList.remove('incorrect');
-          r.classList.add('correct');
-        } else {
-          r.classList.remove('correct');
-          r.classList.add('incorrect');
-        }
-      });
-
-      // check blanks filled
-      const blankSpans = document.querySelectorAll('.blank-drop');
-      const unfilled = Array.from(blankSpans).filter(s => !s.dataset.filled);
-      if(unfilled.length>0){
-        feedback.textContent = `Please fill all blanks. ${unfilled.length} blank(s) left.`;
-        return;
-      }
-
-      // check blanks correctness
-      let blanksAllCorrect = true;
-      blankSpans.forEach(s=>{
-        const bnum = s.dataset.blank;
-        const expected = pu.blanks[bnum];
-        const given = s.dataset.filled;
-        if(expected !== given){
-          blanksAllCorrect = false;
-          const parentLine = s.closest('.line');
-          if(parentLine){
-            parentLine.classList.remove('correct');
-            parentLine.classList.add('incorrect');
-          }
-        }
-      });
-
-      const allLinesCorrect = Array.from(linesContainer.children).every(r => r.classList.contains('correct'));
-      if(allLinesCorrect && blanksAllCorrect){
-        feedback.textContent = 'All correct 🎉 — well done!';
+  // keyboard: Enter places current selectedToken into this blank (or toggles if blank has token)
+  blankEl.addEventListener('keydown', ev => {
+    if(ev.key === 'Enter' || ev.key === ' '){
+      ev.preventDefault();
+      if(selectedToken){
+        placeTokenIntoBlank(selectedToken.el, blankEl);
       } else {
-        feedback.textContent = 'Some lines or blanks are incorrect. Incorrect lines shown in red.';
-      }
-    }
-
-    // Reset
-    function resetPuzzle(){
-      renderPuzzle(current);
-    }
-
-    // Next
-    function nextPuzzle(){
-      current = (current + 1) % puzzles.length;
-      renderPuzzle(current);
-    }
-
-    // Event bindings
-    document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
-    document.getElementById('submitBtn').addEventListener('click', checkSubmit);
-    document.getElementById('nextBtn').addEventListener('click', nextPuzzle);
-
-    // bank mutation observer to add handlers
-    const bankObserver = new MutationObserver(()=> {
-      Array.from(bankDiv.children).forEach(n => {
-        if(!n._hasHandlers){
-          addTokenDragHandlers(n);
-          n._hasHandlers = true;
+        // if nothing selected, and blank has a token, select that token back into the bank (detach)
+        const existing = getTokenInBlank(blankEl);
+        if(existing){
+          // move token back to bank
+          moveTokenToBank(existing, {focus:true});
         }
-      });
-    });
-    bankObserver.observe(bankDiv, { childList:true });
-
-    // clicking filled blank returns token to bank
-    document.addEventListener('click', (e)=>{
-      const target = e.target;
-      if(target.classList && target.classList.contains('blank-drop') && target.dataset.filled){
-        const tok = target.dataset.filled;
-        const t = el('div', { class: 'token', draggable: true }, tok);
-        t.dataset.token = tok;
-        addTokenDragHandlers(t);
-        bankDiv.appendChild(t);
-        delete target.dataset.filled;
-        target.classList.remove('filled');
-        target.textContent = `___${target.dataset.blank}___`;
       }
-    });
-
-    // initial render
-    function renderPuzzle(i){
-      const pu = puzzles[i];
-      pIndex.textContent = (i+1);
-      pTitle.textContent = pu.title;
-      pDesc.textContent = pu.description;
-      pExample.textContent = pu.example;
-
-      // scramble lines
-      currentOrder = shuffle(pu.lines.slice());
-
-      linesContainer.innerHTML = '';
-      currentOrder.forEach((lineText, idx) => {
-        const row = el('div', { class: 'line', draggable: true });
-        row.dataset.index = idx;
-        row.appendChild(el('div', { class: 'idx' }, String(idx+1)));
-
-        const inner = document.createElement('div');
-        inner.style.flex = '1';
-        const htmlParts = lineText.split(/(___\d+___)/).map(part => {
-          if(/^___\d+___$/.test(part)){
-            const num = part.replace(/[^0-9]/g,'');
-            return `<span class="blank-drop" data-blank="${num}">___${num}___</span>`;
-          } else {
-            return part.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-          }
-        }).join('');
-        inner.innerHTML = htmlParts;
-        row.appendChild(inner);
-
-        addDragHandlers(row);
-        linesContainer.appendChild(row);
-      });
-
-      // tokens
-      bankDiv.innerHTML = '';
-      const tokens = shuffle(pu.bank.slice());
-      tokens.forEach(tok => {
-        const t = el('div', { class: 'token', draggable: true }, tok);
-        t.dataset.token = tok;
-        addTokenDragHandlers(t);
-        bankDiv.appendChild(t);
-      });
-
-      feedback.textContent = 'Arrange lines (if more than one) and fill blanks, then Submit.';
     }
+  });
 
-    renderPuzzle(current);
-  </script>
+  // allow click to place selected token
+  blankEl.addEventListener('click', ev => {
+    if(selectedToken){
+      placeTokenIntoBlank(selectedToken.el, blankEl);
+    } else {
+      // if blank filled, clicking selects the token there (so keyboard users can move it)
+      const existing = getTokenInBlank(blankEl);
+      if(existing){
+        // select token in bank visually
+        clearSelection();
+        selectedToken = {el: existing, value: existing.dataset.value};
+        existing.classList.add('selected');
+      }
+    }
+  });
+}
+
+/* ------------------------------
+   DOM utility: find token in bank by value (first one)
+--------------------------------*/
+function findBankTokenByValue(value){
+  // bank tokens are direct children of bankEl but some tokens might be in bank or removed if placed
+  const tokens = Array.from(bankEl.querySelectorAll('.token'));
+  // first exact match that is still attached to bank
+  return tokens.find(t => t.dataset.value === value);
+}
+
+/* ------------------------------
+   Token placement logic: placing tokenEl into blankEl
+   - If blank already has a token, swap it back to bank (or exchange)
+--------------------------------*/
+function getTokenInBlank(blankEl){
+  // blank's token will be a child node with class token if present
+  return blankEl.querySelector('.token');
+}
+
+function moveTokenToBank(tokenEl, options = {}){
+  // append to bank and restore attributes
+  bankEl.appendChild(tokenEl);
+  tokenEl.classList.remove('placed');
+  tokenEl.style.margin = '';
+  tokenEl.tabIndex = 0;
+  tokenEl.setAttribute('draggable','true');
+  // reattach events (in case)
+  attachTokenEvents(tokenEl);
+  if(options.focus){
+    tokenEl.focus();
+  }
+}
+
+function placeTokenIntoBlank(tokenEl, blankEl){
+  // tokenEl might be in bank or already in another blank
+  const currentOwner = tokenEl.parentElement;
+  // identify if blank already contains a token (swap)
+  const existing = getTokenInBlank(blankEl);
+
+  // Remove tokenEl from bank or previous blank
+  if(currentOwner && currentOwner.classList.contains('blank')){
+    // token is being moved from one blank to another
+    currentOwner.innerHTML = `___${currentOwner.dataset.blank}___`;
+    currentOwner.classList.add('empty');
+    // reattach blank events to replaced placeholder
+    const newBlank = document.getElementById(currentOwner.id);
+    attachBlankEvents(newBlank);
+  } else {
+    // token from bank: remove from bank
+    tokenEl.remove();
+  }
+
+  // If blank had existing token, move it back to bank
+  if(existing){
+    // swap: move existing to bank
+    moveTokenToBank(existing);
+  }
+
+  // place tokenEl into blankEl
+  blankEl.innerHTML = ''; // clear placeholder
+  blankEl.appendChild(tokenEl);
+  tokenEl.classList.add('placed');
+  tokenEl.style.margin = '0';
+  tokenEl.setAttribute('draggable','false');
+  blankEl.classList.remove('empty','correct','incorrect');
+  // token no longer selectable in bank; deselect others
+  clearSelection();
+  // focus the blank for accessibility
+  blankEl.focus();
+}
+
+/* ------------------------------
+   Validation logic
+--------------------------------*/
+function validateCurrent(){
+  const p = puzzles[puzzleIndex];
+  const answers = p.answers;
+  let allCorrect = true;
+  // for each expected blank in answers
+  for(const key of Object.keys(answers)){
+    const blank = document.querySelector(`[data-blank="${key}"]`);
+    const expected = answers[key];
+    const placedToken = getTokenInBlank(blank);
+    const placedValue = placedToken ? placedToken.dataset.value : null;
+    if(placedValue === expected){
+      blank.classList.add('correct');
+      blank.classList.remove('incorrect','empty');
+    } else {
+      blank.classList.add('incorrect');
+      blank.classList.remove('correct');
+      allCorrect = false;
+    }
+  }
+  // also treat any other blanks not in answers as incorrect if empty
+  // show status
+  if(allCorrect){
+    statusEl.textContent = "All correct! Well done 🎉";
+  } else {
+    statusEl.textContent = "Some blanks are incorrect — incorrect blanks are highlighted red.";
+  }
+  return allCorrect;
+}
+
+/* ------------------------------
+   Reset: clear fills and reshuffle bank order
+--------------------------------*/
+function resetPuzzle(){
+  const p = puzzles[puzzleIndex];
+  // move any placed tokens back to bank and rebuild bank order shuffled
+  // Gather all token values currently present (in bank or in blanks)
+  const allTokens = [];
+  // tokens that are in bank
+  Array.from(bankEl.querySelectorAll('.token')).forEach(t => { allTokens.push(t.dataset.value); t.remove(); });
+  // tokens placed in blanks
+  document.querySelectorAll('.blank').forEach(b => {
+    const t = getTokenInBlank(b);
+    if(t){
+      allTokens.push(t.dataset.value);
+      t.remove();
+      // restore placeholder
+      b.innerHTML = `___${b.dataset.blank}___`;
+      b.classList.add('empty');
+      b.classList.remove('correct','incorrect');
+      attachBlankEvents(b);
+    } else {
+      // ensure placeholder present
+      b.innerHTML = `___${b.dataset.blank}___`;
+      b.classList.add('empty');
+      b.classList.remove('correct','incorrect');
+      attachBlankEvents(b);
+    }
+  });
+  // ensure we also include any tokens that might not have been present (from puzzle definition)
+  // Assemble tokens from puzzle.bank to ensure completeness
+  const bankTokens = p.bank.slice();
+  // Shuffle combined (but ensure it's the puzzle's bank content)
+  const finalTokens = shuffleArray(bankTokens);
+  // rebuild bank
+  for(const t of finalTokens){
+    const tokenEl = document.createElement('div');
+    tokenEl.className = 'token';
+    tokenEl.tabIndex = 0;
+    tokenEl.setAttribute('role','listitem');
+    tokenEl.setAttribute('draggable','true');
+    tokenEl.dataset.value = t;
+    tokenEl.title = t;
+    tokenEl.innerHTML = `<span>${escapeHtml(String(t))}</span>`;
+    attachTokenEvents(tokenEl);
+    bankEl.appendChild(tokenEl);
+  }
+  clearSelection();
+  statusEl.textContent = '';
+}
+
+/* ------------------------------
+   Next puzzle
+--------------------------------*/
+function nextPuzzle(){
+  puzzleIndex = (puzzleIndex + 1) % puzzles.length;
+  renderPuzzle(puzzleIndex);
+}
+
+/* ------------------------------
+   Initialize first puzzle
+--------------------------------*/
+renderPuzzle(puzzleIndex);
+
+/* ------------------------------
+   Wire up buttons
+--------------------------------*/
+submitBtn.addEventListener('click', ev => {
+  validateCurrent();
+});
+resetBtn.addEventListener('click', ev => {
+  resetPuzzle();
+});
+nextBtn.addEventListener('click', ev => {
+  nextPuzzle();
+});
+
+/* ------------------------------
+   Extra keyboard niceties:
+   - Allow Escape to clear selection
+--------------------------------*/
+document.addEventListener('keydown', ev => {
+  if(ev.key === 'Escape'){
+    clearSelection();
+  }
+});
+
+/* ------------------------------
+   Accessibility: announce puzzle changes to screen readers
+--------------------------------*/
+const observer = new MutationObserver(() => {
+  const p = puzzles[puzzleIndex];
+  document.title = `Code Shuffler – ${p.title}`;
+});
+observer.observe(metaEl, {childList:true, subtree:true});
+
+/* ------------------------------
+   End of script
+--------------------------------*/
+</script>
 </body>
 </html>

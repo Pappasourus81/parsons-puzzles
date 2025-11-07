@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Parsons — REPEAT UNTIL (Reorder mode)</title>
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#fff; --accent:#0568d6; --ok:#e6fbec; --bad:#ffecec;
+    --border:#dfe7f2; --muted:#556;
+  }
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); margin:20px; color:#122;}
+  .container{max-width:960px;margin:0 auto;}
+  header{display:flex;align-items:center;gap:16px;}
+  h1{margin:0;font-size:20px;}
+  .panel{background:var(--card);border:1px solid var(--border);padding:12px;border-radius:10px;margin-top:12px;}
+  .desc-box{border-radius:8px;padding:10px;border:1px solid #e2e8f0;background:#fff;margin-bottom:12px;}
+  .desc-title{font-weight:700;margin-bottom:6px;}
+  .desc-list{margin:6px 0 0 18px;color:#123;}
+  .example{font-family:monospace;background:#f3f9ff;padding:8px;border-radius:6px;border:1px solid #dbeeff;margin-top:8px;white-space:pre-wrap;}
+  .pool{min-height:140px;border:2px dashed var(--border);background:#fff;padding:12px;border-radius:8px;display:flex;flex-wrap:wrap;gap:8px;}
+  .block{user-select:none;padding:10px 12px;border-radius:8px;background:#f9fbff;border:1px solid #d0d9ef;cursor:grab;min-width:220px;box-shadow:0 1px 0 rgba(0,0,0,0.02);transition:transform .12s ease, background .18s;}
+  .block.dragging{opacity:0.6;transform:scale(0.98);}
+  .block.correct{background:var(--ok);border-color:#80d08a;}
+  .block.incorrect{background:var(--bad);border-color:#f3a3a3;}
+  .controls{display:flex;gap:8px;align-items:center;margin-top:12px;}
+  button{padding:8px 12px;border-radius:8px;border:0;font-weight:700;cursor:pointer;}
+  .btn-primary{background:var(--accent);color:white;}
+  .btn-secondary{background:#657; color:#fff; opacity:0.95}
+  .btn-ghost{background:#eef2f7;color:#223;border:1px solid #d6e0f4;}
+  .toolbar{display:flex;gap:12px;align-items:center;margin-top:10px;}
+  select{padding:6px;border-radius:8px;border:1px solid #d7e0f5;}
+  #message{margin-top:10px;font-weight:700;color:#444;}
+  @media (max-width:700px){
+    .block{min-width:150px;}
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Parsons — REPEAT UNTIL (Reorder mode)</h1>
+    </header>
+
+    <div class="panel" id="puzzlePanel">
+      <div class="desc-box" id="descriptionBox">
+        <div class="desc-title" id="descTitle">Select a puzzle</div>
+        <ul class="desc-list" id="descBullets"></ul>
+        <div id="exampleBox" class="example" style="display:none;"></div>
+      </div>
+
+      <div id="pool" class="pool" aria-label="code pool" tabindex="0"></div>
+
+      <div class="controls" style="justify-content:flex-start;">
+        <button id="submitBtn" class="btn-primary">Submit</button>
+        <button id="revealHintBtn" class="btn-ghost">Reveal hint (3 left)</button>
+        <button id="resetBtn" class="btn-secondary">Reset (Reshuffle)</button>
+        <button id="nextBtn" class="btn-ghost">Next Puzzle</button>
+        <div style="margin-left:auto;">
+          <label> Puzzle:
+            <select id="puzzleSelect"></select>
+          </label>
+        </div>
+      </div>
+
+      <div id="message"></div>
+    </div>
+  </div>
+
+<script>
+/*
+ Parsons-style reorder page for REPEAT UNTIL puzzles, with hint button:
+ - Reveal hint places one random correct line into its correct position.
+ - Up to 3 hints per puzzle (in-session).
+ - Drag to reorder; click-to-pick-and-place supported (click one block, click another to swap).
+*/
+
+const MAX_HINTS_PER_PUZZLE = 3;
+
+const puzzles = [
+  {
+    title: "Count 1 to 5 with REPEAT UNTIL",
+    bullets: ["No input — print numbers 1 to 5, each on its own line."],
+    example: "1\n2\n3\n4\n5",
+    lines: [
+      "i = 1",
+      "REPEAT",
+      "OUTPUT i",
+      "i = i + 1",
+      "UNTIL i > 5"
+    ]
+  },
+  {
+    title: "Count 1 to 10 with counter",
+    bullets: ["No input — loop from 1 to 10 using a counter variable."],
+    example: "1..10 (each on its own line)",
+    lines: [
+      "count = 1",
+      "REPEAT",
+      "OUTPUT count",
+      "count = count + 1",
+      "UNTIL count > 10"
+    ]
+  },
+  {
+    title: "Stop on zero (input)",
+    bullets: ["Ask the user for numbers repeatedly and stop when they enter 0."],
+    example: "Input: 4, 2, 0 → loop stops when 0 is entered.",
+    lines: [
+      "REPEAT",
+      "INPUT n",
+      "UNTIL n = 0"
+    ]
+  },
+  {
+    title: "Double until -1 (input & output)",
+    bullets: ["Ask for numbers; output each doubled. Stop when user enters -1."],
+    example: "Input 3 → Output 6; Input -1 → stop",
+    lines: [
+      "REPEAT",
+      "INPUT v",
+      "IF v <> -1 THEN",
+      "OUTPUT v * 2",
+      "ENDIF",
+      "UNTIL v = -1"
+    ]
+  },
+  {
+    title: "Positive or negative (stop on 0)",
+    bullets: ["Ask for a number and print whether it's positive or negative; stop on 0."],
+    example: "Input 3 → 'Positive'; input -1 → 'Negative'; 0 → stop",
+    lines: [
+      "REPEAT",
+      "INPUT n",
+      "IF n > 0 THEN",
+      "OUTPUT \"Positive\"",
+      "ELSE",
+      "OUTPUT \"Negative\"",
+      "ENDIF",
+      "UNTIL n = 0"
+    ]
+  },
+  {
+    title: "Age check (Adult/Child), stop with -1",
+    bullets: ["Ask for age; print 'Adult' if age >= 18 otherwise 'Child'. Stop when -1 entered."],
+    example: "Input 20 → 'Adult'; Input 12 → 'Child'; -1 → stop",
+    lines: [
+      "REPEAT",
+      "INPUT age",
+      "IF age >= 18 THEN",
+      "OUTPUT \"Adult\"",
+      "ELSE",
+      "OUTPUT \"Child\"",
+      "ENDIF",
+      "UNTIL age = -1"
+    ]
+  },
+  {
+    title: "Count scores above 50",
+    bullets: ["Keep a counter for scores > 50; stop on -1 and output the count."],
+    example: "Inputs 55,40,60,-1 → Output: 2",
+    lines: [
+      "count = 0",
+      "REPEAT",
+      "INPUT score",
+      "IF score > 50 THEN",
+      "count = count + 1",
+      "ENDIF",
+      "UNTIL score = -1",
+      "OUTPUT count"
+    ]
+  },
+  {
+    title: "Password check until correct",
+    bullets: ["Ask for password until user enters \"Secret\"; then print Access granted."],
+    example: "Input 'Secret' → 'Access granted'",
+    lines: [
+      "REPEAT",
+      "INPUT pw",
+      "UNTIL pw = \"Secret\"",
+      "OUTPUT \"Access granted\""
+    ]
+  },
+  {
+    title: "Print stars per request (nested FOR)",
+    bullets: ["Ask how many stars to print, use FOR to print that many. Stop when user enters 0."],
+    example: "Input 3 → prints *** ; Input 0 → stop",
+    lines: [
+      "REPEAT",
+      "INPUT n",
+      "FOR i = 1 TO n DO",
+      "OUTPUT \"*\"",
+      "NEXT i",
+      "UNTIL n = 0"
+    ]
+  },
+  {
+    title: "Print even numbers 1..N (REPEAT + FOR + IF)",
+    bullets: ["Ask for N; FOR i = 1..N and output only even i values. Stop when N = 0."],
+    example: "Input 5 → outputs 2 and 4 ; Input 0 → stop",
+    lines: [
+      "REPEAT",
+      "INPUT N",
+      "FOR i = 1 TO N DO",
+      "IF i MOD 2 = 0 THEN",
+      "OUTPUT i",
+      "ENDIF",
+      "NEXT i",
+      "UNTIL N = 0"
+    ]
+  }
+];
+
+// DOM refs
+const poolEl = document.getElementById('pool');
+const descTitleEl = document.getElementById('descTitle');
+const descBulletsEl = document.getElementById('descBullets');
+const exampleBoxEl = document.getElementById('exampleBox');
+const puzzleSelect = document.getElementById('puzzleSelect');
+const submitBtn = document.getElementById('submitBtn');
+const resetBtn = document.getElementById('resetBtn');
+const nextBtn = document.getElementById('nextBtn');
+const messageEl = document.getElementById('message');
+const revealHintBtn = document.getElementById('revealHintBtn');
+
+let current = 0;
+let blocks = []; // current DOM block elements in pool
+let pickedBlock = null;
+const usedHintsCount = {}; // in-session per puzzle
+
+// Utility
+function shuffleArray(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+}
+function populatePuzzleSelect(){
+  puzzleSelect.innerHTML = '';
+  puzzles.forEach((p,i)=>{
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${i+1}. ${p.title}`;
+    puzzleSelect.appendChild(opt);
+  });
+  puzzleSelect.value = 0;
+}
+
+// Render description and example
+function renderDescription(idx){
+  const p = puzzles[idx];
+  descTitleEl.textContent = p.title;
+  descBulletsEl.innerHTML = '';
+  p.bullets.forEach(b=>{
+    const li = document.createElement('li');
+    li.textContent = b;
+    descBulletsEl.appendChild(li);
+  });
+  if(p.example && p.example.trim()!==''){
+    exampleBoxEl.style.display = 'block';
+    exampleBoxEl.textContent = p.example;
+  } else {
+    exampleBoxEl.style.display = 'none';
+  }
+  updateRevealHintBtn();
+}
+
+// Build the pool: create blocks and shuffle
+function buildPool(idx){
+  poolEl.innerHTML = '';
+  const p = puzzles[idx];
+  const items = p.lines.map((line, i) => ({line, order:i}));
+  const shuffled = items.slice();
+  shuffleArray(shuffled);
+  blocks = shuffled.map(item => {
+    const el = document.createElement('div');
+    el.className = 'block';
+    el.draggable = true;
+    el.dataset.correctIndex = String(item.order); // correct index when ordered
+    el.textContent = item.line;
+    // drag events
+    el.addEventListener('dragstart', e => {
+      el.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', el.dataset.correctIndex);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
+    el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      const draggedIndex = e.dataTransfer.getData('text/plain');
+      const draggedEl = Array.from(poolEl.children).find(child => child.dataset.correctIndex === String(draggedIndex));
+      if(!draggedEl || draggedEl === el) return;
+      // swap positions: insert draggedEl before or after el depending on indices in DOM
+      const children = Array.from(poolEl.children);
+      const elIndex = children.indexOf(el);
+      const draggedIndexInDom = children.indexOf(draggedEl);
+      if(draggedIndexInDom < elIndex){
+        poolEl.insertBefore(draggedEl, el.nextSibling);
+      } else {
+        poolEl.insertBefore(draggedEl, el);
+      }
+      // small visual nudge
+      el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:150});
+    });
+    // click-swap support
+    el.addEventListener('click', onBlockClick);
+    return el;
+  });
+  blocks.forEach(b => poolEl.appendChild(b));
+  // clear message and styling
+  messageEl.textContent = '';
+  // reset classes
+  Array.from(poolEl.children).forEach(c => c.classList.remove('correct','incorrect'));
+  updateRevealHintBtn();
+}
+
+// click-to-swap handler
+function onBlockClick(e){
+  const el = e.currentTarget;
+  if(!pickedBlock){
+    pickedBlock = el;
+    el.style.outline = '3px solid rgba(5,104,214,0.18)';
+    return;
+  }
+  if(pickedBlock === el){
+    pickedBlock.style.outline = '';
+    pickedBlock = null;
+    return;
+  }
+  // swap pickedBlock and el positions
+  const children = Array.from(poolEl.children);
+  const aIndex = children.indexOf(pickedBlock);
+  const bIndex = children.indexOf(el);
+  if(aIndex < 0 || bIndex < 0){
+    pickedBlock.style.outline=''; pickedBlock=null; return;
+  }
+  if(aIndex < bIndex){
+    poolEl.insertBefore(pickedBlock, el.nextSibling);
+  } else {
+    poolEl.insertBefore(pickedBlock, el);
+  }
+  // visual cue
+  el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:140});
+  pickedBlock.style.outline = '';
+  pickedBlock = null;
+}
+
+// Check order
+function checkOrder(){
+  const p = puzzles[current];
+  const children = Array.from(poolEl.children);
+  let allCorrect = true;
+  children.forEach((c, i) => {
+    const correctIdx = Number(c.dataset.correctIndex);
+    if(correctIdx === i){
+      c.classList.remove('incorrect'); c.classList.add('correct');
+    } else {
+      c.classList.remove('correct'); c.classList.add('incorrect');
+      allCorrect = false;
+    }
+  });
+  if(allCorrect){
+    messageEl.textContent = 'All correct — great job!';
+    messageEl.style.color = '#0b7';
+  } else {
+    messageEl.textContent = 'Some lines are in the wrong order. Incorrect blocks are highlighted.';
+    messageEl.style.color = '#b33';
+  }
+}
+
+// Reset (reshuffle)
+function resetPuzzle(){
+  buildPool(current);
+  messageEl.textContent = '';
+}
+
+// Next puzzle
+function nextPuzzle(){
+  current = (current + 1) % puzzles.length;
+  puzzleSelect.value = current;
+  loadPuzzle(current);
+}
+
+// Reveal hint: place one random eligible block into its correct position
+function revealHint(){
+  const used = usedHintsCount[current] || 0;
+  if(used >= MAX_HINTS_PER_PUZZLE){
+    messageEl.textContent = `No hints left for this puzzle (max ${MAX_HINTS_PER_PUZZLE}).`;
+    messageEl.style.color = '#a00';
+    updateRevealHintBtn();
+    return;
+  }
+  const children = Array.from(poolEl.children);
+  // eligible blocks are those whose correctIndex != current DOM index
+  const eligible = [];
+  children.forEach((c, idx) => {
+    const correctIdx = Number(c.dataset.correctIndex);
+    if(correctIdx !== idx) eligible.push({el:c, correctIdx});
+  });
+  if(eligible.length === 0){
+    messageEl.textContent = 'All blocks are already in the correct positions.';
+    messageEl.style.color = '#444';
+    return;
+  }
+  // pick random eligible block
+  const choice = eligible[Math.floor(Math.random()*eligible.length)];
+  const blockToPlace = choice.el;
+  const targetPos = choice.correctIdx;
+  // Move blockToPlace to the targetPos in the DOM
+  const childrenNow = Array.from(poolEl.children).filter(n => n !== blockToPlace); // without the moving block
+  if(targetPos >= childrenNow.length){
+    poolEl.appendChild(blockToPlace);
+  } else {
+    poolEl.insertBefore(blockToPlace, childrenNow[targetPos]);
+  }
+  // mark it visually correct
+  blockToPlace.classList.remove('incorrect'); blockToPlace.classList.add('correct');
+  usedHintsCount[current] = used + 1;
+  messageEl.textContent = `Hint used: one line placed into correct position (${usedHintsCount[current]} of ${MAX_HINTS_PER_PUZZLE}).`;
+  messageEl.style.color = '#0b5';
+  updateRevealHintBtn();
+}
+
+// Update reveal button label/state
+function updateRevealHintBtn(){
+  const used = usedHintsCount[current] || 0;
+  const left = Math.max(0, MAX_HINTS_PER_PUZZLE - used);
+  if(left <= 0){
+    revealHintBtn.disabled = true;
+    revealHintBtn.textContent = `Reveal hint (used up)`;
+    revealHintBtn.style.opacity = '0.6';
+  } else {
+    revealHintBtn.disabled = false;
+    revealHintBtn.textContent = `Reveal hint (${left} left)`;
+    revealHintBtn.style.opacity = '1';
+  }
+}
+
+// Load puzzle
+function loadPuzzle(idx){
+  current = idx;
+  puzzleSelect.value = idx;
+  renderDescription(idx);
+  buildPool(idx);
+  messageEl.textContent = '';
+  // reset picked block
+  if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
+}
+
+// Init
+function init(){
+  populatePuzzleSelect();
+  submitBtn.addEventListener('click', checkOrder);
+  resetBtn.addEventListener('click', resetPuzzle);
+  nextBtn.addEventListener('click', nextPuzzle);
+  puzzleSelect.addEventListener('change', (e)=> loadPuzzle(Number(e.target.value)));
+  revealHintBtn.addEventListener('click', revealHint);
+  loadPuzzle(0);
+  // keyboard focus helper (not full keyboard reorder)
+  poolEl.addEventListener('keydown', (e)=> {
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      const first = poolEl.querySelector('.block');
+      if(first) first.focus();
+    }
+  });
+}
+
+init();
+
+</script>
+</body>
+</html>

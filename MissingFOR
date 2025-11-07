@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Code Shuffler – FOR Loops (Fill the Blanks)</title>
+<style>
+  :root{
+    --bg:#ffffff; --accent:#0066cc; --ok:#d4f7d9; --bad:#ffd6d6;
+    --panel:#f8f9fb; --muted:#666;
+  }
+  body{ font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:18px; background:var(--bg); color:#111; }
+  h1{ margin:0 0 12px 0; font-size:20px; }
+  .meta{ color:#444; margin-bottom:12px; }
+  .panel{ background:var(--panel); padding:12px; border-radius:10px; margin-bottom:12px; }
+  .desc-box{ padding:10px; border-radius:8px; background:#fff; border:1px solid #d1d7df; margin-bottom:10px; }
+  .code-area{ font-family: "Courier New", monospace; background:#fff; padding:10px; border-radius:8px; border:1px dashed #ccc; min-height:110px; }
+  .code-line{ padding:6px 4px; white-space:pre-wrap; }
+  .blank{ display:inline-block; min-width:48px; padding:2px 6px; margin:0 4px; background:#f2f6fb; border-radius:4px; border:1px dashed #9fb8e6; cursor:pointer; outline:none; }
+  .blank.filled{ background:#fff; border-style:solid; }
+  .blank.correct{ background:var(--ok); border-color:#2a9a4a; }
+  .blank.incorrect{ background:var(--bad); border-color:#c44; }
+  .bank{ display:flex; flex-wrap:wrap; gap:8px; padding:10px; margin-top:10px; }
+  .token{ background:#fff; border:1px solid #ddd; padding:6px 8px; border-radius:6px; cursor:grab; user-select:none; }
+  .token[aria-pressed="true"]{ outline:2px solid var(--accent); }
+  .controls{ display:flex; gap:8px; margin-top:12px; align-items:center; }
+  button{ background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+  button.secondary{ background:#666; }
+  #message{ margin-top:10px; font-weight:600; }
+  .keyboard-hint{ color:var(--muted); font-size:13px; margin-top:6px; }
+  @media (max-width:700px){ .bank{ gap:6px; } .blank{ min-width:40px; } }
+</style>
+</head>
+<body>
+  <h1>Code Shuffler – FOR Loops (Fill the Blanks)</h1>
+  <div class="meta">Place the correct token into each blank. Use drag & drop, or keyboard: Tab to token → Enter to pick → Tab to blank → Enter to place.</div>
+
+  <div class="panel">
+    <div id="desc" class="desc-box">Select a puzzle to see its description</div>
+
+    <div class="code-area" id="codeArea" aria-live="polite"></div>
+
+    <div class="bank" id="bank"></div>
+
+    <div class="keyboard-hint">Tip: you can also click a token to select it, then click a blank to place it.</div>
+
+    <div class="controls">
+      <button id="submitBtn">Submit</button>
+      <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
+      <button id="nextBtn">Next Puzzle</button>
+      <div style="margin-left:auto;">
+        <label style="font-size:13px;color:#333">Puzzle:
+          <select id="puzzleSelect" style="margin-left:8px; padding:6px; border-radius:6px;"></select>
+        </label>
+      </div>
+    </div>
+
+    <div id="message" role="status"></div>
+  </div>
+
+<script>
+/*
+ Fill-in-the-blanks FOR-loop puzzles.
+ Each puzzle has:
+  - title
+  - description (student-friendly)
+  - lines: array of strings; blanks are ___1___, ___2___...
+  - answers: array where index 0 => correct token for ___1___, etc.
+  - bank: array of tokens (correct tokens + distractors)
+*/
+const puzzles = [
+  {
+    title: "Simple FOR output 1 to 3",
+    description: "No input. Use a FOR loop to output numbers 1 to 3. Example output: 1 2 3.",
+    lines: [
+      "___1___ i = ___2___ TO ___3___ DO",
+      "OUTPUT ___4___",
+      "NEXT ___5___"
+    ],
+    answers: ["FOR","1","3","i","i"],
+    bank: ["FOR","NEXT","i","1","3","TO","STEP","OUTPUT","j","2"]
+  },
+  {
+    title: "FOR with STEP 3",
+    description: "No input. Use STEP to output every third number from 1 to 10. Example: 1 4 7 10.",
+    lines: [
+      "FOR i = ___1___ TO ___2___ ___3___ ___4___ DO",
+      "OUTPUT i",
+      "NEXT i"
+    ],
+    answers: ["1","10","STEP","3"],
+    bank: ["1","10","STEP","3","2","TO","OUTPUT","i","NEXT","STEP 3"]
+  },
+  {
+    title: "Descending FOR loop",
+    description: "No input. Loop from 5 down to 1 using a negative STEP. Example: 5 4 3 2 1.",
+    lines: [
+      "FOR k = ___1___ TO ___2___ ___3___ ___4___ DO",
+      "OUTPUT k",
+      "NEXT k"
+    ],
+    answers: ["5","1","STEP","-1"],
+    bank: ["5","1","-1","STEP","TO","k","FOR","i","NEXT","OUTPUT"]
+  },
+  {
+    title: "Sum a few values",
+    description: "Input: ask the user for 3 numbers, add them to total and output the result after the loop. Example: entering 1,2,3 outputs 6.",
+    lines: [
+      "total = ___1___",
+      "FOR i = ___2___ TO ___3___ DO",
+      "INPUT n",
+      "total = total ___4___ n",
+      "NEXT i",
+      "OUTPUT total"
+    ],
+    answers: ["0","1","3","+","0?unused"], // last placeholder is unused; answers length should match blanks count (here 4)
+    bank: ["0","+","-","1","3","FOR","INPUT","OUTPUT","n","NEXT"]
+  },
+  {
+    title: "Double input values",
+    description: "Input: the user enters 4 numbers. For each number output twice its value. Example: entering 2 prints 4.",
+    lines: [
+      "FOR i = ___1___ TO ___2___ DO",
+      "INPUT value",
+      "OUTPUT value ___3___ 2",
+      "NEXT i"
+    ],
+    answers: ["1","4","*"],
+    bank: ["1","4","*","/","+","-","INPUT","OUTPUT","value","NEXT"]
+  },
+  {
+    title: "Output only even numbers",
+    description: "Input: the user enters 4 numbers. Output only those that are even using MOD. Example: entering 2,3,4,5 outputs 2 and 4.",
+    lines: [
+      "FOR i = ___1___ TO ___2___ DO",
+      "INPUT num",
+      "IF num ___3___ 2 = 0 THEN",
+      "OUTPUT num",
+      "ENDIF",
+      "NEXT i"
+    ],
+    answers: ["1","4","MOD"],
+    bank: ["1","4","MOD","DIV","%","IF","THEN","ENDIF","OUTPUT","num"]
+  },
+  {
+    title: "Count values above threshold",
+    description: "Input: user enters 5 values. Count how many are greater than 10 and output the count after the loop. Example: entering 12,9,15,6,11 outputs 3.",
+    lines: [
+      "count = ___1___",
+      "FOR i = ___2___ TO ___3___ DO",
+      "INPUT v",
+      "IF v > ___4___ THEN",
+      "count = count + 1",
+      "ENDIF",
+      "NEXT i",
+      "OUTPUT count"
+    ],
+    answers: ["0","1","5","10"],
+    bank: ["0","1","5","10","count","v","INPUT","OUTPUT","THEN","IF"]
+  },
+  {
+    title: "FOR with variable step expression",
+    description: "No input. Use an expression to compute STEP from a variable 'stepSize' and iterate accordingly. Example: if stepSize=2, output 1 3 5.",
+    lines: [
+      "stepSize = 2",
+      "FOR i = ___1___ TO ___2___ STEP ___3___ DO",
+      "OUTPUT i",
+      "NEXT i"
+    ],
+    answers: ["1","5","stepSize"],
+    bank: ["1","5","2","stepSize","STEP","FOR","OUTPUT","i","NEXT"]
+  },
+  {
+    title: "NEXT variable mismatch (fix the loop variable)",
+    description: "This tests attention to loop variable names. No input. Ensure NEXT uses the same variable name as FOR. Example output: 1 2 3.",
+    lines: [
+      "FOR index = ___1___ TO ___2___ DO",
+      "OUTPUT index",
+      "NEXT ___3___"
+    ],
+    answers: ["1","3","index"],
+    bank: ["1","3","i","index","NEXT","FOR","OUTPUT","TO"]
+  },
+  {
+    title: "Nested FOR to build pairs (small)",
+    description: "No input. Use nested FOR loops to output pairs (i,j) for i=1..2 and j=1..3. Example output: 1,1 1,2 1,3 2,1 2,2 2,3.",
+    lines: [
+      "FOR i = ___1___ TO ___2___ DO",
+      "FOR j = ___3___ TO ___4___ DO",
+      "OUTPUT i, j",
+      "NEXT j",
+      "NEXT i"
+    ],
+    answers: ["1","2","1","3"],
+    bank: ["1","2","3","j","i","FOR","NEXT","OUTPUT",",","TO"]
+  }
+];
+
+// --- UI state ---
+let currentIndex = 0;
+let selectedToken = null; // {value, el}
+const bankEl = document.getElementById('bank');
+const codeArea = document.getElementById('codeArea');
+const descEl = document.getElementById('desc');
+const msgEl = document.getElementById('message');
+const puzzleSelect = document.getElementById('puzzleSelect');
+
+function populatePuzzleSelect(){
+  puzzles.forEach((p,i)=>{
+    const opt = document.createElement('option'); opt.value=i; opt.textContent = `${i+1}. ${p.title}`;
+    puzzleSelect.appendChild(opt);
+  });
+}
+
+function renderBank(tokens){
+  bankEl.innerHTML = '';
+  const arr = tokens.slice();
+  shuffleArray(arr);
+  arr.forEach(tok=>{
+    const b = document.createElement('button');
+    b.className='token';
+    b.type='button';
+    b.textContent = tok;
+    b.draggable = true;
+    b.setAttribute('aria-pressed','false');
+    b.tabIndex = 0;
+    b.addEventListener('click', ()=> selectToken(b, tok));
+    b.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); selectToken(b,tok); }
+    });
+    b.addEventListener('dragstart', (e)=>{ e.dataTransfer.setData('text/plain', tok); });
+    bankEl.appendChild(b);
+  });
+}
+
+function selectToken(el, val){
+  // toggle selection
+  if(selectedToken && selectedToken.el === el){
+    el.setAttribute('aria-pressed','false');
+    selectedToken = null;
+    return;
+  }
+  // unselect previous
+  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  el.setAttribute('aria-pressed','true');
+  selectedToken = {el, val};
+}
+
+function renderCode(puzzle){
+  // Build HTML with blanks replaced by spans
+  codeArea.innerHTML = '';
+  let blankCount = 0;
+  puzzle.lines.forEach((line)=>{
+    const div = document.createElement('div');
+    div.className = 'code-line';
+    // replace blanks like ___1___ with span elements
+    let out = '';
+    // split by ___n___ pattern
+    let remaining = line;
+    const regex = /___(\d+)___/g;
+    let lastIndex = 0;
+    let m;
+    const container = document.createElement('span');
+    while((m = regex.exec(line)) !== null){
+      const idx = m.index;
+      const before = line.substring(lastIndex, idx);
+      if(before) container.appendChild(document.createTextNode(before));
+      blankCount++;
+      const num = m[1];
+      const span = document.createElement('button');
+      span.className = 'blank';
+      span.type = 'button';
+      span.dataset.blank = num;
+      span.dataset.filled = 'false';
+      span.tabIndex = 0;
+      span.textContent = `___${num}___`;
+      // drag/drop handlers
+      span.addEventListener('dragover', (e)=>{ e.preventDefault(); span.classList.add('dragover'); });
+      span.addEventListener('dragleave', ()=> span.classList.remove('dragover'));
+      span.addEventListener('drop', (e)=>{ e.preventDefault(); span.classList.remove('dragover'); const tok = e.dataTransfer.getData('text/plain'); placeTokenInBlank(tok, span); });
+      // click to place selected token
+      span.addEventListener('click', ()=> {
+        if(selectedToken) { placeTokenInBlank(selectedToken.val, span); }
+      });
+      // keyboard: Enter to place selected token
+      span.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter' || e.key === ' '){
+          e.preventDefault();
+          if(selectedToken) placeTokenInBlank(selectedToken.val, span);
+        }
+      });
+      container.appendChild(span);
+      lastIndex = regex.lastIndex;
+    }
+    // append tail
+    const tail = line.substring(lastIndex);
+    if(tail) container.appendChild(document.createTextNode(tail));
+    div.appendChild(container);
+    codeArea.appendChild(div);
+  });
+  // make blanks droppable targets in bank as well
+}
+
+function placeTokenInBlank(tokenValue, blankEl){
+  // If tokenValue is not available in bank (already used), disallow (but we allow swapping)
+  // Find token element with matching text and aria-pressed false (or if it's currently placed in another blank, allow swap)
+  // If blank already has a token, swap it back to bank
+  const currentlyFilled = blankEl.dataset.filled === 'true';
+  // If token is currently placed inside another blank, remove it from there first
+  const otherBlank = findBlankContaining(tokenValue);
+  if(otherBlank){
+    // swap tokens between blanks (otherBlank -> blankEl)
+    const otherToken = otherBlank.dataset.token;
+    if(currentlyFilled){
+      const thisToken = blankEl.dataset.token;
+      // swap
+      otherBlank.dataset.token = thisToken;
+      otherBlank.textContent = thisToken;
+      blankEl.dataset.token = otherToken;
+      blankEl.textContent = otherToken;
+      // update filled flags
+      otherBlank.dataset.filled = 'true';
+      blankEl.dataset.filled = 'true';
+      updateTokenButtons();
+      return;
+    } else {
+      // move token from otherBlank to this blank
+      otherBlank.dataset.filled = 'false';
+      otherBlank.dataset.token = '';
+      otherBlank.textContent = `___${otherBlank.dataset.blank}___`;
+      blankEl.dataset.token = tokenValue;
+      blankEl.textContent = tokenValue;
+      blankEl.dataset.filled = 'true';
+      updateTokenButtons();
+      return;
+    }
+  }
+
+  // If token currently in bank (not used), find its button and mark used
+  const btn = Array.from(bankEl.children).find(b=>b.textContent === tokenValue && b.getAttribute('aria-pressed') !== 'true');
+  if(!btn && !currentlyFilled){
+    // token not available and target blank empty => cannot place
+    return;
+  }
+
+  if(currentlyFilled){
+    // blank already has a token: swap it back to bank
+    const prev = blankEl.dataset.token;
+    // put prev back into bank (make a new token button)
+    addTokenToBank(prev);
+  }
+
+  // place token into blank
+  blankEl.dataset.token = tokenValue;
+  blankEl.textContent = tokenValue;
+  blankEl.dataset.filled = 'true';
+
+  // remove one token instance from bank (the first matching)
+  if(btn){
+    btn.remove();
+  } else {
+    // if no bank button found (maybe was selected via keyboard), remove selectedToken but don't rely on aria-pressed
+    if(selectedToken && selectedToken.val === tokenValue){
+      selectedToken.el.remove();
+      selectedToken = null;
+    }
+  }
+  // clear any selection UI
+  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  selectedToken = null;
+}
+
+function findBlankContaining(token){
+  const blanks = Array.from(document.querySelectorAll('.blank'));
+  return blanks.find(b=>b.dataset.filled === 'true' && b.dataset.token === token) || null;
+}
+
+function addTokenToBank(token){
+  const b = document.createElement('button');
+  b.className='token';
+  b.type='button';
+  b.textContent = token;
+  b.draggable = true;
+  b.setAttribute('aria-pressed','false');
+  b.tabIndex = 0;
+  b.addEventListener('click', ()=> selectToken(b, token));
+  b.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); selectToken(b,token);} });
+  b.addEventListener('dragstart', (e)=>{ e.dataTransfer.setData('text/plain', token); });
+  bankEl.appendChild(b);
+}
+
+function updateTokenButtons(){
+  // ensure tokens in bank reflect remaining tokens
+  // nothing to do here since we remove/add elements directly
+}
+
+// shuffle helper
+function shuffleArray(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+}
+
+// Load puzzle by index
+function loadPuzzle(index){
+  if(index < 0) index = 0;
+  if(index >= puzzles.length) index = 0;
+  currentIndex = index;
+  const p = puzzles[currentIndex];
+  descEl.textContent = p.description;
+  // render code with blanks
+  renderCode(p);
+  // populate bank with tokens (make copies, so multiple same tokens allowed if present)
+  renderBank(p.bank.slice());
+  // reset message
+  msgEl.textContent = '';
+}
+
+// Reset current puzzle (clear blanks, return tokens)
+function resetCurrent(){
+  const p = puzzles[currentIndex];
+  // clear blanks: restore display text and flags
+  document.querySelectorAll('.blank').forEach(b=>{
+    b.dataset.filled='false';
+    b.dataset.token = '';
+    b.classList.remove('correct','incorrect','filled');
+    b.textContent = `___${b.dataset.blank}___`;
+  });
+  // restore bank
+  renderBank(p.bank.slice());
+  selectedToken = null;
+  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  msgEl.textContent = '';
+}
+
+// Check answers
+function checkAnswers(){
+  const p = puzzles[currentIndex];
+  const answers = p.answers.slice(); // array
+  // collect blanks in reading order of blank number
+  const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
+  let allCorrect = true;
+  blanks.forEach((b, i)=>{
+    const placed = b.dataset.filled === 'true' ? b.dataset.token : '';
+    const correct = answers[i] !== undefined ? answers[i] : '';
+    // For puzzles with intentionally fewer answers than blanks, treat missing answer as don't-check
+    if(correct === '' || correct === undefined || correct === null){
+      b.classList.remove('incorrect'); b.classList.remove('correct');
+      return;
+    }
+    if(placed === correct){
+      b.classList.remove('incorrect'); b.classList.add('correct');
+    } else {
+      b.classList.remove('correct'); b.classList.add('incorrect');
+      allCorrect = false;
+    }
+  });
+  if(allCorrect){
+    msgEl.textContent = 'All correct! Well done 🎉'; msgEl.style.color = '#1a7f3a';
+  } else {
+    msgEl.textContent = 'Some blanks are incorrect — incorrect blanks are highlighted.'; msgEl.style.color = '#a00';
+  }
+}
+
+// pick first matching blank index
+function getBlankCount(){
+  const set = new Set();
+  puzzles.forEach(p=>p.lines.forEach(l=>{
+    const re = /___(\d+)___/g; let m;
+    while((m=re.exec(l))!==null) set.add(Number(m[1]));
+  }));
+  return Math.max(...(set.size?Array.from(set):[0]));
+}
+
+// navigation
+document.getElementById('submitBtn').addEventListener('click', checkAnswers);
+document.getElementById('resetBtn').addEventListener('click', resetCurrent);
+document.getElementById('nextBtn').addEventListener('click', ()=> {
+  currentIndex = (currentIndex + 1) % puzzles.length;
+  puzzleSelect.value = currentIndex;
+  loadPuzzle(currentIndex);
+});
+puzzleSelect.addEventListener('change', (e)=> loadPuzzle(Number(e.target.value)));
+
+// allow dragging tokens to blanks
+bankEl.addEventListener('dragstart', (e)=> {
+  // handled per token
+});
+
+// initialize
+populatePuzzleSelect();
+loadPuzzle(0);
+
+</script>
+</body>
+</html>

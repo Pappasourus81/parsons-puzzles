@@ -124,134 +124,114 @@
 const puzzles = [
   {
     title: "Basic Output Loop",
-    description: "Task: use a FOR loop to print the numbers 1 to 5. No input required. Example output: 1 2 3 4 5 (each number on its own line).",
+    description: "Use a FOR loop to print the numbers 1 to 5. Example output: 1 2 3 4 5 (each number on a new line).",
     lines: [
-      "BEGIN",
-      "    FOR i = 1 TO 5 DO",
-      "    OUTPUT i",
-      "    NEXT i",
-      "END"
+      "FOR i = 1 TO 5 DO",
+      "OUTPUT i",
+      "NEXT i"
     ]
   },
   {
     title: "Output with Arithmetic",
-    description: "Task: use a FOR loop to output the square of each number from 1 to 5. No input required. Example output: 1 4 9 16 25.",
+    description: "Use a FOR loop to output the square of each number from 1 to 5. Example output: 1 4 9 16 25.",
     lines: [
-      "BEGIN",
-      "    FOR i = 1 TO 5 DO",
-      "    OUTPUT i * i",
-      "    NEXT i",
-      "END"
+      "FOR i = 1 TO 5 DO",
+      "OUTPUT i * i",
+      "NEXT i"
     ]
   },
   {
     title: "FOR Loop with Input and Output",
-    description: "Task: ask the user to enter 5 numbers and output each one doubled. Input: the user types 5 numbers when prompted. Example: entering 3 prints 6.",
+    description: "Ask the user to enter 5 numbers and output each one doubled. Example: entering 3 prints 6.",
     lines: [
-      "BEGIN",
-      "    FOR i = 1 TO 5 DO",
-      "    OUTPUT \"Enter number:\"",
-      "    INPUT n",
-      "    OUTPUT n * 2",
-      "    NEXT i",
-      "END"
+      "FOR i = 1 TO 5 DO",
+      "OUTPUT \"Enter number:\"",
+      "INPUT n",
+      "OUTPUT n * 2",
+      "NEXT i"
     ]
   },
   {
     title: "FOR Loop with Accumulation",
-    description: "Task: ask the user to enter 4 numbers, add them together inside the loop, and output the total after the loop ends. Example: entering 1,2,3,4 outputs 10.",
+    description: "Ask the user to enter 4 numbers, add them together, and output the total after the loop ends. Example: 1,2,3,4 outputs 10.",
     lines: [
-      "BEGIN",
-      "    total = 0",
-      "    FOR i = 1 TO 4 DO",
-      "    INPUT num",
-      "    total = total + num",
-      "    NEXT i",
-      "    OUTPUT total",
-      "END"
+      "total = 0",
+      "FOR i = 1 TO 4 DO",
+      "INPUT num",
+      "total = total + num",
+      "NEXT i",
+      "OUTPUT total"
     ]
   },
   {
     title: "FOR Loop with Conditional Output",
-    description: "Task: ask the user to enter 5 numbers and output only the even numbers. Input: 5 numbers. Example: entering 2,3,4,5,6 outputs 2,4,6.",
+    description: "Ask the user to enter 5 numbers and output only the even ones. Example: 2,3,4,5,6 outputs 2,4,6.",
     lines: [
-      "BEGIN",
-      "    FOR i = 1 TO 5 DO",
-      "    INPUT val",
-      "    IF val MOD 2 = 0 THEN",
-      "    OUTPUT val",
-      "    ENDIF",
-      "    NEXT i",
-      "END"
+      "FOR i = 1 TO 5 DO",
+      "INPUT val",
+      "IF val MOD 2 = 0 THEN",
+      "OUTPUT val",
+      "ENDIF",
+      "NEXT i"
     ]
   },
   {
     title: "FOR Loop Containing IF–ELSE",
-    description: "Task: ask the user to enter 5 numbers and for each print Even if the number is even, otherwise print Odd. Example: entering 4 prints Even.",
+    description: "Ask the user to enter 5 numbers. Output 'Even' if even, otherwise 'Odd'. Example: entering 4 prints Even.",
     lines: [
-      "BEGIN",
-      "    FOR i = 1 TO 5 DO",
-      "    INPUT x",
-      "    IF x MOD 2 = 0 THEN",
-      "    OUTPUT \"Even\"",
-      "    ELSE",
-      "    OUTPUT \"Odd\"",
-      "    ENDIF",
-      "    NEXT i",
-      "END"
+      "FOR i = 1 TO 5 DO",
+      "INPUT x",
+      "IF x MOD 2 = 0 THEN",
+      "OUTPUT \"Even\"",
+      "ELSE",
+      "OUTPUT \"Odd\"",
+      "ENDIF",
+      "NEXT i"
     ]
   },
   {
     title: "FOR Loop Counting Specific Values",
-    description: "Task: ask the user to enter 5 test scores and count how many are greater than 50. After the loop output the count. Example: entering 60,45,70,50,55 outputs 3.",
+    description: "Ask the user to enter 5 test scores. Count how many are greater than 50 and output the count after the loop. Example: 60,45,70,50,55 outputs 3.",
     lines: [
-      "BEGIN",
-      "    count = 0",
-      "    FOR i = 1 TO 5 DO",
-      "    INPUT score",
-      "    IF score > 50 THEN",
-      "    count = count + 1",
-      "    ENDIF",
-      "    NEXT i",
-      "    OUTPUT count",
-      "END"
+      "count = 0",
+      "FOR i = 1 TO 5 DO",
+      "INPUT score",
+      "IF score > 50 THEN",
+      "count = count + 1",
+      "ENDIF",
+      "NEXT i",
+      "OUTPUT count"
     ]
   },
   {
     title: "FOR Loop with Step Increment",
-    description: "Task: use a FOR loop with a STEP to output every second number from 2 to 10. No input required. Example output: 2 4 6 8 10.",
+    description: "Use a FOR loop with STEP 2 to output every second number from 2 to 10. Example output: 2 4 6 8 10.",
     lines: [
-      "BEGIN",
-      "    FOR i = 2 TO 10 STEP 2 DO",
-      "    OUTPUT i",
-      "    NEXT i",
-      "END"
+      "FOR i = 2 TO 10 STEP 2 DO",
+      "OUTPUT i",
+      "NEXT i"
     ]
   },
   {
     title: "Nested FOR Loop – Grid Pattern",
-    description: "Task: use nested FOR loops to output a 3×3 grid of * characters (three rows of three stars). No input required. Example output:\n*\n*\n* (three stars per row, three rows).",
+    description: "Use nested FOR loops to print a 3×3 grid of * characters. Example output: three rows of three stars each.",
     lines: [
-      "BEGIN",
-      "    FOR r = 1 TO 3 DO",
-      "    FOR c = 1 TO 3 DO",
-      "    OUTPUT \"*\"",
-      "    NEXT c",
-      "    NEXT r",
-      "END"
+      "FOR r = 1 TO 3 DO",
+      "FOR c = 1 TO 3 DO",
+      "OUTPUT \"*\"",
+      "NEXT c",
+      "NEXT r"
     ]
   },
   {
     title: "Nested FOR Loop with Logic – Number Triangle",
-    description: "Task: use nested FOR loops to output a growing number triangle: first row 1, second row 12, third 123, fourth 1234. No input required. Example output: 1 on first line, 12 on second, etc.",
+    description: "Use nested FOR loops to output a triangle of numbers: 1, then 12, then 123, then 1234.",
     lines: [
-      "BEGIN",
-      "    FOR i = 1 TO 4 DO",
-      "    FOR j = 1 TO i DO",
-      "    OUTPUT j",
-      "    NEXT j",
-      "    NEXT i",
-      "END"
+      "FOR i = 1 TO 4 DO",
+      "FOR j = 1 TO i DO",
+      "OUTPUT j",
+      "NEXT j",
+      "NEXT i"
     ]
   }
 ];

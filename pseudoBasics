@@ -29,7 +29,7 @@
     white-space:pre;line-height:1.6;display:block;
   }
   .line{display:block}
-  .controls{display:flex;gap:8px;align-items:center;margin-top:12px}
+  .controls{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
   button{background:var(--accent);color:white;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600;box-shadow:0 6px 12px rgba(11,102,255,0.12)}
   button.secondary{background:#eef3ff;color:var(--accent);box-shadow:none}
   button:disabled{opacity:0.6;cursor:not-allowed}
@@ -63,7 +63,7 @@
     font-weight:600;
   }
   /* focus outlines for accessibility */
-  .token:focus, .blank:focus, button:focus, .placed-clone:focus {outline:3px solid rgba(11,102,255,0.12);outline-offset:3px}
+  .token:focus, .blank:focus, button:focus, .placed-clone:focus, select:focus {outline:3px solid rgba(11,102,255,0.12);outline-offset:3px}
   /* subtle animations */
   .token{transition:transform .12s ease, box-shadow .12s ease}
   .token:active{transform:scale(.98)}
@@ -73,6 +73,7 @@
   @media (max-width:640px){
     .wrap{padding:12px}
     .token{padding:8px}
+    .controls{gap:6px}
   }
   .sr-only{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
 </style>
@@ -92,16 +93,28 @@
     <pre class="pseudocode" id="codeArea" aria-label="Pseudocode area"></pre>
 
     <div class="bank-wrap card" aria-label="Token bank area">
-      <div><strong>Token bank</strong></div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <strong>Token bank</strong>
+        <div style="font-size:13px;color:var(--muted)">Tip: Use Tab to navigate tokens and blanks.</div>
+      </div>
       <div id="bank" class="bank" role="list" aria-label="Tokens available for placing"></div>
-      <div class="hint">Tip: Use Tab to navigate tokens and blanks. Press Enter to pick/place. Tokens stay in the bank and can be used multiple times.</div>
+      <div class="hint">Press Enter to pick/place. Tokens stay in the bank and can be used multiple times.</div>
     </div>
 
     <div class="controls" role="region" aria-label="Puzzle controls">
+      <button id="prevBtn" class="secondary" title="Previous question">◀ Prev</button>
+      <button id="nextBtn" class="secondary" title="Next question">Next ▶</button>
+
+      <label for="puzzleSelect" style="margin-left:6px;color:var(--muted);font-weight:600">Go to:</label>
+      <select id="puzzleSelect" aria-label="Select puzzle" style="padding:8px;border-radius:8px;border:1px solid #e6eefc;background:#fff;color:#07203a">
+        <!-- options populated by script -->
+      </select>
+
+      <div style="flex:1"></div>
+
       <button id="submitBtn">Submit</button>
       <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
-      <button id="nextBtn" class="secondary">Next Puzzle</button>
-      <div style="flex:1"></div>
+
       <div id="status" class="status" aria-live="polite"></div>
     </div>
 
@@ -116,80 +129,35 @@
 </div>
 
 <script>
-/* Puzzles (Topics 2 & 4). Edit the array to add/modify puzzles. */
+/*
+  Single-file Code Shuffler with:
+    - Prev / Next navigation (wrap-around)
+    - Dropdown to select any puzzle
+    - Tokens cloned when placed so bank tokens remain available
+    - Keyboard accessibility (Tab + Enter), drag-and-drop, Reset, Submit
+  To modify puzzles: update the `puzzles` array below. Each puzzle should include:
+    title, description, lines (array of strings with ___n___ placeholders), bank (array of tokens), answers (map)
+*/
+
+/* ------------------------------
+   PUZZLES (Topics 2 & 4) — 10 puzzles
+--------------------------------*/
 const puzzles = [
-  {
-    title: "Simple output and quotes",
-    description: "Expected: no input. Outputs the text Hello. Example output: Hello",
-    lines: ["___1___ ___2___Hello___3___"],
-    bank: ["OUTPUT", '"', "'", "PRINT", "OUTPUTS", "Hello", " "],
-    answers: {"1":"OUTPUT","2":'"',"3":'"'}
-  },
-  {
-    title: "Read and echo",
-    description: "Input one word (a name). The program then outputs that name. Example: input Ali → output Ali",
-    lines: ["___1___ Name","___2___ Name"],
-    bank: ["INPUT","OUTPUT","READ","PRINT","Name","Name:"],
-    answers: {"1":"INPUT","2":"OUTPUT"}
-  },
-  {
-    title: "Assignment and addition",
-    description: "No input. Assign 5 to A then add 3 and store in B. Example final B = 8",
-    lines: ["A ___1___ 5","B ___2___ A ___3___ 3"],
-    bank: ["←","+","=","-","5","3","<-"],
-    answers: {"1":"←","2":"←","3":"+"}
-  },
-  {
-    title: "String and number concatenation",
-    description: "Assume Name = \"Sam\" and Score = 10. Output should be: You scored 10. Example: You scored 10",
-    lines: ["Name ___1___ \"Sam\"","Score ___2___ 10.0","___3___ \"You scored \" , ___4___"],
-    bank: ["←", "=", "OUTPUT", "PRINT", "Score", "Name", "10.0"],
-    answers: {"1":"←","2":"←","3":"OUTPUT","4":"Score"}
-  },
-  {
-    title: "Char vs String literals",
-    description: "Shows the difference between CHAR (single quotes) and STRING (double quotes). Outputs a char and a string.",
-    lines: ["Letter ___1___ 'A'","Word ___2___ \"A\"","___3___ Letter , \" vs \" , Word"],
-    bank: ["←","=","OUTPUT","PRINT","'","\"","Letter","Word"],
-    answers: {"1":"←","2":"←","3":"OUTPUT"}
-  },
-  {
-    title: "DIV and MOD usage",
-    description: "Given Total = 17, compute how many full groups of 4 (GroupCount) and the remainder (Remainder). Example: GroupCount=4, Remainder=1",
-    lines: ["Total ___1___ 17","GroupCount ___2___ Total ___3___ 4","Remainder ___4___ Total ___5___ 4"],
-    bank: ["←","=","DIV","MOD","/","4","17"],
-    answers: {"1":"←","2":"←","3":"DIV","4":"←","5":"MOD"}
-  },
-  {
-    title: "SUBSTRING with indices",
-    description: "INPUT Text. Output the substring from position 2 for length 3. Example: Text=\"Hello\" → SUBSTRING(Text,2,3) returns \"ell\"",
-    lines: ["INPUT Text","Part ___1___ SUBSTRING ___2___ Text ___3___ 2 ___4___ 3 ___5___","OUTPUT Part"],
-    bank: ["←","SUBSTRING","(","Comma","Text",",",")","2","3"],
-    answers: {"1":"←","2":"SUBSTRING","3":"(","4":",","5":")"}
-  },
-  {
-    title: "Rounding REAL values",
-    description: "Compute average of two REAL numbers and ROUND the result. Example: 4.7 and 3.2 → average 3.95 → ROUND(3.95) = 4",
-    lines: ["A ___1___ 4.7","B ___2___ 3.2","Avg ___3___ ( A ___4___ B ) / 2.0","Result ___5___ ROUND ___6___ Avg ___7___"],
-    bank: ["←","=","(","+",")","/","2.0","ROUND","Avg","A","B"],
-    answers: {"1":"←","2":"←","3":"←","4":"+","5":"←","6":"ROUND","7":"Avg"}
-  },
-  {
-    title: "OUTPUT multiple values with commas",
-    description: "Given Name and Lives, output: Name, \" has \", Lives, \" lives\". Example: Ali has 3 lives",
-    lines: ["Name ___1___ \"Ali\"","Lives ___2___ 3","___3___ Name ___4___ \" has \" ___5___ Lives ___6___ \" lives\" ___7___"],
-    bank: ["←","=","OUTPUT",",","\" has \"","Lives","\" lives\"","Name"],
-    answers: {"1":"←","2":"←","3":"OUTPUT","4":",","5":",","6":"Lives","7":","}
-  },
-  {
-    title: "Complex expression with SUBSTRING, ROUND and arithmetic",
-    description: "No user input. Extract digits, compute, and round. Example operations use parentheses, SUBSTRING and ROUND. This tests quotes, parentheses and punctuation.",
-    lines: ["Text ___1___ \"X12Y\"","NumStr ___2___ SUBSTRING ___3___ Text ___4___ 2 ___5___ 2 ___6___","Num ___7___ NumStr ___8___"],
-    bank: ["←","=","SUBSTRING","(","Text",",",")","2","2","NumStr","Num","INT","'","\""],
-    answers: {"1":"←","2":"←","3":"SUBSTRING","4":"Text","5":"2","6":"2","7":"←","8":"NumStr"}
-  }
+  { title: "Simple output and quotes", description: "Expected: no input. Outputs the text Hello. Example output: Hello", lines: ["___1___ ___2___Hello___3___"], bank: ["OUTPUT", '"', "'", "PRINT", "OUTPUTS", "Hello", " "], answers: {"1":"OUTPUT","2":'"',"3":'"'} },
+  { title: "Read and echo", description: "Input one word (a name). The program then outputs that name. Example: input Ali → output Ali", lines: ["___1___ Name","___2___ Name"], bank: ["INPUT","OUTPUT","READ","PRINT","Name","Name:"], answers: {"1":"INPUT","2":"OUTPUT"} },
+  { title: "Assignment and addition", description: "No input. Assign 5 to A then add 3 and store in B. Example final B = 8", lines: ["A ___1___ 5","B ___2___ A ___3___ 3"], bank: ["←","+","=","-","5","3","<-"], answers: {"1":"←","2":"←","3":"+"} },
+  { title: "String and number concatenation", description: "Assume Name = \"Sam\" and Score = 10. Output should be: You scored 10. Example: You scored 10", lines: ["Name ___1___ \"Sam\"","Score ___2___ 10.0","___3___ \"You scored \" , ___4___"], bank: ["←", "=", "OUTPUT", "PRINT", "Score", "Name", "10.0"], answers: {"1":"←","2":"←","3":"OUTPUT","4":"Score"} },
+  { title: "Char vs String literals", description: "Shows the difference between CHAR (single quotes) and STRING (double quotes). Outputs a char and a string.", lines: ["Letter ___1___ 'A'","Word ___2___ \"A\"","___3___ Letter , \" vs \" , Word"], bank: ["←","=","OUTPUT","PRINT","'","\"","Letter","Word"], answers: {"1":"←","2":"←","3":"OUTPUT"} },
+  { title: "DIV and MOD usage", description: "Given Total = 17, compute how many full groups of 4 (GroupCount) and the remainder (Remainder). Example: GroupCount=4, Remainder=1", lines: ["Total ___1___ 17","GroupCount ___2___ Total ___3___ 4","Remainder ___4___ Total ___5___ 4"], bank: ["←","=","DIV","MOD","/","4","17"], answers: {"1":"←","2":"←","3":"DIV","4":"←","5":"MOD"} },
+  { title: "SUBSTRING with indices", description: "INPUT Text. Output the substring from position 2 for length 3. Example: Text=\"Hello\" → SUBSTRING(Text,2,3) returns \"ell\"", lines: ["INPUT Text","Part ___1___ SUBSTRING ___2___ Text ___3___ 2 ___4___ 3 ___5___","OUTPUT Part"], bank: ["←","SUBSTRING","(","Comma","Text",",",")","2","3"], answers: {"1":"←","2":"SUBSTRING","3":"(","4":",","5":")"} },
+  { title: "Rounding REAL values", description: "Compute average of two REAL numbers and ROUND the result. Example: 4.7 and 3.2 → average 3.95 → ROUND(3.95) = 4", lines: ["A ___1___ 4.7","B ___2___ 3.2","Avg ___3___ ( A ___4___ B ) / 2.0","Result ___5___ ROUND ___6___ Avg ___7___"], bank: ["←","=","(","+",")","/","2.0","ROUND","Avg","A","B"], answers: {"1":"←","2":"←","3":"←","4":"+","5":"←","6":"ROUND","7":"Avg"} },
+  { title: "OUTPUT multiple values with commas", description: "Given Name and Lives, output: Name, \" has \", Lives, \" lives\". Example: Ali has 3 lives", lines: ["Name ___1___ \"Ali\"","Lives ___2___ 3","___3___ Name ___4___ \" has \" ___5___ Lives ___6___ \" lives\" ___7___"], bank: ["←","=","OUTPUT",",","\" has \"","Lives","\" lives\"","Name"], answers: {"1":"←","2":"←","3":"OUTPUT","4":",","5":",","6":"Lives","7":","} },
+  { title: "Complex expression with SUBSTRING, ROUND and arithmetic", description: "No user input. Extract digits, compute, and round. Example operations use parentheses, SUBSTRING and ROUND. This tests quotes, parentheses and punctuation.", lines: ["Text ___1___ \"X12Y\"","NumStr ___2___ SUBSTRING ___3___ Text ___4___ 2 ___5___ 2 ___6___","Num ___7___ NumStr ___8___"], bank: ["←","=","SUBSTRING","(","Text",",",")","2","2","NumStr","Num","INT","'","\""], answers: {"1":"←","2":"←","3":"SUBSTRING","4":"Text","5":"2","6":"2","7":"←","8":"NumStr"} }
 ];
 
+/* ------------------------------
+   State & DOM refs
+--------------------------------*/
 let puzzleIndex = 0;
 let selectedTokenValue = null;
 const bankEl = document.getElementById('bank');
@@ -198,18 +166,38 @@ const metaEl = document.getElementById('puzzleMeta');
 const submitBtn = document.getElementById('submitBtn');
 const resetBtn = document.getElementById('resetBtn');
 const nextBtn = document.getElementById('nextBtn');
+const prevBtn = document.getElementById('prevBtn');
+const selectEl = document.getElementById('puzzleSelect');
 const statusEl = document.getElementById('status');
 
 function escapeHtml(s){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
-function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function clearSelection(){ document.querySelectorAll('.token.selected').forEach(el=>el.classList.remove('selected')); selectedTokenValue=null; }
 
-/* Render puzzle */
+/* ------------------------------
+   Populate select dropdown (titles)
+--------------------------------*/
+function populatePuzzleSelect(){
+  selectEl.innerHTML = '';
+  puzzles.forEach((p,i)=>{
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = `${i+1}. ${p.title}`;
+    selectEl.appendChild(opt);
+  });
+}
+
+/* ------------------------------
+   Render puzzle (index)
+--------------------------------*/
 function renderPuzzle(index){
   clearSelection();
   statusEl.textContent = '';
+  puzzleIndex = index;
+  selectEl.value = String(index);
   const p = puzzles[index];
   metaEl.innerHTML = `<strong>${escapeHtml(p.title)}</strong><div style="margin-top:6px;color:${getComputedStyle(document.documentElement).getPropertyValue('--muted')}">${escapeHtml(p.description)}</div>`;
+  // render code lines with placeholders replaced by blank spans
   let rendered = '';
   for(const line of p.lines){
     let out = escapeHtml(line);
@@ -221,7 +209,7 @@ function renderPuzzle(index){
   }
   codeArea.innerHTML = rendered;
 
-  // bank tokens (visual shuffle)
+  // build bank (visual shuffle); bank tokens remain available
   bankEl.innerHTML = '';
   const bankTokens = shuffleArray(p.bank.slice());
   for(const t of bankTokens){
@@ -237,10 +225,16 @@ function renderPuzzle(index){
     bankEl.appendChild(tokenEl);
   }
 
+  // attach blanks
   document.querySelectorAll('.blank').forEach(b => attachBlankEvents(b));
+
+  // update document title
+  document.title = `Code Shuffler – ${p.title}`;
 }
 
-/* Bank token events - originals remain in bank; we clone when placing */
+/* ------------------------------
+   Bank token events (originals remain)
+--------------------------------*/
 function attachBankTokenEvents(tokenEl){
   tokenEl.addEventListener('dragstart', ev=>{
     ev.dataTransfer.setData('text/plain', tokenEl.dataset.value);
@@ -263,7 +257,9 @@ function attachBankTokenEvents(tokenEl){
   });
 }
 
-/* Blank events */
+/* ------------------------------
+   Blank events and placement (cloning)
+--------------------------------*/
 function attachBlankEvents(blankEl){
   blankEl.addEventListener('dragover', ev=>{ ev.preventDefault(); ev.dataTransfer.dropEffect='copy'; blankEl.classList.add('drag-over'); });
   blankEl.addEventListener('dragleave', ev=>{ blankEl.classList.remove('drag-over'); });
@@ -283,7 +279,6 @@ function attachBlankEvents(blankEl){
     if(selectedTokenValue !== null){
       placeValueIntoBlankByValue(selectedTokenValue, blankEl);
     } else {
-      // if blank has a placed clone, focus it (user can press Enter to remove)
       const placed = getPlacedCloneInBlank(blankEl);
       if(placed) blankEl.focus();
     }
@@ -292,7 +287,6 @@ function attachBlankEvents(blankEl){
 
 function getPlacedCloneInBlank(blankEl){ return blankEl.querySelector('.placed-clone'); }
 
-/* Place a clone with the token value into the blank (bank token remains available) */
 function placeValueIntoBlankByValue(value, blankEl){
   const existing = getPlacedCloneInBlank(blankEl);
   if(existing) existing.remove();
@@ -301,7 +295,6 @@ function placeValueIntoBlankByValue(value, blankEl){
   clone.dataset.value = value;
   clone.tabIndex = -1;
   clone.innerHTML = `<span>${escapeHtml(String(value))}</span>`;
-  // allow quick removal
   clone.addEventListener('click', ev=>{
     clone.remove();
     blankEl.innerHTML = `___${blankEl.dataset.blank}___`;
@@ -314,7 +307,9 @@ function placeValueIntoBlankByValue(value, blankEl){
   clearSelection();
 }
 
-/* Validation */
+/* ------------------------------
+   Validation
+--------------------------------*/
 function validateCurrent(){
   const p = puzzles[puzzleIndex];
   const answers = p.answers;
@@ -336,11 +331,13 @@ function validateCurrent(){
   return allCorrect;
 }
 
-/* Reset */
+/* ------------------------------
+   Reset (clear clones and reshuffle bank)
+--------------------------------*/
 function resetPuzzle(){
   clearSelection();
   statusEl.textContent = '';
-  // remove clones and restore placeholders
+  // remove placed clones from blanks
   document.querySelectorAll('.blank').forEach(b=>{
     const placed = getPlacedCloneInBlank(b);
     if(placed) placed.remove();
@@ -349,9 +346,9 @@ function resetPuzzle(){
     b.classList.remove('correct','incorrect');
     attachBlankEvents(b);
   });
-  // reshuffle bank visually
+  // reshuffle bank visuals
   const p = puzzles[puzzleIndex];
-  const tokens = p.bank.slice(); shuffleArray(tokens);
+  const tokens = shuffleArray(p.bank.slice());
   bankEl.innerHTML = '';
   for(const t of tokens){
     const tokenEl = document.createElement('div');
@@ -367,21 +364,47 @@ function resetPuzzle(){
   }
 }
 
-/* Next puzzle */
-function nextPuzzle(){ puzzleIndex = (puzzleIndex + 1) % puzzles.length; renderPuzzle(puzzleIndex); }
+/* ------------------------------
+   Navigation: prev / next / select
+--------------------------------*/
+function goToPrevious(){
+  const nextIndex = (puzzleIndex - 1 + puzzles.length) % puzzles.length;
+  renderPuzzle(nextIndex);
+}
+function goToNext(){
+  const nextIndex = (puzzleIndex + 1) % puzzles.length;
+  renderPuzzle(nextIndex);
+}
+function goToIndex(i){
+  if(i<0 || i>=puzzles.length) return;
+  renderPuzzle(i);
+}
 
-/* Init */
-renderPuzzle(puzzleIndex);
+/* ------------------------------
+   Initialize UI & events
+--------------------------------*/
+populatePuzzleSelect();
+renderPuzzle(0);
 
-/* Buttons */
-submitBtn.addEventListener('click', ()=>validateCurrent());
-resetBtn.addEventListener('click', ()=>resetPuzzle());
-nextBtn.addEventListener('click', ()=>nextPuzzle());
-document.addEventListener('keydown', ev=>{ if(ev.key==='Escape') clearSelection(); });
+prevBtn.addEventListener('click', ev => { goToPrevious(); });
+nextBtn.addEventListener('click', ev => { goToNext(); });
+submitBtn.addEventListener('click', ev => { validateCurrent(); });
+resetBtn.addEventListener('click', ev => { resetPuzzle(); });
 
-/* accessibility: title updates */
-const observer = new MutationObserver(()=>{ const p = puzzles[puzzleIndex]; document.title = `Code Shuffler – ${p.title}`; });
-observer.observe(metaEl,{childList:true,subtree:true});
+selectEl.addEventListener('change', ev => {
+  const idx = parseInt(selectEl.value,10);
+  if(!Number.isNaN(idx)) goToIndex(idx);
+});
+
+/* keyboard nicety */
+document.addEventListener('keydown', ev => {
+  if(ev.key === 'Escape') clearSelection();
+});
+
+/* ensure select reflects puzzle changes (wrap-around nav) */
+const selectObserver = new MutationObserver(()=>{ selectEl.value = String(puzzleIndex); });
+selectObserver.observe(metaEl, {childList:true,subtree:true});
+
 </script>
 </body>
 </html>

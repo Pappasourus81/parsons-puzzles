@@ -206,7 +206,7 @@ const puzzles = [
     // CORRECTED: removed unusable trailing blank — there are now 7 blanks
     lines: ["Text ___1___ \"X12Y\"","NumStr ← ___2___ ( ___3___  ___4___ 2 ___5___ 2 ___6___","Num ___7___ NumStr"],
     bank: ["←","=","SUBSTRING","(","Text",",",")","2","2","NumStr","Num","INT","'","\""],
-    answers: {"1":"←","2":"SUBSTRING","3":"SUBSTRING","4":"Text","5":",","6":"2","7":"←"}
+    answers: {"1":"←","2":"SUBSTRING","3":"Text","4":",","5":",","6":")","7":"←"}
   }
 ];
 

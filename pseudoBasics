@@ -34,7 +34,7 @@
   .token:active{cursor:grabbing}
   .token[draggable="true"]{user-select:none}
   .blank{display:inline-block;min-width:64px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.06);border:1px dashed rgba(255,255,255,0.12);margin:0 4px;vertical-align:middle;color:#fff}
-  .blank.empty{opacity:0.7}
+  .blank.empty{opacity:0.8}
   .blank.correct{background:var(--good);color:#064e3b;border-style:solid;border-color:#86efac}
   .blank.incorrect{background:var(--bad);color:#7f1d1d;border-style:solid;border-color:#fca5a5}
   .bank-wrap{margin-top:12px}
@@ -52,7 +52,6 @@
     .wrap{padding:12px}
     .token{padding:8px}
   }
-  /* visually-hidden for screen-readers only */
   .sr-only{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
 </style>
 </head>
@@ -61,7 +60,7 @@
   <header>
     <div>
       <h1>Code Shuffler – Syntax and Data Types</h1>
-      <div class="meta">Fill the numbered blanks using tokens from the bank. Drag or keyboard-place tokens. Focusable and accessible.</div>
+      <div class="meta">Fill the numbered blanks using tokens from the bank. Drag or keyboard-place tokens. Tokens remain available and can be reused.</div>
     </div>
   </header>
 
@@ -77,7 +76,7 @@
     <div class="bank-wrap card" aria-label="Token bank area">
       <div><strong>Token bank</strong></div>
       <div id="bank" class="bank" role="list" aria-label="Tokens available for placing"></div>
-      <div class="hint">Tip: Use Tab to navigate tokens and blanks. Press Enter to pick/place.</div>
+      <div class="hint">Tip: Use Tab to navigate tokens and blanks. Press Enter to pick/place. Tokens stay in the bank and can be used multiple times.</div>
     </div>
 
     <div class="controls" role="region" aria-label="Puzzle controls">
@@ -100,25 +99,17 @@
 
 <script>
 /*
-  Code Shuffler – Syntax and Data Types
-  - Single-file static page with 10 puzzles using Topics 2 and 4 from the provided IGCSE pseudocode guide.
-  - How to modify puzzles: edit the `puzzles` array below.
-    Each puzzle must include:
-      - title (string)
-      - description (string)
-      - lines (array of strings) : each pseudocode line (no indentation). Use ___1___, ___2___ etc as placeholders.
-      - bank (array of token strings) : tokens are single items shown inside the bank (include correct tokens and distractors)
-      - answers (object mapping blank number (1-based string) to the exact expected token string)
-  - The UI handles drag-and-drop, click-to-select, keyboard (Tab + Enter) placement, swapping and validation.
+  Updated Code Shuffler:
+  - Bank tokens are NOT removed when used. A clone of the token is created when placed in a blank.
+  - Clicking or pressing Enter on a bank token selects it (keyboard accessible). Pressing Enter on a blank places a clone there.
+  - Reset clears clones and reshuffles visual order of the bank tokens.
+  - Validation compares placed clone.dataset.value to expected answers.
 */
 
 /* ------------------------------
-   PUZZLES DEFINITION (10 puzzles)
-   - All puzzles contain only syntax, data types, assignments, INPUT/OUTPUT or function calls (no IF/LOOP).
-   - Blanks use the format ___1___, ___2___ ... in reading order (left-to-right, top-to-bottom).
+   PUZZLES DEFINITION (same puzzles as before)
 --------------------------------*/
 const puzzles = [
-  // Puzzle 1: Very simple OUTPUT with missing keyword and quotes (3 blanks)
   {
     title: "Simple output and quotes",
     description: "Expected: no input. Outputs the text Hello. Example output: Hello",
@@ -128,8 +119,6 @@ const puzzles = [
     bank: ["OUTPUT", '"', "'", "PRINT", "OUTPUTS", "Hello", " "],
     answers: {"1":"OUTPUT","2":'"',"3":'"'}
   },
-
-  // Puzzle 2: INPUT into a variable and OUTPUT (3 blanks)
   {
     title: "Read and echo",
     description: "Input one word (a name). The program then outputs that name. Example: input Ali → output Ali",
@@ -140,8 +129,6 @@ const puzzles = [
     bank: ["INPUT","OUTPUT","READ","PRINT","Name","Name:"],
     answers: {"1":"INPUT","2":"OUTPUT"}
   },
-
-  // Puzzle 3: Assignment with arithmetic and correct assignment arrow (4 blanks)
   {
     title: "Assignment and addition",
     description: "No input. Assign 5 to A then add 3 and store in B. Example final B = 8",
@@ -152,8 +139,6 @@ const puzzles = [
     bank: ["←","+","=","-","5","3","<-"],
     answers: {"1":"←","2":"←","3":"+"}
   },
-
-  // Puzzle 4: Mixed types — concatenation in OUTPUT (4 blanks)
   {
     title: "String and number concatenation",
     description: "Assume Name = \"Sam\" and Score = 10. Output should be: You scored 10. Example: You scored 10",
@@ -165,8 +150,6 @@ const puzzles = [
     bank: ["←", "=", "OUTPUT", "PRINT", "Score", "Name", "10.0"],
     answers: {"1":"←","2":"←","3":"OUTPUT","4":"Score"}
   },
-
-  // Puzzle 5: Types and literals (CHAR vs STRING) (5 blanks)
   {
     title: "Char vs String literals",
     description: "Shows the difference between CHAR (single quotes) and STRING (double quotes). Outputs a char and a string.",
@@ -178,8 +161,6 @@ const puzzles = [
     bank: ["←","=","OUTPUT","PRINT","'","\"","Letter","Word"],
     answers: {"1":"←","2":"←","3":"OUTPUT"}
   },
-
-  // Puzzle 6: Integer division and MOD (5 blanks)
   {
     title: "DIV and MOD usage",
     description: "Given Total = 17, compute how many full groups of 4 (GroupCount) and the remainder (Remainder). Example: GroupCount=4, Remainder=1",
@@ -191,8 +172,6 @@ const puzzles = [
     bank: ["←","=","DIV","MOD","/","4","17"],
     answers: {"1":"←","2":"←","3":"DIV","4":"←","5":"MOD"}
   },
-
-  // Puzzle 7: SUBSTRING usage with parentheses and commas (6 blanks)
   {
     title: "SUBSTRING with indices",
     description: "INPUT Text. Output the substring from position 2 for length 3. Example: Text=\"Hello\" → SUBSTRING(Text,2,3) returns \"ell\"",
@@ -203,10 +182,7 @@ const puzzles = [
     ],
     bank: ["←","SUBSTRING","(","Comma","Text",",",")","2","3"],
     answers: {"1":"←","2":"SUBSTRING","3":"(","4":",","5":")"}
-    // Note: the expected tokens place parentheses and comma in the correct blanks; later validation expects exact matches.
   },
-
-  // Puzzle 8: ROUND and REAL arithmetic (6 blanks)
   {
     title: "Rounding REAL values",
     description: "Compute average of two REAL numbers and ROUND the result. Example: 4.7 and 3.2 → average 3.95 → ROUND(3.95) = 4",
@@ -219,8 +195,6 @@ const puzzles = [
     bank: ["←","=","(","+",")","/","2.0","ROUND","Avg","A","B"],
     answers: {"1":"←","2":"←","3":"←","4":"+","5":"←","6":"ROUND","7":"Avg"}
   },
-
-  // Puzzle 9: Careful punctuation — OUTPUT multiple values and commas (7 blanks)
   {
     title: "OUTPUT multiple values with commas",
     description: "Given Name and Lives, output: Name, \" has \", Lives, \" lives\". Example: Ali has 3 lives",
@@ -232,8 +206,6 @@ const puzzles = [
     bank: ["←","=","OUTPUT",",","\" has \"","Lives","\" lives\"","Name"],
     answers: {"1":"←","2":"←","3":"OUTPUT","4":",","5":",","6":"Lives","7":","}
   },
-
-  // Puzzle 10: Harder — nested function-style tokens and multiple blanks (8 blanks)
   {
     title: "Complex expression with SUBSTRING, ROUND and arithmetic",
     description: "No user input. Extract digits, compute, and round. Example operations use parentheses, SUBSTRING and ROUND. This tests quotes, parentheses and punctuation.",
@@ -245,13 +217,13 @@ const puzzles = [
     bank: ["←","=","SUBSTRING","(","Text",",",")","2","2","NumStr","Num","INT","'","\""],
     answers: {"1":"←","2":"←","3":"SUBSTRING","4":"Text","5":"2","6":"2","7":"←","8":"NumStr"}
   }
-]; /* end puzzles */
+];
 
 /* ------------------------------
-   Basic state and DOM refs
+   State and DOM refs
 --------------------------------*/
 let puzzleIndex = 0;
-let selectedToken = null; // {el, value}
+let selectedTokenValue = null; // when a bank token is selected (value only)
 const bankEl = document.getElementById('bank');
 const codeArea = document.getElementById('codeArea');
 const metaEl = document.getElementById('puzzleMeta');
@@ -261,11 +233,11 @@ const nextBtn = document.getElementById('nextBtn');
 const statusEl = document.getElementById('status');
 
 function escapeHtml(s){
-  return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+  return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
 }
 
 /* ------------------------------
-   Helpers: Shuffle, create elements
+   Helpers
 --------------------------------*/
 function shuffleArray(a){
   for(let i=a.length-1;i>0;i--){
@@ -276,10 +248,9 @@ function shuffleArray(a){
 }
 
 function clearSelection(){
-  if(selectedToken){
-    selectedToken.el.classList.remove('selected');
-  }
-  selectedToken = null;
+  // deselect any bank visual selected token
+  document.querySelectorAll('.token.selected').forEach(el => el.classList.remove('selected'));
+  selectedTokenValue = null;
 }
 
 /* ------------------------------
@@ -289,15 +260,11 @@ function renderPuzzle(index){
   clearSelection();
   statusEl.textContent = '';
   const p = puzzles[index];
-  // meta
   metaEl.innerHTML = `<strong>${escapeHtml(p.title)}</strong><div style="margin-top:6px;color:${getComputedStyle(document.documentElement).getPropertyValue('--muted')}">${escapeHtml(p.description)}</div>`;
-  // code lines: we show blanks as focusable inline spans
-  // We must parse lines and replace every ___n___ with a blank span
+  // render code area with blanks
   let rendered = '';
   for(const line of p.lines){
-    // replace placeholders preserving order
     let out = escapeHtml(line);
-    // match placeholders like ___1___
     out = out.replace(/___(\d+)___/g, function(_,n){
       const id = `blank-${n}`;
       return `<span tabindex="0" role="button" aria-label="Blank ${n}" class="blank empty" data-blank="${n}" id="${id}">___${n}___</span>`;
@@ -306,11 +273,10 @@ function renderPuzzle(index){
   }
   codeArea.innerHTML = rendered;
 
-  // build bank: clone array to avoid modifying original
-  const bankTokens = shuffleArray(p.bank.slice());
+  // build bank (visual order shuffled)
   bankEl.innerHTML = '';
+  const bankTokens = shuffleArray(p.bank.slice());
   for(const t of bankTokens){
-    // show tokens visually; token value may be quotes or special chars
     const tokenEl = document.createElement('div');
     tokenEl.className = 'token';
     tokenEl.tabIndex = 0;
@@ -318,9 +284,8 @@ function renderPuzzle(index){
     tokenEl.setAttribute('draggable','true');
     tokenEl.dataset.value = t;
     tokenEl.title = t;
-    // display token label with some escaping
     tokenEl.innerHTML = `<span>${escapeHtml(String(t))}</span>`;
-    attachTokenEvents(tokenEl);
+    attachBankTokenEvents(tokenEl);
     bankEl.appendChild(tokenEl);
   }
 
@@ -328,42 +293,40 @@ function renderPuzzle(index){
   document.querySelectorAll('.blank').forEach(b => {
     attachBlankEvents(b);
   });
-
-  // clear statuses (visual)
-  document.querySelectorAll('.blank').forEach(b => b.classList.remove('correct','incorrect'));
 }
 
 /* ------------------------------
-   Events for tokens and blanks
+   Events for bank tokens (originals)
+   - Bank tokens are never removed. We clone them when placing.
 --------------------------------*/
-function attachTokenEvents(tokenEl){
+function attachBankTokenEvents(tokenEl){
   tokenEl.addEventListener('dragstart', ev => {
+    // For drag/drop we'll provide the value so the drop handler can create a clone in the blank
     ev.dataTransfer.setData('text/plain', tokenEl.dataset.value);
-    // mark the dragged element's id to allow swap on drop
-    ev.dataTransfer.effectAllowed = 'move';
-    // store a reference via global selectedToken for keyboard mode as well
-    selectedToken = {el: tokenEl, value: tokenEl.dataset.value};
+    ev.dataTransfer.effectAllowed = 'copy';
     tokenEl.classList.add('dragging');
+    // select it visually
+    clearSelection();
+    tokenEl.classList.add('selected');
+    selectedTokenValue = tokenEl.dataset.value;
   });
   tokenEl.addEventListener('dragend', ev => {
     tokenEl.classList.remove('dragging');
-    clearSelection();
+    // keep bank tokens visible (not removed)
   });
 
-  // click selection / keyboard: Enter toggles selection
+  // click: select token value for keyboard placement
   tokenEl.addEventListener('click', ev => {
-    // clicking selects token (for keyboard placement)
-    if(selectedToken && selectedToken.el === tokenEl){
-      // deselect
-      tokenEl.classList.remove('selected');
-      selectedToken = null;
-    } else {
-      // deselect previous
-      clearSelection();
-      selectedToken = {el: tokenEl, value: tokenEl.dataset.value};
+    const currentlySelected = tokenEl.classList.contains('selected');
+    clearSelection();
+    if(!currentlySelected){
       tokenEl.classList.add('selected');
+      selectedTokenValue = tokenEl.dataset.value;
+    } else {
+      selectedTokenValue = null;
     }
   });
+
   tokenEl.addEventListener('keydown', ev => {
     if(ev.key === 'Enter' || ev.key === ' '){
       ev.preventDefault();
@@ -372,10 +335,13 @@ function attachTokenEvents(tokenEl){
   });
 }
 
+/* ------------------------------
+   Blank events
+--------------------------------*/
 function attachBlankEvents(blankEl){
   blankEl.addEventListener('dragover', ev => {
     ev.preventDefault();
-    ev.dataTransfer.dropEffect = 'move';
+    ev.dataTransfer.dropEffect = 'copy';
     blankEl.classList.add('drag-over');
   });
   blankEl.addEventListener('dragleave', ev => {
@@ -385,120 +351,81 @@ function attachBlankEvents(blankEl){
     ev.preventDefault();
     blankEl.classList.remove('drag-over');
     const val = ev.dataTransfer.getData('text/plain');
-    if(!val) return;
-    // find token element in bank with this value that is draggable (first match)
-    const tokenEl = findBankTokenByValue(val);
-    if(tokenEl){
-      placeTokenIntoBlank(tokenEl, blankEl);
-    } else {
-      // if token not found (maybe it was selected via keyboard), use selectedToken
-      if(selectedToken) placeTokenIntoBlank(selectedToken.el, blankEl);
+    if(val){
+      placeValueIntoBlankByValue(val, blankEl);
     }
   });
 
-  // keyboard: Enter places current selectedToken into this blank (or toggles if blank has token)
+  // keyboard: Enter places currently selected bank token value
   blankEl.addEventListener('keydown', ev => {
     if(ev.key === 'Enter' || ev.key === ' '){
       ev.preventDefault();
-      if(selectedToken){
-        placeTokenIntoBlank(selectedToken.el, blankEl);
+      if(selectedTokenValue !== null){
+        placeValueIntoBlankByValue(selectedTokenValue, blankEl);
       } else {
-        // if nothing selected, and blank has a token, select that token back into the bank (detach)
-        const existing = getTokenInBlank(blankEl);
-        if(existing){
-          // move token back to bank
-          moveTokenToBank(existing, {focus:true});
+        // if nothing selected, and blank has a placed clone, remove it
+        const placed = getPlacedCloneInBlank(blankEl);
+        if(placed) {
+          placed.remove();
+          blankEl.innerHTML = `___${blankEl.dataset.blank}___`;
+          blankEl.classList.add('empty');
+          attachBlankEvents(blankEl); // reattach events to new inner HTML
         }
       }
     }
   });
 
-  // allow click to place selected token
+  // click: if a token value selected, place; else toggle selection of existing placed clone
   blankEl.addEventListener('click', ev => {
-    if(selectedToken){
-      placeTokenIntoBlank(selectedToken.el, blankEl);
+    if(selectedTokenValue !== null){
+      placeValueIntoBlankByValue(selectedTokenValue, blankEl);
     } else {
-      // if blank filled, clicking selects the token there (so keyboard users can move it)
-      const existing = getTokenInBlank(blankEl);
-      if(existing){
-        // select token in bank visually
-        clearSelection();
-        selectedToken = {el: existing, value: existing.dataset.value};
-        existing.classList.add('selected');
+      // clicking blank when no bank token selected: if it has a clone, select that clone (so keyboard move can remove it)
+      const placed = getPlacedCloneInBlank(blankEl);
+      if(placed){
+        // visually indicate (temporary) selection by giving focus to the blank
+        blankEl.focus();
       }
     }
   });
 }
 
 /* ------------------------------
-   DOM utility: find token in bank by value (first one)
+   Placement: create a clone element for the blank (bank tokens remain)
+   - If the blank already has a clone, simply replace it (the old clone is removed).
+   - Clones are not draggable and are simple markers holding data-value for validation.
 --------------------------------*/
-function findBankTokenByValue(value){
-  // bank tokens are direct children of bankEl but some tokens might be in bank or removed if placed
-  const tokens = Array.from(bankEl.querySelectorAll('.token'));
-  // first exact match that is still attached to bank
-  return tokens.find(t => t.dataset.value === value);
+function getPlacedCloneInBlank(blankEl){
+  return blankEl.querySelector('.placed-clone');
 }
 
-/* ------------------------------
-   Token placement logic: placing tokenEl into blankEl
-   - If blank already has a token, swap it back to bank (or exchange)
---------------------------------*/
-function getTokenInBlank(blankEl){
-  // blank's token will be a child node with class token if present
-  return blankEl.querySelector('.token');
-}
-
-function moveTokenToBank(tokenEl, options = {}){
-  // append to bank and restore attributes
-  bankEl.appendChild(tokenEl);
-  tokenEl.classList.remove('placed');
-  tokenEl.style.margin = '';
-  tokenEl.tabIndex = 0;
-  tokenEl.setAttribute('draggable','true');
-  // reattach events (in case)
-  attachTokenEvents(tokenEl);
-  if(options.focus){
-    tokenEl.focus();
+function placeValueIntoBlankByValue(value, blankEl){
+  // create a clone node representing the placed token (do not remove the bank token)
+  // if blank already has a clone, remove it (swap behaviour: previous clone removed; bank remains)
+  const existingClone = getPlacedCloneInBlank(blankEl);
+  if(existingClone){
+    existingClone.remove();
   }
-}
-
-function placeTokenIntoBlank(tokenEl, blankEl){
-  // tokenEl might be in bank or already in another blank
-  const currentOwner = tokenEl.parentElement;
-  // identify if blank already contains a token (swap)
-  const existing = getTokenInBlank(blankEl);
-
-  // Remove tokenEl from bank or previous blank
-  if(currentOwner && currentOwner.classList.contains('blank')){
-    // token is being moved from one blank to another
-    currentOwner.innerHTML = `___${currentOwner.dataset.blank}___`;
-    currentOwner.classList.add('empty');
-    // reattach blank events to replaced placeholder
-    const newBlank = document.getElementById(currentOwner.id);
-    attachBlankEvents(newBlank);
-  } else {
-    // token from bank: remove from bank
-    tokenEl.remove();
-  }
-
-  // If blank had existing token, move it back to bank
-  if(existing){
-    // swap: move existing to bank
-    moveTokenToBank(existing);
-  }
-
-  // place tokenEl into blankEl
-  blankEl.innerHTML = ''; // clear placeholder
-  blankEl.appendChild(tokenEl);
-  tokenEl.classList.add('placed');
-  tokenEl.style.margin = '0';
-  tokenEl.setAttribute('draggable','false');
+  // create clone visual
+  const clone = document.createElement('span');
+  clone.className = 'token placed-clone';
+  clone.dataset.value = value;
+  clone.tabIndex = -1;
+  clone.setAttribute('draggable','false');
+  clone.innerHTML = `<span>${escapeHtml(String(value))}</span>`;
+  // clear placeholder text and append clone
+  blankEl.innerHTML = '';
+  blankEl.appendChild(clone);
   blankEl.classList.remove('empty','correct','incorrect');
-  // token no longer selectable in bank; deselect others
+  // allow clicking clone to remove it (for convenience)
+  clone.addEventListener('click', ev => {
+    clone.remove();
+    blankEl.innerHTML = `___${blankEl.dataset.blank}___`;
+    blankEl.classList.add('empty');
+    attachBlankEvents(blankEl);
+  });
+  // after placing, clear selected bank token selection (but bank tokens remain)
   clearSelection();
-  // focus the blank for accessibility
-  blankEl.focus();
 }
 
 /* ------------------------------
@@ -508,12 +435,11 @@ function validateCurrent(){
   const p = puzzles[puzzleIndex];
   const answers = p.answers;
   let allCorrect = true;
-  // for each expected blank in answers
   for(const key of Object.keys(answers)){
     const blank = document.querySelector(`[data-blank="${key}"]`);
     const expected = answers[key];
-    const placedToken = getTokenInBlank(blank);
-    const placedValue = placedToken ? placedToken.dataset.value : null;
+    const placed = getPlacedCloneInBlank(blank);
+    const placedValue = placed ? placed.dataset.value : null;
     if(placedValue === expected){
       blank.classList.add('correct');
       blank.classList.remove('incorrect','empty');
@@ -523,8 +449,6 @@ function validateCurrent(){
       allCorrect = false;
     }
   }
-  // also treat any other blanks not in answers as incorrect if empty
-  // show status
   if(allCorrect){
     statusEl.textContent = "All correct! Well done 🎉";
   } else {
@@ -534,41 +458,26 @@ function validateCurrent(){
 }
 
 /* ------------------------------
-   Reset: clear fills and reshuffle bank order
+   Reset: remove all placed clones and reshuffle bank order
 --------------------------------*/
 function resetPuzzle(){
-  const p = puzzles[puzzleIndex];
-  // move any placed tokens back to bank and rebuild bank order shuffled
-  // Gather all token values currently present (in bank or in blanks)
-  const allTokens = [];
-  // tokens that are in bank
-  Array.from(bankEl.querySelectorAll('.token')).forEach(t => { allTokens.push(t.dataset.value); t.remove(); });
-  // tokens placed in blanks
+  clearSelection();
+  statusEl.textContent = '';
+  // remove clones from blanks
   document.querySelectorAll('.blank').forEach(b => {
-    const t = getTokenInBlank(b);
-    if(t){
-      allTokens.push(t.dataset.value);
-      t.remove();
-      // restore placeholder
-      b.innerHTML = `___${b.dataset.blank}___`;
-      b.classList.add('empty');
-      b.classList.remove('correct','incorrect');
-      attachBlankEvents(b);
-    } else {
-      // ensure placeholder present
-      b.innerHTML = `___${b.dataset.blank}___`;
-      b.classList.add('empty');
-      b.classList.remove('correct','incorrect');
-      attachBlankEvents(b);
-    }
+    const placed = getPlacedCloneInBlank(b);
+    if(placed) placed.remove();
+    b.innerHTML = `___${b.dataset.blank}___`;
+    b.classList.add('empty');
+    b.classList.remove('correct','incorrect');
+    attachBlankEvents(b);
   });
-  // ensure we also include any tokens that might not have been present (from puzzle definition)
-  // Assemble tokens from puzzle.bank to ensure completeness
-  const bankTokens = p.bank.slice();
-  // Shuffle combined (but ensure it's the puzzle's bank content)
-  const finalTokens = shuffleArray(bankTokens);
-  // rebuild bank
-  for(const t of finalTokens){
+  // reshuffle visual bank tokens
+  const p = puzzles[puzzleIndex];
+  const tokens = p.bank.slice();
+  shuffleArray(tokens);
+  bankEl.innerHTML = '';
+  for(const t of tokens){
     const tokenEl = document.createElement('div');
     tokenEl.className = 'token';
     tokenEl.tabIndex = 0;
@@ -577,11 +486,9 @@ function resetPuzzle(){
     tokenEl.dataset.value = t;
     tokenEl.title = t;
     tokenEl.innerHTML = `<span>${escapeHtml(String(t))}</span>`;
-    attachTokenEvents(tokenEl);
+    attachBankTokenEvents(tokenEl);
     bankEl.appendChild(tokenEl);
   }
-  clearSelection();
-  statusEl.textContent = '';
 }
 
 /* ------------------------------
@@ -593,12 +500,12 @@ function nextPuzzle(){
 }
 
 /* ------------------------------
-   Initialize first puzzle
+   Initialize
 --------------------------------*/
 renderPuzzle(puzzleIndex);
 
 /* ------------------------------
-   Wire up buttons
+   Buttons
 --------------------------------*/
 submitBtn.addEventListener('click', ev => {
   validateCurrent();
@@ -611,8 +518,7 @@ nextBtn.addEventListener('click', ev => {
 });
 
 /* ------------------------------
-   Extra keyboard niceties:
-   - Allow Escape to clear selection
+   Global keyboard niceties
 --------------------------------*/
 document.addEventListener('keydown', ev => {
   if(ev.key === 'Escape'){
@@ -621,17 +527,13 @@ document.addEventListener('keydown', ev => {
 });
 
 /* ------------------------------
-   Accessibility: announce puzzle changes to screen readers
+   Accessibility: update document title per puzzle
 --------------------------------*/
 const observer = new MutationObserver(() => {
   const p = puzzles[puzzleIndex];
   document.title = `Code Shuffler – ${p.title}`;
 });
 observer.observe(metaEl, {childList:true, subtree:true});
-
-/* ------------------------------
-   End of script
---------------------------------*/
 </script>
 </body>
 </html>

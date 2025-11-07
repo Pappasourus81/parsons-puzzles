@@ -29,7 +29,7 @@
   .controls{ display:flex; gap:8px; margin-top:12px; align-items:center; }
   button.action{ background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
   button.secondary{ background:#666; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
-  .small{ padding:6px 10px; font-size:13px; }
+  button.small{ padding:6px 10px; font-size:13px; border-radius:6px; }
   #message{ margin-top:10px; font-weight:600; }
   .keyboard-hint{ color:var(--muted); font-size:13px; margin-top:6px; }
   @media (max-width:700px){ .bank{ gap:6px; } .blank{ min-width:44px; } .token{ min-width:32px; padding:6px 8px;} }
@@ -44,7 +44,10 @@
       <div id="descTitle" style="font-weight:700; margin-bottom:6px;">Select a puzzle to see its description</div>
       <ul id="descBullets" class="desc-bullets"></ul>
       <div id="teacherHint" class="hint"></div>
-      <button id="toggleExample" class="small" style="margin-top:8px; display:none;">Show example output</button>
+      <div style="margin-top:8px;">
+        <button id="toggleExample" class="small">Show example output</button>
+        <button id="revealHintBtn" class="small" style="margin-left:8px;">Reveal hint (fill one blank)</button>
+      </div>
       <div id="exampleBox" class="example-box" role="region" aria-hidden="true"></div>
     </div>
 
@@ -70,11 +73,11 @@
 
 <script>
 /*
- Updated puzzles with:
- - short bullet points for teacher-style instructions
- - one-line hint for each puzzle
- - example output text (hidden by default, toggled by button)
- Functionality unchanged otherwise.
+ Added a Reveal Hint button:
+ - fills the first unanswered/incorrect blank with the correct token
+ - visually marks it correct
+ - disables itself for the current puzzle (one hint per puzzle)
+ - resets when a different puzzle is loaded
 */
 
 const puzzles = [
@@ -142,7 +145,6 @@ const puzzles = [
       "NEXT ___11___",
       "OUTPUT ___9___"
     ],
-    // 11 blanks; answers ordered by blank number
     answers: ["total","0","FOR","i","=","1","TO","n","total","+","i"],
     bank: ["total","sum","0","1","2","+","-","*","FOR","i","j","TO","STEP","OUTPUT","INPUT","n","=","NEXT"]
   },
@@ -272,12 +274,14 @@ const descTitle = document.getElementById('descTitle');
 const descBullets = document.getElementById('descBullets');
 const teacherHint = document.getElementById('teacherHint');
 const toggleExample = document.getElementById('toggleExample');
+const revealHintBtn = document.getElementById('revealHintBtn');
 const exampleBox = document.getElementById('exampleBox');
 const msgEl = document.getElementById('message');
 const puzzleSelect = document.getElementById('puzzleSelect');
 
 let currentIndex = 0;
 let selectedToken = null;
+const usedHintForPuzzle = {}; // track hints used per puzzle (one hint allowed per puzzle)
 
 // Helpers
 function shuffleArray(a){
@@ -317,6 +321,16 @@ function renderDescription(p){
     exampleBox.style.display = 'none';
     exampleBox.setAttribute('aria-hidden','true');
   }
+  // Hint button enabled only if not used for this puzzle
+  if(usedHintForPuzzle[currentIndex]) {
+    revealHintBtn.disabled = true;
+    revealHintBtn.textContent = 'Reveal hint (used)';
+    revealHintBtn.style.opacity = '0.6';
+  } else {
+    revealHintBtn.disabled = false;
+    revealHintBtn.textContent = 'Reveal hint (fill one blank)';
+    revealHintBtn.style.opacity = '1';
+  }
 }
 
 // Toggle example visibility
@@ -330,6 +344,48 @@ toggleExample.addEventListener('click', ()=>{
     exampleBox.style.display = 'block';
     exampleBox.setAttribute('aria-hidden','false');
     toggleExample.textContent = 'Hide example output';
+  }
+});
+
+// Reveal hint: fill one correct blank
+revealHintBtn.addEventListener('click', ()=> {
+  if(usedHintForPuzzle[currentIndex]) return; // should already be disabled
+  const p = puzzles[currentIndex];
+  const answers = p.answers || [];
+  const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
+  // find first blank that has a defined correct answer and is not correctly filled
+  let found = false;
+  for(let i=0;i<blanks.length;i++){
+    const b = blanks[i];
+    const correct = answers[i] !== undefined ? String(answers[i]) : '';
+    if(!correct) continue; // skip blanks without a defined answer
+    const placed = b.dataset.filled === 'true' ? (b.dataset.token || '') : '';
+    if(placed.trim() !== correct.trim()){
+      // fill this blank with the correct token
+      b.dataset.token = correct;
+      b.dataset.filled = 'true';
+      b.textContent = correct;
+      b.classList.remove('incorrect');
+      b.classList.add('correct');
+      found = true;
+      break;
+    }
+  }
+  if(found){
+    usedHintForPuzzle[currentIndex] = true;
+    revealHintBtn.disabled = true;
+    revealHintBtn.textContent = 'Reveal hint (used)';
+    revealHintBtn.style.opacity = '0.6';
+    msgEl.textContent = 'Hint used: one correct blank filled.';
+    msgEl.style.color = '#0b5';
+  } else {
+    msgEl.textContent = 'No eligible blank found to reveal (all blanks correct or no answer defined).';
+    msgEl.style.color = '#a00';
+    // still disable to avoid repeated clicks
+    usedHintForPuzzle[currentIndex] = true;
+    revealHintBtn.disabled = true;
+    revealHintBtn.textContent = 'Reveal hint (used)';
+    revealHintBtn.style.opacity = '0.6';
   }
 });
 
@@ -429,8 +485,18 @@ function resetCurrent(){
   msgEl.textContent = '';
   document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
   selectedToken = null;
-  // hide example
+  // hide example and re-enable hint if it wasn't used before
   exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
+  // If they reset after using hint, keep hint as used (do not re-enable)
+  if(!usedHintForPuzzle[currentIndex]){
+    revealHintBtn.disabled = false;
+    revealHintBtn.textContent = 'Reveal hint (fill one blank)';
+    revealHintBtn.style.opacity = '1';
+  } else {
+    revealHintBtn.disabled = true;
+    revealHintBtn.textContent = 'Reveal hint (used)';
+    revealHintBtn.style.opacity = '0.6';
+  }
 }
 
 // Check answers
@@ -473,6 +539,16 @@ function loadPuzzle(idx){
   msgEl.textContent = '';
   document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
   selectedToken = null;
+  // ensure hint button state reflects whether hint was used
+  if(usedHintForPuzzle[currentIndex]){
+    revealHintBtn.disabled = true;
+    revealHintBtn.textContent = 'Reveal hint (used)';
+    revealHintBtn.style.opacity = '0.6';
+  } else {
+    revealHintBtn.disabled = false;
+    revealHintBtn.textContent = 'Reveal hint (fill one blank)';
+    revealHintBtn.style.opacity = '1';
+  }
   // hide example initially
   exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
 }

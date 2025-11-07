@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Parsons Code Checker</title>
+  <style>
+    :root{
+      --gap: 12px;
+      --card-bg: #f8f9fb;
+      --slot-border: #ccccd6;
+      --ok: #d4f7d9;
+      --bad: #ffd6d6;
+      --accent: #0066cc;
+    }
+    body{
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin: 18px;
+      background: #ffffff;
+      color:#111;
+    }
+    h1{ margin: 0 0 14px 0; font-size: 20px; }
+    .controls{ display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
+    button{
+      background:var(--accent);
+      color:white;
+      border: none;
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    button.secondary{ background:#666; }
+    .layout{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items:start;
+    }
+    .panel{
+      background:var(--card-bg);
+      padding:12px;
+      border-radius:10px;
+      box-shadow: 0 2px 6px rgba(10,10,20,0.03);
+    }
+    .pool{
+      display:flex;
+      flex-direction:column;
+      gap:var(--gap);
+      min-height:120px;
+      padding:8px;
+      border: 2px dashed var(--slot-border);
+      border-radius:8px;
+    }
+    .piece{
+      padding:8px 10px;
+      background:white;
+      border-radius:6px;
+      box-shadow:0 1px 2px rgba(0,0,0,0.05);
+      cursor:grab;
+      user-select:none;
+      white-space:pre-wrap;
+      font-family: "Courier New", monospace;
+      font-size: 13px;
+    }
+    .slots{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .slot{
+      min-height:34px;
+      padding:6px;
+      border: 2px dashed var(--slot-border);
+      border-radius:6px;
+      background: linear-gradient(180deg,#fff,#fbfdff);
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      font-family: "Courier New", monospace;
+      font-size:13px;
+    }
+    .slot.dragover{ border-color: #0066cc; background: #eef6ff; }
+    .message{ margin-top:10px; font-weight:600; }
+    .meta{ font-size:13px; color:#444; margin-bottom:8px; }
+    .controls small{ display:block; color:#222; opacity:0.85; margin-top:6px; font-weight:500;}
+    @media (max-width:900px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Parsons Code Checker</h1>
+  <div class="meta">Drag lines from the pool into the slots in order. Submit to check.</div>
+
+  <div class="controls">
+    <button id="submitBtn">Submit</button>
+    <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
+    <button id="nextBtn">New Puzzle</button>
+    <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+      <label style="font-size:13px; color:#333">Puzzle:
+        <select id="puzzleSelect" style="margin-left:6px; padding:6px; border-radius:6px;"></select>
+      </label>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <strong>Pool (drag from here)</strong>
+      <div id="pool" class="pool" aria-label="pool of code lines"></div>
+    </div>
+
+    <div class="panel">
+      <strong>Slots (place code in order)</strong>
+      <div id="slots" class="slots" aria-label="slots to drop code lines"></div>
+      <div id="message" class="message" role="status"></div>
+    </div>
+  </div>
+
+<script>
+const puzzles = [
+  {
+    title: "Basic IF (Pseudocode)",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Enter a number: \"",
+      "    INPUT number",
+      "",
+      "    IF number > 0 THEN",
+      "        OUTPUT \"The number is positive\"",
+      "    ENDIF",
+      "END"
+    ]
+  },
+  {
+    title: "IF-ELSE (Pseudocode)",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Enter a number: \"",
+      "    INPUT number",
+      "",
+      "    IF number MOD 2 = 0 THEN",
+      "        OUTPUT \"The number is even\"",
+      "    ELSE",
+      "        OUTPUT \"The number is odd\"",
+      "    ENDIF",
+      "END"
+    ]
+  },
+  {
+    title: "Nested IF (Pseudocode)",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Enter a number: \"",
+      "    INPUT number",
+      "",
+      "    IF number > 0 THEN",
+      "        IF number > 100 THEN",
+      "            OUTPUT \"The number is large and positive\"",
+      "        ELSE",
+      "            OUTPUT \"The number is small but positive\"",
+      "        ENDIF",
+      "    ENDIF",
+      "END"
+    ]
+  },
+  {
+    title: "Nested IF with ELSE (Pseudocode)",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Enter a number: \"",
+      "    INPUT number",
+      "",
+      "    IF number > 0 THEN",
+      "        IF number > 100 THEN",
+      "            OUTPUT \"The number is large and positive\"",
+      "        ELSE",
+      "            OUTPUT \"The number is small but positive\"",
+      "        ENDIF",
+      "    ELSE",
+      "        IF number < 0 THEN",
+      "            OUTPUT \"The number is negative\"",
+      "        ELSE",
+      "            OUTPUT \"The number is zero\"",
+      "        ENDIF",
+      "    ENDIF",
+      "END"
+    ]
+  }
+];
+
+let currentIndex = 0;
+const poolEl = document.getElementById('pool');
+const slotsEl = document.getElementById('slots');
+const messageEl = document.getElementById('message');
+const puzzleSelect = document.getElementById('puzzleSelect');
+
+puzzles.forEach((p, i) => {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `${i+1}. ${p.title}`;
+  puzzleSelect.appendChild(opt);
+});
+puzzleSelect.addEventListener('change', e => {
+  currentIndex = parseInt(e.target.value, 10);
+  loadPuzzle(currentIndex);
+});
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function makePiece(text, id) {
+  const el = document.createElement('div');
+  el.className = 'piece';
+  el.draggable = true;
+  el.id = 'piece-' + id;
+  el.textContent = text;
+  el.dataset.line = text;
+  el.addEventListener('dragstart', onDragStart);
+  el.addEventListener('touchstart', onTouchStart, {passive:false});
+  return el;
+}
+
+function makeSlot(index) {
+  const s = document.createElement('div');
+  s.className = 'slot';
+  s.dataset.index = index;
+  s.tabIndex = 0;
+  s.addEventListener('dragover', onDragOver);
+  s.addEventListener('dragleave', onDragLeave);
+  s.addEventListener('drop', onDrop);
+  s.addEventListener('click', onSlotClick);
+  s.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') clearSlot(s);
+  });
+  return s;
+}
+
+function clearSlot(slot) {
+  if (slot.firstChild) {
+    poolEl.appendChild(slot.firstChild);
+  }
+  slot.style.background = '';
+  slot.style.borderColor = '';
+  slot.classList.remove('dragover');
+}
+
+let draggedId = null;
+
+function onDragStart(e) {
+  draggedId = e.target.id;
+  e.dataTransfer.setData('text/plain', draggedId);
+  e.dataTransfer.effectAllowed = 'move';
+}
+function onDragOver(e) {
+  e.preventDefault();
+  this.classList.add('dragover');
+  e.dataTransfer.dropEffect = 'move';
+}
+function onDragLeave(e) {
+  this.classList.remove('dragover');
+}
+function onDrop(e) {
+  e.preventDefault();
+  this.classList.remove('dragover');
+  const id = e.dataTransfer.getData('text/plain') || draggedId;
+  const piece = document.getElementById(id);
+  if (!piece) return;
+  if (this.firstChild) {
+    poolEl.appendChild(this.firstChild);
+  }
+  this.appendChild(piece);
+}
+
+function onSlotClick(e) {
+  clearSlot(e.currentTarget);
+}
+
+poolEl.addEventListener('dragover', function(e) { e.preventDefault(); });
+poolEl.addEventListener('drop', function(e) {
+  e.preventDefault();
+  const id = e.dataTransfer.getData('text/plain') || draggedId;
+  const piece = document.getElementById(id);
+  if (piece) poolEl.appendChild(piece);
+});
+
+let touchPickup = null;
+function onTouchStart(e){
+  e.preventDefault();
+  touchPickup = e.currentTarget;
+  document.addEventListener('touchend', onTouchEnd, {once:true});
+}
+function onTouchEnd(e){
+  if(!touchPickup) return;
+  const touch = e.changedTouches[0];
+  const target = document.elementFromPoint(touch.clientX, touch.clientY);
+  const slot = target && target.closest('.slot');
+  if (slot) {
+    if (slot.firstChild) poolEl.appendChild(slot.firstChild);
+    slot.appendChild(touchPickup);
+  } else {
+    poolEl.appendChild(touchPickup);
+  }
+  touchPickup = null;
+}
+
+function resetPuzzle() {
+  const puzzle = puzzles[currentIndex];
+  const lines = puzzle.lines.slice();
+  shuffle(lines);
+  poolEl.innerHTML = '';
+  slotsEl.innerHTML = '';
+  lines.forEach((ln, i) => poolEl.appendChild(makePiece(ln, 'p' + i + '-' + Math.random().toString(36).slice(2))));
+  for (let i = 0; i < puzzle.lines.length; i++) {
+    slotsEl.appendChild(makeSlot(i));
+  }
+  messageEl.textContent = '';
+}
+
+function submitPuzzle() {
+  const puzzle = puzzles[currentIndex];
+  const correct = puzzle.lines;
+  const slotNodes = Array.from(slotsEl.children);
+  let allCorrect = true;
+  slotNodes.forEach((slot, i) => {
+    slot.style.background = '';
+    slot.style.borderColor = '';
+    const child = slot.firstChild;
+    if (!child) {
+      slot.style.background = 'var(--bad)';
+      slot.style.borderColor = '#c44';
+      allCorrect = false;
+      return;
+    }
+    const text = child.dataset.line.trim();
+    if (text === correct[i].trim()) {
+      slot.style.background = 'var(--ok)';
+      slot.style.borderColor = '#2a9a4a';
+    } else {
+      slot.style.background = 'var(--bad)';
+      slot.style.borderColor = '#c44';
+      allCorrect = false;
+    }
+  });
+  if (allCorrect) {
+    messageEl.textContent = "All correct! Well done 🎉";
+    messageEl.style.color = '#1a7f3a';
+  } else {
+    messageEl.textContent = "Some lines are incorrect — incorrect slots are highlighted red.";
+    messageEl.style.color = '#a00';
+  }
+}
+
+function nextPuzzle() {
+  currentIndex = (currentIndex + 1) % puzzles.length;
+  puzzleSelect.value = currentIndex;
+  loadPuzzle(currentIndex);
+}
+
+function loadPuzzle(index) {
+  currentIndex = index;
+  resetPuzzle();
+}
+
+document.getElementById('submitBtn').addEventListener('click', submitPuzzle);
+document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
+document.getElementById('nextBtn').addEventListener('click', nextPuzzle);
+
+loadPuzzle(currentIndex);
+</script>
+</body>
+</html>

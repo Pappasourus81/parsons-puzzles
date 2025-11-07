@@ -127,15 +127,14 @@
 
 <script>
 /*
-  Code Shuffler – full file
-  - Puzzles now include teacher-style descriptions: exact input required (if any) and expected output or task.
-  - Bank tokens are cloned when placed; originals remain available.
-  - Controls: Prev, Next, Dropdown, Submit, Reset.
-  - Keyboard accessible: Tab and Enter supported.
+  Code Shuffler – corrected final puzzle (removed unusable trailing blank)
+  - Puzzles include teacher-style descriptions.
+  - Bank tokens are cloned when placed (bank remains unchanged).
+  - Prev/Next/Dropdown/Reset/Submit available.
 */
 
 /* ------------------------------
-   Puzzles with new teacher-style descriptions
+   Puzzles (last puzzle corrected)
 --------------------------------*/
 const puzzles = [
   {
@@ -203,7 +202,8 @@ const puzzles = [
   },
   {
     title: "Complex expression with SUBSTRING and assignment",
-    description: "No input. Task: Set Text = \"X12Y\", then extract NumStr = SUBSTRING(Text,2,2). Finally assign Num = NumStr. (This tests correct punctuation and assignment.)",
+    description: "No input. Task: Set Text = \"X12Y\", then extract NumStr = SUBSTRING(Text,2,2). Finally assign Num = NumStr. Ensure correct punctuation and assignment symbols.",
+    // CORRECTED: removed unusable trailing blank — there are now 7 blanks
     lines: ["Text ___1___ \"X12Y\"","NumStr ___2___ SUBSTRING ___3___ Text ___4___ 2 ___5___ 2 ___6___","Num ___7___ NumStr"],
     bank: ["←","=","SUBSTRING","(","Text",",",")","2","2","NumStr","Num","INT","'","\""],
     answers: {"1":"←","2":"←","3":"SUBSTRING","4":"Text","5":"2","6":"2","7":"←"}
@@ -230,7 +230,7 @@ function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math
 function clearSelection(){ document.querySelectorAll('.token.selected').forEach(el=>el.classList.remove('selected')); selectedTokenValue=null; }
 
 /* ------------------------------
-   Populate dropdown with puzzle titles
+   Populate dropdown
 --------------------------------*/
 function populatePuzzleSelect(){
   selectEl.innerHTML = '';
@@ -243,7 +243,7 @@ function populatePuzzleSelect(){
 }
 
 /* ------------------------------
-   Render puzzle at index
+   Render puzzle
 --------------------------------*/
 function renderPuzzle(index){
   clearSelection();
@@ -266,7 +266,7 @@ function renderPuzzle(index){
   }
   codeArea.innerHTML = rendered;
 
-  // render bank tokens (shuffled). Tokens stay in bank; clones are placed into blanks.
+  // render bank (shuffled)
   bankEl.innerHTML = '';
   const bankTokens = shuffleArray(p.bank.slice());
   for(const t of bankTokens){
@@ -285,7 +285,7 @@ function renderPuzzle(index){
   // attach blank events
   document.querySelectorAll('.blank').forEach(b => attachBlankEvents(b));
 
-  // update title for screen readers/tabs
+  // update title for accessibility
   document.title = `Code Shuffler – ${p.title}`;
 }
 
@@ -315,7 +315,7 @@ function attachBankTokenEvents(tokenEl){
 }
 
 /* ------------------------------
-   Blank events and clone placement
+   Blank events & placement (cloning)
 --------------------------------*/
 function attachBlankEvents(blankEl){
   blankEl.addEventListener('dragover', ev=>{ ev.preventDefault(); ev.dataTransfer.dropEffect='copy'; blankEl.classList.add('drag-over'); });
@@ -345,25 +345,19 @@ function attachBlankEvents(blankEl){
 function getPlacedCloneInBlank(blankEl){ return blankEl.querySelector('.placed-clone'); }
 
 function placeValueIntoBlankByValue(value, blankEl){
-  // remove existing clone if present (replace)
   const existing = getPlacedCloneInBlank(blankEl);
   if(existing) existing.remove();
-
-  // create clone (visual placed token)
   const clone = document.createElement('span');
   clone.className = 'placed-clone';
   clone.dataset.value = value;
   clone.tabIndex = -1;
   clone.innerHTML = `<span>${escapeHtml(String(value))}</span>`;
-
-  // clicking a placed clone removes it (convenience)
   clone.addEventListener('click', ev=>{
     clone.remove();
     blankEl.innerHTML = `___${blankEl.dataset.blank}___`;
     blankEl.classList.add('empty');
     attachBlankEvents(blankEl);
   });
-
   blankEl.innerHTML = '';
   blankEl.appendChild(clone);
   blankEl.classList.remove('empty','correct','incorrect');
@@ -400,7 +394,6 @@ function validateCurrent(){
 function resetPuzzle(){
   clearSelection();
   statusEl.textContent = '';
-  // clear placed clones in blanks
   document.querySelectorAll('.blank').forEach(b=>{
     const placed = getPlacedCloneInBlank(b);
     if(placed) placed.remove();
@@ -409,7 +402,6 @@ function resetPuzzle(){
     b.classList.remove('correct','incorrect');
     attachBlankEvents(b);
   });
-  // reshuffle bank visual order
   const p = puzzles[puzzleIndex];
   const tokens = shuffleArray(p.bank.slice());
   bankEl.innerHTML = '';
@@ -428,7 +420,7 @@ function resetPuzzle(){
 }
 
 /* ------------------------------
-   Navigation functions
+   Navigation
 --------------------------------*/
 function goToPrevious(){
   const nextIndex = (puzzleIndex - 1 + puzzles.length) % puzzles.length;
@@ -444,12 +436,11 @@ function goToIndex(i){
 }
 
 /* ------------------------------
-   Initialization
+   Init
 --------------------------------*/
 populatePuzzleSelect();
 renderPuzzle(0);
 
-/* wire up controls */
 prevBtn.addEventListener('click', ev => { goToPrevious(); });
 nextBtn.addEventListener('click', ev => { goToNext(); });
 submitBtn.addEventListener('click', ev => { validateCurrent(); });

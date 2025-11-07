@@ -20,7 +20,7 @@
       color:#111;
     }
     h1{ margin: 0 0 14px 0; font-size: 20px; }
-    .controls{ display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; align-items:center }
+    .controls{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center }
     button{
       background:var(--accent);
       color:white;
@@ -49,7 +49,7 @@
       padding:10px 12px;
       border-radius:8px;
       border:1px solid #d1d7df;
-      background:#ffffff; /* keep clean white */
+      background:#ffffff;
       box-shadow:0 1px 3px rgba(10,10,20,0.04);
       font-size:14px;
       font-weight:600;
@@ -91,7 +91,6 @@
     }
     .message{ margin-top:10px; font-weight:600; }
     .meta{ font-size:14px; color:#444; margin-bottom:8px; }
-    .description{ font-size:13px; color:#666; margin-left:6px }
     @media (max-width:900px){
       .layout{ grid-template-columns: 1fr; }
     }
@@ -99,37 +98,29 @@
 </head>
 <body>
   <h1>Parsons Code Checker — Reorder Mode</h1>
-  <div style="display:flex; gap:12px; align-items:flex-start;">
-    <div class="meta">Drag lines to reorder them. Drop a line onto another to swap places. Submit to check.</div>
-  </div>
+  <div class="meta">Drag lines to reorder them. Drop a line onto another to swap places. Submit to check.</div>
 
-  <div class="controls">
-    <button id="submitBtn">Submit</button>
-    <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
-    <button id="nextBtn">New Puzzle</button>
-    <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
-      <label style="font-size:13px; color:#333">Puzzle:
-        <select id="puzzleSelect" style="margin-left:6px; padding:6px; border-radius:6px;"></select>
-      </label>
-    </div>
-  </div>
-
-  <!-- Description box placed here, above the scrambled code -->
   <div class="puzzle-box" id="puzzleDescription">Select a puzzle to see its description.</div>
 
   <div class="layout">
     <div class="panel">
       <strong>Scrambled code (reorder here)</strong>
       <div id="scrambled" class="scrambled-box" aria-label="scrambled code lines"></div>
+      <div class="controls">
+        <button id="submitBtn">Submit</button>
+        <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
+        <button id="nextBtn">New Puzzle</button>
+        <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+          <label style="font-size:13px; color:#333">Puzzle:
+            <select id="puzzleSelect" style="margin-left:6px; padding:6px; border-radius:6px;"></select>
+          </label>
+        </div>
+      </div>
       <div id="message" class="message" role="status"></div>
     </div>
   </div>
 
 <script>
-/* Reorder mode with swap animation
-   - Description box now appears above the scrambled area (styled).
-   - Small animation plays on swapped pieces for visual feedback.
-*/
 const puzzles = [
   {
     title: "Basic IF (Pseudocode)",
@@ -202,13 +193,12 @@ const puzzles = [
 ];
 
 let currentIndex = 0;
-let currentOrder = []; // mutable array of lines in current scrambled order
+let currentOrder = [];
 const scrambledEl = document.getElementById('scrambled');
 const messageEl = document.getElementById('message');
 const puzzleSelect = document.getElementById('puzzleSelect');
 const puzzleDescriptionEl = document.getElementById('puzzleDescription');
 
-// populate dropdown
 puzzles.forEach((p, i) => {
   const opt = document.createElement('option');
   opt.value = i;
@@ -238,11 +228,9 @@ function renderScrambled() {
     el.dataset.line = line;
     el.textContent = line;
 
-    // dragstart stores the index
     el.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', idx);
       e.dataTransfer.effectAllowed = 'move';
-      // mark source for keyboard/touch clarity
       el.classList.add('picked');
     });
 
@@ -261,9 +249,7 @@ function renderScrambled() {
       const toIdx = parseInt(el.dataset.index, 10);
       if (!Number.isNaN(fromIdx) && !Number.isNaN(toIdx) && fromIdx !== toIdx) {
         swapItems(fromIdx, toIdx);
-        // add a small animation class to both swapped elements
         renderScrambled();
-        // find the two elements and animate
         setTimeout(() => {
           const children = Array.from(scrambledEl.children);
           const a = children[toIdx];
@@ -274,7 +260,6 @@ function renderScrambled() {
       }
     });
 
-    // click-to-swap behaviour for touch/keyboard: select one then another
     el.addEventListener('click', () => {
       const prev = scrambledEl.querySelector('.picked');
       if (prev && prev !== el) {
@@ -283,7 +268,6 @@ function renderScrambled() {
         swapItems(i1,i2);
         prev.classList.remove('picked');
         renderScrambled();
-        // animate
         setTimeout(()=>{
           const children = Array.from(scrambledEl.children);
           const a = children[i1];
@@ -292,7 +276,6 @@ function renderScrambled() {
           if (b) { b.classList.add('swap-anim'); setTimeout(()=>b.classList.remove('swap-anim'), 300); }
         },10);
       } else {
-        // mark this as picked
         scrambledEl.querySelectorAll('.picked').forEach(x=>x.classList.remove('picked'));
         el.classList.add('picked');
       }
@@ -355,12 +338,10 @@ function loadPuzzle(index) {
   resetPuzzle();
 }
 
-// wire buttons
 document.getElementById('submitBtn').addEventListener('click', submitPuzzle);
 document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
 document.getElementById('nextBtn').addEventListener('click', nextPuzzle);
 
-// initial load
 puzzleSelect.value = 0;
 loadPuzzle(0);
 </script>

@@ -1,171 +1,25 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Code Shuffler – Syntax and Data Types</title>
-<style>
-  body{font-family:Arial,Helvetica,sans-serif;background:#f6f8fb;margin:0;padding:0;}
-  .wrap{max-width:960px;margin:30px auto;padding:20px;}
-  h1{text-align:center;color:#003366;}
-  .card{background:white;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.1);padding:20px;margin-bottom:20px;}
-  .description{background:#eef4ff;border-left:4px solid #003366;padding:10px;margin-bottom:12px;}
-  .pseudocode{background:#0f1724;color:#e6eefc;padding:14px;border-radius:8px;font-family:Consolas,monospace;white-space:pre;}
-  .blank{display:inline-block;min-width:70px;padding:5px 8px;border:1px dashed #88a;border-radius:5px;margin:2px;color:#ccc;}
-  .blank.correct{background:#d1fae5;color:#064e3b;border:1px solid #059669;}
-  .blank.incorrect{background:#fee2e2;color:#7f1d1d;border:1px solid #dc2626;}
-  .token{display:inline-block;background:#fff;border:1px solid #ccc;border-radius:6px;padding:6px 8px;margin:3px;cursor:grab;box-shadow:0 2px 5px rgba(0,0,0,0.1);}
-  .placed-clone{background:#fff;border:1px solid #ccc;border-radius:6px;padding:5px 7px;display:inline-block;color:#003366;font-weight:bold;}
-  .bank{display:flex;flex-wrap:wrap;}
-  .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:15px;}
-  button{background:#003366;color:white;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:bold;}
-  button.secondary{background:#e2e8f0;color:#003366;}
-  #status{font-weight:bold;margin-top:10px;}
-</style>
-</head>
-<body>
-<div class="wrap">
-<h1>Code Shuffler – Syntax and Data Types</h1>
-
-<div class="card">
-  <div id="puzzleMeta" class="description"></div>
-  <pre id="codeArea" class="pseudocode"></pre>
-  <div class="card">
-    <strong>Token bank</strong>
-    <div id="bank" class="bank"></div>
-  </div>
-  <div class="controls">
-    <button id="prevBtn" class="secondary">◀ Prev</button>
-    <button id="nextBtn" class="secondary">Next ▶</button>
-    <label for="puzzleSelect">Go to:</label>
-    <select id="puzzleSelect"></select>
-    <div style="flex:1"></div>
-    <button id="submitBtn">Submit</button>
-    <button id="resetBtn" class="secondary">Reset</button>
-  </div>
-  <div id="status"></div>
-</div>
-</div>
-
-<script>
-const puzzles = [
-  {
-    title:"Output a greeting",
-    description:"No input. Task: Write pseudocode that outputs the message \"Welcome to class\".",
-    lines:["___1___ ___2___Welcome to class___3___"],
-    bank:["OUTPUT","PRINT","\"","'","DISPLAY","OUTPUTS","("," )",":","Welcome to class"],
-    answers:{"1":"OUTPUT","2":'"',"3":'"'}
-  },
-  {
-    title:"Ask for name and display it",
-    description:"Input: a user's name. Task: Read the name and then output it in a sentence.",
-    lines:["___1___ Name","___2___ \"Hello, \" , ___3___"],
-    bank:["INPUT","READ","OUTPUT","PRINT","Name","'","\"","=","+"],
-    answers:{"1":"INPUT","2":"OUTPUT","3":"Name"}
-  },
-  {
-    title:"Calculate total price",
-    description:"No input. Task: Assign 20 to Price and 5 to Quantity, then compute Total = Price * Quantity.",
-    lines:["Price ___1___ 20","Quantity ___2___ 5","Total ___3___ Price ___4___ Quantity"],
-    bank:["←","=","*","+","-","/","Price","Quantity","Total","20","5"],
-    answers:{"1":"←","2":"←","3":"←","4":"*"}
-  },
-  {
-    title:"Combine text and number output",
-    description:"No input. Task: Create variables Name=\"Maya\" and Score=45, then output 'Maya scored 45 points'.",
-    lines:["Name ___1___ ___2___Maya___3___","Score ___4___ 45","___5___ Name , \" scored \" , Score , \" points\""],
-    bank:["←","=","OUTPUT","PRINT","'","\"","Name","Score","45","points"],
-    answers:{"1":"←","2":'"',"3":'"',"4":"←","5":"OUTPUT"}
-  },
-  {
-    title:"Demonstrate CHAR vs STRING",
-    description:"No input. Task: Declare Char='B' and Word=\"B\". Students must also fill in the quote marks themselves.",
-    lines:["Char ___1___ ___2___B___3___","Word ___4___ ___5___B___6___","___7___ Char , ___8___ and ___9___ , Word"],
-    bank:["←","=","OUTPUT","DISPLAY","PRINT","'","\"","and","Char","Word"],
-    answers:{"1":"←","2":"'", "3":"'", "4":"←","5":'"',"6":'"',"7":"OUTPUT","8":'"',"9":'"'}
-  },
-  {
-    title:"Use DIV and MOD",
-    description:"No input. Task: Given Total=25, calculate Quotient=Total DIV 6 and Remainder=Total MOD 6.",
-    lines:["Total ___1___ 25","Quotient ___2___ Total ___3___ 6","Remainder ___4___ Total ___5___ 6"],
-    bank:["←","=","DIV","MOD","/","6","25","%","//"],
-    answers:{"1":"←","2":"←","3":"DIV","4":"←","5":"MOD"}
-  },
-  {
-    title:"Substring extraction",
-    description:"Input: Text. Task: Assign Part=SUBSTRING(Text,3,2) and output Part.",
-    lines:["INPUT Text","Part ___1___ ___2___ ___3___ Text ___4___ 3 ___5___ 2 ___6___","___7___ Part"],
-    bank:["←","=","SUBSTRING","OUTPUT","PRINT","(","Text",",",")","3","2"],
-    answers:{"1":"←","2":"SUBSTRING","3":"(","4":",","5":",","6":")","7":"OUTPUT"}
-  },
-  {
-    title:"Rounding a calculated value",
-    description:"No input. Task: Students must reconstruct all lines. Use A=5.3, B=2.7, compute Avg=(A+B)/2, Result=ROUND(Avg).",
-    // completely blank - no words prefilled
-    lines:["___1___ ___2___ 5.3","___3___ ___4___ 2.7","___5___ ___6___ ( ___7___ ___8___ ___9___ ) / 2","___10___ ___11___ ___12___ ( ___13___ )"],
-    bank:["A","B","Avg","Result","←","=","ROUND","+","-","/","2","5.3","2.7","("," )","ROUND","AVG"],
-    answers:{"1":"A","2":"←","3":"B","4":"←","5":"Avg","6":"←","7":"A","8":"+","9":"B","10":"Result","11":"←","12":"ROUND","13":"Avg"}
-  },
-  {
-    title:"Concatenation challenge",
-    description:"No input. Task: Rebuild the full code. Declare X=4, Y=7 then output: \"Result: \" , X , \" + \" , Y , \" = \" , X + Y.",
-    // fully blank too
-    lines:["___1___ ___2___ 4","___3___ ___4___ 7","___5___ ___6___Result: ___7___ , ___8___ , ___9___ + ___10___ , ___11___ , ___12___ = ___13___ , ___14___ ___15___ ___16___"],
-    bank:["X","Y","←","=","OUTPUT","PRINT","'","\"","+","-","*","/","Result:","=","4","7",","],
-    answers: {
-  "1":"X","2":"←","3":"Y","4":"←","5":"OUTPUT","6":'"',"7":'"',
-  "8":"X","9":'"',"10":"Y","11":'"',"12":"X","13":'"',
-  "14":"Y","15":"+","16":"Y","17":"Y"
-}
-  },
-  {
-    title:"Advanced string and number mix",
-    description:"No input. Task: Rebuild all lines: Text=\"X12Y\", NumStr=SUBSTRING(Text,2,2), Num=ROUND(NumStr)+3, OUTPUT Num.",
-    lines:["___1___ ___2___ ___3___X12Y___4___","___5___ ___6___ ___7___ ___8___ ___9___ ___10___ 2 ___11___ 2 ___12___","___13___ ___14___ ___15___ ___16___ ( ___17___ ) + 3","___18___ ___19___"],
-    bank:["Text","NumStr","Num","←","=","SUBSTRING","ROUND","OUTPUT","(","Text",",",")","+","-","*","2","3","\"","'"],
-    answers:{"1":"Text","2":"←","3":'"',"4":'"',"5":"NumStr","6":"←","7":"SUBSTRING","8":"(","9":"Text","10":",","11":",","12":")","13":"Num","14":"←","15":"ROUND","16":"(","17":"NumStr","18":"OUTPUT","19":"Num"}
+{
+  title: "Concatenation challenge",
+  description: "No input. Task: Rebuild the full code. Declare X=4, Y=7 then output: \"Result:\" , X , \"+\" , Y , \"=\" , X + Y.",
+  lines: [
+    "___1___ ___2___ 4",
+    "___3___ ___4___ 7",
+    "___5___ ___6___ ___7___ ___8___ ___9___ ___10___ ___11___ ___12___ ___13___ ___14___ ___15___ ___16___ ___17___ ___18___"
+  ],
+  bank: [
+    "X","Y","←","=","OUTPUT",
+    "\"Result:\"","\",\"",",","\"+\"","\"=\"",
+    "4","7","+"
+  ],
+  answers: {
+    "1":"X","2":"←",
+    "3":"Y","4":"←",
+    "5":"OUTPUT","6":"\"Result:\"",
+    "7":",","8":"X",
+    "9":",","10":"\"+\"",
+    "11":",","12":"Y",
+    "13":",","14":"\"=\"",
+    "15":",","16":"X",
+    "17":"+","18":"Y"
   }
-];
-
-let puzzleIndex=0;
-let selectedTokenValue=null;
-const bankEl=document.getElementById('bank');
-const codeArea=document.getElementById('codeArea');
-const metaEl=document.getElementById('puzzleMeta');
-const selectEl=document.getElementById('puzzleSelect');
-const statusEl=document.getElementById('status');
-
-function escapeHtml(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function clearSelection(){document.querySelectorAll('.token.selected').forEach(el=>el.classList.remove('selected'));selectedTokenValue=null;}
-
-function renderPuzzle(i){
-  puzzleIndex=i;statusEl.textContent='';const p=puzzles[i];
-  metaEl.innerHTML=`<strong>${p.title}</strong><br>${p.description}`;
-  let html='';for(const line of p.lines){html+=line.replace(/___(\d+)___/g,(_,n)=>`<span class='blank' data-blank='${n}'>___${n}___</span>`)+"\n";}
-  codeArea.innerHTML=html;
-  bankEl.innerHTML='';const tokens=shuffle(p.bank.slice());
-  for(const t of tokens){const el=document.createElement('div');el.className='token';el.draggable=true;el.dataset.value=t;el.textContent=t;
-    el.onclick=()=>{clearSelection();el.classList.add('selected');selectedTokenValue=t;};
-    el.addEventListener('dragstart',ev=>ev.dataTransfer.setData('text/plain',t));bankEl.appendChild(el);}
-  document.querySelectorAll('.blank').forEach(b=>{
-    b.onclick=()=>{if(selectedTokenValue)place(selectedTokenValue,b);};
-    b.addEventListener('drop',ev=>{ev.preventDefault();place(ev.dataTransfer.getData('text/plain'),b);});
-    b.addEventListener('dragover',ev=>ev.preventDefault());
-  });
-  selectEl.innerHTML=puzzles.map((pz,idx)=>`<option value="${idx}" ${idx===i?"selected":""}>${idx+1}. ${pz.title}</option>`).join("");
 }
-
-function place(v,b){b.innerHTML=`<span class='placed-clone' data-value='${v}'>${v}</span>`;clearSelection();}
-function getValue(b){const c=b.querySelector('.placed-clone');return c?c.dataset.value:null;}
-function validate(){const p=puzzles[puzzleIndex];let ok=true;for(const [n,a] of Object.entries(p.answers)){const b=document.querySelector(`[data-blank="${n}"]`);const v=getValue(b);if(v===a){b.classList.add('correct');b.classList.remove('incorrect');}else{b.classList.add('incorrect');b.classList.remove('correct');ok=false;}}statusEl.textContent=ok?"All correct! 🎉":"Some blanks are incorrect.";}
-function reset(){renderPuzzle(puzzleIndex);}
-document.getElementById('submitBtn').onclick=validate;
-document.getElementById('resetBtn').onclick=reset;
-document.getElementById('nextBtn').onclick=()=>{puzzleIndex=(puzzleIndex+1)%puzzles.length;renderPuzzle(puzzleIndex);};
-document.getElementById('prevBtn').onclick=()=>{puzzleIndex=(puzzleIndex-1+puzzles.length)%puzzles.length;renderPuzzle(puzzleIndex);};
-selectEl.onchange=()=>renderPuzzle(Number(selectEl.value));
-renderPuzzle(0);
-</script>
-</body>
-</html>

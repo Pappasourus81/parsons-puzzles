@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Parsons Code Checker — Reorder Mode</title>
+  <title>Reorder Mode- Conditionals</title>
   <style>
     :root{
       --gap: 12px;

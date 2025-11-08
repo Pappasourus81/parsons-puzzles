@@ -1,1 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Code Shuffler – Conditionals</title>
+  <style>
+    :root{
+      --gap: 12px;
+      --card-bg: #f8f9fb;
+      --slot-border: #ccccd6;
+      --ok: #d4f7d9;
+      --bad: #ffd6d6;
+      --accent: #0066cc;
+    }
+    body{
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin: 18px;
+      background: #ffffff;
+      color:#111;
+    }
+    h1{ margin: 0 0 14px 0; font-size: 20px; }
+    .controls{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center }
+    button{
+      background:var(--accent);
+      color:white;
+      border: none;
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:14px;
+    }
+    button.secondary{ background:#666; }
+    .layout{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      align-items:start;
+    }
+    .panel{
+      background:var(--card-bg);
+      padding:12px;
+      border-radius:10px;
+      box-shadow: 0 2px 6px rgba(10,10,20,0.03);
+    }
+    .puzzle-box{
+      margin:10px 0 12px 0;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #d1d7df;
+      background:#ffffff;
+      box-shadow:0 1px 3px rgba(10,10,20,0.04);
+      font-size:14px;
+      font-weight:600;
+      color:#222;
+    }
+    .scrambled-box{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      padding:10px;
+      border: 2px dashed var(--slot-border);
+      min-height: 120px;
+      border-radius:8px;
+      background: #fff;
+    }
+    .piece{
+      padding:8px 10px;
+      background:white;
+      border-radius:6px;
+      box-shadow:0 1px 2px rgba(0,0,0,0.05);
+      cursor:grab;
+      user-select:none;
+      white-space:pre-wrap;
+      font-family: "Courier New", monospace;
+      font-size: 13px;
+      border:1px solid transparent;
+      transition: transform 200ms ease, background-color 200ms ease, border-color 200ms ease;
+    }
+    .piece.dragover{ outline:2px dashed #0066cc; }
+    .piece.picked{ transform: scale(1.02); box-shadow:0 4px 10px rgba(0,0,0,0.08); }
+    .swap-anim {
+      animation: swapFlash 280ms ease;
+    }
+    @keyframes swapFlash {
+      0% { transform: translateY(0) scale(1); }
+      25% { transform: translateY(-6px) scale(1.02); }
+      60% { transform: translateY(2px) scale(.995); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    .message{ margin-top:10px; font-weight:600; }
+    .meta{ font-size:14px; color:#444; margin-bottom:8px; }
+    @media (max-width:900px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Code Shuffler – Conditionals</h1>
+  <div class="meta">Drag lines to reorder them. Drop a line onto another to swap places. Submit to check.</div>
 
+  <div class="puzzle-box" id="puzzleDescription">Select a puzzle to see its description.</div>
+
+  <div class="layout">
+    <div class="panel">
+      <strong>Scrambled code (reorder here)</strong>
+      <div id="scrambled" class="scrambled-box" aria-label="scrambled code lines"></div>
+      <div class="controls">
+        <button id="submitBtn">Submit</button>
+        <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
+        <button id="nextBtn">New Puzzle</button>
+        <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+          <label style="font-size:13px; color:#333">Puzzle:
+            <select id="puzzleSelect" style="margin-left:6px; padding:6px; border-radius:6px;"></select>
+          </label>
+        </div>
+      </div>
+      <div id="message" class="message" role="status"></div>
+    </div>
+  </div>
+
+<script>
+const puzzles = [
+  {
+    title: "Basic IF (Pseudocode)",
+    description: "Input: the user types a number. Output: if the number is greater than 0 the program shows a message saying the number is positive. For example, if the user enters 5 the program shows The number is positive.",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Enter a number: \"",
+      "    INPUT number",
+      "    IF number > 0 THEN",
+      "        OUTPUT \"The number is positive\"",
+      "    ENDIF",
+      "END"
+    ]
+  },
+  {
+    title: "IF-ELSE (Pseudocode)",
+    description: "Input: the user types a number. Output: the program checks if the number is even or odd using MOD. It prints The number is even when the remainder is 0, otherwise it prints The number is odd. For example, entering 4 prints The number is even.",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Enter a number: \"",
+      "    INPUT number",
+      "    IF number MOD 2 = 0 THEN",
+      "        OUTPUT \"The number is even\"",
+      "    ELSE",
+      "        OUTPUT \"The number is odd\"",
+      "    ENDIF",
+      "END"
+    ]
+  },
+  {
+    title: "Nested IF (Pseudocode)",
+    description: "Input: the user types a number. Output: first the program checks if the number is positive. If it is positive it then checks if it is greater than 100 and prints either The number is large and positive or The number is small but positive. For example, entering 150 prints The number is large and positive.",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Enter a number: \"",
+      "    INPUT number",
+      "    IF number > 0 THEN",
+      "        IF number > 100 THEN",
+      "            OUTPUT \"The number is large and positive\"",
+      "        ELSE",
+      "            OUTPUT \"The number is small but positive\"",
+      "        ENDIF",
+      "    ENDIF",
+      "END"
+    ]
+  },
+  {
+    title: "Nested IF with ELSE (Pseudocode)",
+    description: "Input: the user types a number. Output: the program classifies the number as large positive, small positive, negative, or zero. It first checks if the number is positive and then checks size; otherwise it checks for negative or zero. For example, entering 0 prints The number is zero.",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Enter a number: \"",
+      "    INPUT number",
+      "    IF number > 0 THEN",
+      "        IF number > 100 THEN",
+      "            OUTPUT \"The number is large and positive\"",
+      "        ELSE",
+      "            OUTPUT \"The number is small but positive\"",
+      "        ENDIF",
+      "    ELSE",
+      "        IF number < 0 THEN",
+      "            OUTPUT \"The number is negative\"",
+      "        ELSE",
+      "            OUTPUT \"The number is zero\"",
+      "        ENDIF",
+      "    ENDIF",
+      "END"
+    ]
+  },
+  {
+    title: "Basic CASE (Pseudocode)",
+    description: "Input: the user types a small code number (for example 1, 2 or 3). Output: the program uses a CASE statement to print a label depending on the code. For example, entering 2 prints Option Two. If the code is not 1–3 it prints Unknown code.",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Enter code (1-3): \"",
+      "    INPUT code",
+      "    CASE code OF",
+      "    1: OUTPUT \"Option One\"",
+      "    2: OUTPUT \"Option Two\"",
+      "    3: OUTPUT \"Option Three\"",
+      "    DEFAULT: OUTPUT \"Unknown code\"",
+      "    ENDCASE",
+      "END"
+    ]
+  },
+  {
+    title: "CASE inside IF (Pseudocode)",
+    description: "Input: the user types 1 for admin or 0 for not admin. Output: if the user is admin (value 1) the program enters a CASE inside the IF and shows an admin message. For example, entering 1 shows Welcome, admin.",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Is the user admin? (1=yes,0=no): \"",
+      "    INPUT isAdmin",
+      "    IF isAdmin = 1 THEN",
+      "    CASE isAdmin OF",
+      "    1: OUTPUT \"Welcome, admin\"",
+      "    DEFAULT: OUTPUT \"Strange value\"",
+      "    ENDCASE",
+      "    ENDIF",
+      "END"
+    ]
+  },
+  {
+    title: "IF with different CASEs (Pseudocode)",
+    description: "Input: the user enters a level number. Output: if the level is 2 or higher the program runs one CASE block; otherwise it runs a different CASE block in the ELSE branch. Example: entering 3 runs the first CASE and prints Level three actions.",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Enter level (1-3): \"",
+      "    INPUT level",
+      "    IF level >= 2 THEN",
+      "    CASE level OF",
+      "    2: OUTPUT \"Level two actions\"",
+      "    3: OUTPUT \"Level three actions\"",
+      "    DEFAULT: OUTPUT \"Other level\"",
+      "    ENDCASE",
+      "    ELSE",
+      "    CASE level OF",
+      "    1: OUTPUT \"Basic actions\"",
+      "    DEFAULT: OUTPUT \"Unknown\"",
+      "    ENDCASE",
+      "    ENDIF",
+      "END"
+    ]
+  },
+  {
+    title: "Two separate IF-ELSE statements (Pseudocode)",
+    description: "Input: the user types a temperature value. Output: the program checks two independent conditions in sequence. First it tells if it is hot (temp > 30) and then it tells if it is freezing (temp < 0). For example, entering -5 prints It is not hot and then Freezing.",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Enter temperature: \"",
+      "    INPUT temp",
+      "    IF temp > 30 THEN",
+      "    OUTPUT \"It is hot\"",
+      "    ELSE",
+      "    OUTPUT \"It is not hot\"",
+      "    ENDIF",
+      "    IF temp < 0 THEN",
+      "    OUTPUT \"Freezing\"",
+      "    ELSE",
+      "    OUTPUT \"Above freezing\"",
+      "    ENDIF",
+      "END"
+    ]
+  },
+  {
+    title: "IF using SUBSTRING (Pseudocode)",
+    description: "Input: the user types a word. Output: the program checks the first three letters using SUBSTRING and tells if the word starts with pre. For example, entering prevent results in Word starts with pre.",
+    lines: [
+      "BEGIN",
+      "    OUTPUT \"Enter a word: \"",
+      "    INPUT word",
+      "    IF SUBSTRING(word,1,3) = \"pre\" THEN",
+      "    OUTPUT \"Word starts with pre\"",
+      "    ELSE",
+      "    OUTPUT \"Different start\"",
+      "    ENDIF",
+      "END"
+    ]
+  },
+  {
+    title: "CASE using SUBSTRING, ROUND and RANDOM (Pseudocode)",
+    description: "Input: this example uses a name and a random number. Output: it checks the name prefix and may use a rounded random value in a nested CASE to decide what to show. For example, for name Alice the prefix is Ali so it prints Hello Ali; otherwise a rounded random score may produce Top grade or Excellent.",
+    lines: [
+      "BEGIN",
+      "    name = \"Alice\"",
+      "    prefix = SUBSTRING(name,1,3)",
+      "    rand = RANDOM(1,100)",
+      "    scaled = ROUND(rand / 10)",
+      "    CASE prefix OF",
+      "    Ali: OUTPUT \"Hello Ali\"",
+      "    DEFAULT:",
+      "    CASE scaled OF",
+      "    10: OUTPUT \"Top grade\"",
+      "    9: OUTPUT \"Excellent\"",
+      "    DEFAULT: OUTPUT \"Keep trying\"",
+      "    ENDCASE",
+      "    ENDCASE",
+      "END"
+    ]
+  }
+];
+
+let currentIndex = 0;
+let currentOrder = [];
+const scrambledEl = document.getElementById('scrambled');
+const messageEl = document.getElementById('message');
+const puzzleSelect = document.getElementById('puzzleSelect');
+const puzzleDescriptionEl = document.getElementById('puzzleDescription');
+
+puzzles.forEach((p, i) => {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `${i+1}. ${p.title}`;
+  puzzleSelect.appendChild(opt);
+});
+
+puzzleSelect.addEventListener('change', e => {
+  currentIndex = parseInt(e.target.value, 10);
+  loadPuzzle(currentIndex);
+});
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function renderScrambled() {
+  scrambledEl.innerHTML = '';
+  currentOrder.forEach((line, idx) => {
+    const el = document.createElement('div');
+    el.className = 'piece';
+    el.draggable = true;
+    el.dataset.index = idx;
+    el.dataset.line = line;
+    el.textContent = line;
+
+    el.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', idx);
+      e.dataTransfer.effectAllowed = 'move';
+      el.classList.add('picked');
+    });
+
+    el.addEventListener('dragend', () => el.classList.remove('picked'));
+
+    el.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      el.classList.add('dragover');
+    });
+    el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      el.classList.remove('dragover');
+      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      const toIdx = parseInt(el.dataset.index, 10);
+      if (!Number.isNaN(fromIdx) && !Number.isNaN(toIdx) && fromIdx !== toIdx) {
+        swapItems(fromIdx, toIdx);
+        renderScrambled();
+        setTimeout(() => {
+          const children = Array.from(scrambledEl.children);
+          const a = children[toIdx];
+          const b = children[fromIdx];
+          if (a) { a.classList.add('swap-anim'); setTimeout(()=>a.classList.remove('swap-anim'), 300); }
+          if (b) { b.classList.add('swap-anim'); setTimeout(()=>b.classList.remove('swap-anim'), 300); }
+        }, 10);
+      }
+    });
+
+    el.addEventListener('click', () => {
+      const prev = scrambledEl.querySelector('.picked');
+      if (prev && prev !== el) {
+        const i1 = parseInt(prev.dataset.index,10);
+        const i2 = parseInt(el.dataset.index,10);
+        swapItems(i1,i2);
+        prev.classList.remove('picked');
+        renderScrambled();
+        setTimeout(()=>{
+          const children = Array.from(scrambledEl.children);
+          const a = children[i1];
+          const b = children[i2];
+          if (a) { a.classList.add('swap-anim'); setTimeout(()=>a.classList.remove('swap-anim'), 300); }
+          if (b) { b.classList.add('swap-anim'); setTimeout(()=>b.classList.remove('swap-anim'), 300); }
+        },10);
+      } else {
+        scrambledEl.querySelectorAll('.picked').forEach(x=>x.classList.remove('picked'));
+        el.classList.add('picked');
+      }
+    });
+
+    scrambledEl.appendChild(el);
+  });
+}
+
+function swapItems(i, j) {
+  const tmp = currentOrder[i];
+  currentOrder[i] = currentOrder[j];
+  currentOrder[j] = tmp;
+}
+
+function resetPuzzle() {
+  const puzzle = puzzles[currentIndex];
+  currentOrder = puzzle.lines.slice();
+  shuffle(currentOrder);
+  renderScrambled();
+  messageEl.textContent = '';
+}
+
+function submitPuzzle() {
+  const puzzle = puzzles[currentIndex];
+  const correct = puzzle.lines;
+  let allCorrect = true;
+  const pieces = Array.from(scrambledEl.children);
+  pieces.forEach((p, i) => {
+    p.style.background = '';
+    p.style.borderColor = '';
+    const text = p.dataset.line.trim();
+    if (text === correct[i].trim()) {
+      p.style.background = 'var(--ok)';
+      p.style.borderColor = '#2a9a4a';
+    } else {
+      p.style.background = 'var(--bad)';
+      p.style.borderColor = '#c44';
+      allCorrect = false;
+    }
+  });
+  if (allCorrect) {
+    messageEl.textContent = 'All correct! Well done 🎉';
+    messageEl.style.color = '#1a7f3a';
+  } else {
+    messageEl.textContent = 'Some lines are incorrect — incorrect lines are highlighted.';
+    messageEl.style.color = '#a00';
+  }
+}
+
+function nextPuzzle() {
+  currentIndex = (currentIndex + 1) % puzzles.length;
+  puzzleSelect.value = currentIndex;
+  loadPuzzle(currentIndex);
+}
+
+function loadPuzzle(index) {
+  currentIndex = index;
+  puzzleDescriptionEl.textContent = puzzles[index].description || '';
+  resetPuzzle();
+}
+
+document.getElementById('submitBtn').addEventListener('click', submitPuzzle);
+document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
+document.getElementById('nextBtn').addEventListener('click', nextPuzzle);
+
+puzzleSelect.value = 0;
+loadPuzzle(0);
+</script>
+</body>
+</html>

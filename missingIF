@@ -149,6 +149,8 @@
   }
   .msg{ margin-left:8px; color:var(--muted); font-weight:600; }
 
+  select.puzzle-select{ padding:8px; border-radius:8px; border:1px solid rgba(2,6,23,0.06); background:#fff; color:#0f172a; font-weight:600; }
+
   /* small screens */
   @media (max-width:640px){
     .container{ padding:12px; }
@@ -187,8 +189,15 @@
 
       <div class="controls" style="justify-content:flex-start;">
         <button id="submitBtn">Submit</button>
+        <button id="revealHintBtn" class="ghost">Reveal hint (3 left)</button>
         <button class="secondary" id="resetBtn">Reset (reshuffle)</button>
         <button class="ghost" id="nextBtn">Next Puzzle →</button>
+
+        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+          <label style="color:var(--muted); font-weight:600;">Puzzle</label>
+          <select id="puzzleSelect" class="puzzle-select" aria-label="Select puzzle"></select>
+        </div>
+
         <div class="msg" id="feedback" aria-live="assertive"></div>
       </div>
 
@@ -203,28 +212,27 @@
 
 <script>
 /*
-  Single-file pseudocode puzzles.
-  - Puzzles are defined in the `puzzles` array.
-  - Each puzzle has:
-      title, description, example (optional),
-      lines: array of strings (each line is code, no indentation),
-      bank: array of tokens to show,
-      solution: object mapping blankNumber (1-based) -> correct token (exact match, case-sensitive)
+  Conditionals fill-in-the-blanks
+  - Reusable tokens
+  - Drag & drop + keyboard
+  - Submit / Reset / Next / Puzzle selector
+  - Reveal hint (fills a random incorrect blank), up to 3 per puzzle (in-session)
+  - Puzzles array comes from your provided file (unmodified)
 */
 
 (function(){
-  // Utility: shuffle array in place
+  // Utility: shuffle array copy
   function shuffle(a){
-    for(let i=a.length-1;i>0;i--){
+    const arr = a.slice();
+    for(let i=arr.length-1;i>0;i--){
       const j=Math.floor(Math.random()*(i+1));
-      [a[i],a[j]]=[a[j],a[i]];
+      [arr[i],arr[j]]=[arr[j],arr[i]];
     }
-    return a;
+    return arr;
   }
 
-  // --- Puzzle definitions (progressively harder) ---
+  // --- puzzles (taken from your provided content) ---
   const puzzles = [
-    // 1: easy (2 blanks)
     {
       title: "Basic IF — positive check",
       description: "Read an integer and output whether it is positive. Input: one number. Output: a short message when the number is positive.",
@@ -240,8 +248,6 @@
       bank: ["THEN", ">", "<", "ELSE"],
       solution: {1: ">", 2: "THEN"}
     },
-
-    // 2: small step up (3 blanks)
     {
       title: "IF-ELSE — even or odd (MOD)",
       description: "Read an integer and print whether it is even or odd. Use the MOD operator to test divisibility. Fill the operator, equality and THEN.",
@@ -259,8 +265,6 @@
       bank: ["MOD","THEN","=","ELSE","%","<>"],
       solution: {1: "MOD", 2: "=", 3: "THEN"}
     },
-
-    // 3: nested (single nested) — more blanks (4)
     {
       title: "Nested IF-ELSE (single nested) — positive & large",
       description: "Read a number. If it is positive, check whether it is larger than 100 and respond. This puzzle has one nested IF-ELSE.",
@@ -282,8 +286,6 @@
       bank: [">","THEN","<","ELSE","="],
       solution: {1: ">", 2: "THEN", 3: ">", 4: "THEN"}
     },
-
-    // 4: IF with ELSE (simple classification) — 3 blanks
     {
       title: "IF with ELSE — zero or not",
       description: "Read a number and report if it is zero or not zero. Fill in the comparison and THEN.",
@@ -301,8 +303,6 @@
       bank: ["THEN","=","MOD","ELSE","<>"],
       solution: {1: "=", 2: "THEN"}
     },
-
-    // 5: Basic CASE — more blanks & distractors (4 blanks)
     {
       title: "Basic CASE — options",
       description: "Read a code and select one of three options. Use CASE with OF and DEFAULT. Fill the CASE structure tokens.",
@@ -321,8 +321,6 @@
       bank: ["CASE","OF","DEFAULT","ENDCASE","WHEN","SWITCH"],
       solution: {1: "CASE", 2: "OF", 3: "DEFAULT", 4: "ENDCASE"}
     },
-
-    // 6: CASE inside IF — more blanks in conditions (5 blanks)
     {
       title: "CASE inside IF — admin message",
       description: "If admin is 1 show a CASE with specific admin welcome messages. Fill in the IF THEN, CASE tokens, and ENDCASE.",
@@ -343,8 +341,6 @@
       bank: ["=","THEN","OF","DEFAULT","ENDCASE","<>","ELSE"],
       solution: {1: "=", 2: "THEN", 3: "OF", 4: "DEFAULT", 5: "ENDCASE"}
     },
-
-    // 7: IF with CASEs in both branches — 5 blanks
     {
       title: "IF with CASEs in both branches",
       description: "If userType = 1 run a CASE for admin options; otherwise run a CASE for guest options. Fill THEN and CASE tokens.",
@@ -371,8 +367,6 @@
       bank: ["=","THEN","OF","ENDCASE","ELSE","CASE","DEFAULT","END"],
       solution: {1: "=", 2: "THEN", 3: "OF", 4: "ENDCASE", 5: "OF", 6: "ENDCASE"}
     },
-
-    // 8: Two separate IF-ELSE statements — increased blanks and distractors (5 blanks)
     {
       title: "Two separate IF-ELSE statements (independent)",
       description: "Read temperature and windSpeed. Check two independent conditions and output messages for each. Fill relational operators and THENs.",
@@ -396,8 +390,6 @@
       bank: [">","THEN","MOD","<","=","ELSE","<>"],
       solution: {1: ">", 2: "THEN", 3: ">", 4: "THEN"}
     },
-
-    // 9: IF using SUBSTRING — include literal token blank and more distractors (5 blanks)
     {
       title: "IF using SUBSTRING — prefix check",
       description: "Read a word. If its first three letters are 'pre' output a message. Fill SUBSTRING, equality, literal and THEN.",
@@ -415,8 +407,6 @@
       bank: ["SUBSTRING","=","\"pre\"","THEN","ELSE","LEFT","MID"],
       solution: {1: "SUBSTRING", 2: "=", 3: "\"pre\"", 4: "THEN"}
     },
-
-    // 10: Final complex — many blanks, more than half of code missing (hard)
     {
       title: "Final: CASE + SUBSTRING + ROUND (hard)",
       description: "Read a name and a score. If the name prefix matches, greet; otherwise round the score and use a CASE. This final puzzle has many blanks — more than half of the code tokens are missing.",
@@ -437,13 +427,11 @@
 "___16___",
 "END"
       ],
-      // bank contains all correct tokens + many distractors to increase confusion
       bank: [
         "BEGIN","INPUT","OUTPUT","SUBSTRING","=","\"Ann\"","THEN","OUTPUT","ELSE",
         "scoreRounded","ROUND","OF","ENDCASE","CASE","END","DEFAULT",
         "PRINT","RANDOM","SUBSTR","->","LET","<-","ELIF"
       ],
-      // mapping blankNumber -> exact token (case-sensitive)
       solution: {
         1: "BEGIN",
         2: "INPUT",
@@ -464,15 +452,17 @@
       }
     }
   ];
-  // --- end puzzles ---
+  // --- end-of-puzzles ---
 
-  // Application state
+  // App state
   let puzzleIndex = 0;
   let currentPuzzle = null;
-  let bankTokens = []; // tokens currently in bank (strings)
-  let blankState = {};  // mapping blankNumber -> token or null
-  let selectedTokenIndex = null; // index in bankTokens of selected token when user clicks (null when none)
-  const app = document.getElementById('app');
+  let bankTokens = [];
+  let blankState = {}; // blankNum -> token string or null
+  let selectedTokenIndex = null; // index into bankTokens for keyboard selection
+  const usedHintsCount = {}; // puzzleIndex -> used hints
+
+  // Elements
   const descBox = document.getElementById('descBox');
   const codeWrap = document.getElementById('codeWrap');
   const bankEl = document.getElementById('bank');
@@ -480,211 +470,178 @@
   const submitBtn = document.getElementById('submitBtn');
   const resetBtn = document.getElementById('resetBtn');
   const nextBtn = document.getElementById('nextBtn');
+  const revealHintBtn = document.getElementById('revealHintBtn');
+  const puzzleSelect = document.getElementById('puzzleSelect');
 
-  // Load initial puzzle
+  // Init
+  function init(){
+    populatePuzzleSelect();
+    loadPuzzle(0);
+    // events
+    submitBtn.addEventListener('click', onSubmit);
+    resetBtn.addEventListener('click', onReset);
+    nextBtn.addEventListener('click', onNext);
+    revealHintBtn.addEventListener('click', onRevealHint);
+    puzzleSelect.addEventListener('change', (e)=> loadPuzzle(Number(e.target.value)));
+    document.addEventListener('keydown', (e)=> { if(e.key === 'Escape'){ clearSelection(); } });
+  }
+
+  function populatePuzzleSelect(){
+    puzzleSelect.innerHTML = '';
+    puzzles.forEach((p,i)=>{
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `${i+1}. ${p.title}`;
+      puzzleSelect.appendChild(opt);
+    });
+  }
+
   function loadPuzzle(index){
     puzzleIndex = index % puzzles.length;
-    currentPuzzle = JSON.parse(JSON.stringify(puzzles[puzzleIndex])); // deep copy to avoid accidental edits
-    // Normalize lines: if solution contains tokens like "scoreRounded <-" that's a single token; keep as-is.
-    bankTokens = shuffle(currentPuzzle.bank.slice()); // copy & shuffle
+    currentPuzzle = JSON.parse(JSON.stringify(puzzles[puzzleIndex])); // copy to avoid in-place edits
+    bankTokens = shuffle(currentPuzzle.bank.slice());
+    // set blanks
+    const blanks = extractBlanks(currentPuzzle.lines);
     blankState = {};
-    // Count blanks in lines to initialize mapping
-    const allBlanks = extractBlanksFromLines(currentPuzzle.lines);
-    allBlanks.forEach(num => { blankState[num] = null; });
-    // Render UI
+    blanks.forEach(n => blankState[n] = null);
+    selectedTokenIndex = null;
+    feedbackEl.textContent = '';
+    // ensure usedHintsCount key exists
+    if(typeof usedHintsCount[puzzleIndex] === 'undefined') usedHintsCount[puzzleIndex] = 0;
+    // render
     renderDescription();
     renderCode();
     renderBank();
-    feedbackEl.textContent = '';
-    selectedTokenIndex = null;
-    // Announce puzzle to screen readers
-    codeWrap.setAttribute('aria-label', currentPuzzle.title + ". " + (currentPuzzle.description || ""));
+    updateRevealHintBtn();
+    puzzleSelect.value = puzzleIndex;
   }
 
-  // Extract blank numbers present in lines (array of ints)
-  function extractBlanksFromLines(lines){
-    const nums = [];
+  function extractBlanks(lines){
     const re = /___(\d+)___/g;
+    const set = new Set();
     lines.forEach(line=>{
       let m;
-      while((m=re.exec(line))!==null){
-        nums.push(Number(m[1]));
-      }
+      while((m=re.exec(line))!==null) set.add(Number(m[1]));
     });
-    // Deduplicate & sort
-    return Array.from(new Set(nums)).sort((a,b)=>a-b);
+    return Array.from(set).sort((a,b)=>a-b);
   }
 
-  // Render description
   function renderDescription(){
     descBox.innerHTML = '';
-    const h = document.createElement('div');
     const title = document.createElement('strong');
     title.textContent = currentPuzzle.title;
-    h.appendChild(title);
     const p = document.createElement('p');
     p.textContent = currentPuzzle.description || '';
-    h.appendChild(p);
+    descBox.appendChild(title);
+    descBox.appendChild(p);
     if(currentPuzzle.example){
       const ex = document.createElement('div');
       ex.className = 'example';
-      ex.textContent = "Example: " + currentPuzzle.example;
-      h.appendChild(ex);
+      ex.textContent = 'Example: ' + currentPuzzle.example;
+      descBox.appendChild(ex);
     }
-    descBox.appendChild(h);
   }
 
-  // Render code area with blanks turned into focusable blank elements
   function renderCode(){
     codeWrap.innerHTML = '';
-    currentPuzzle.lines.forEach((line, lineIdx) => {
+    const re = /___(\d+)___/g;
+    currentPuzzle.lines.forEach(line=>{
       const lineDiv = document.createElement('div');
       lineDiv.className = 'code-line';
-      const re = /___(\d+)___/g;
-      let lastIndex = 0;
-      let match;
+      let last = 0;
+      let m;
       const frag = document.createDocumentFragment();
-      while((match = re.exec(line)) !== null){
-        const before = line.slice(lastIndex, match.index);
+      while((m = re.exec(line)) !== null){
+        const before = line.slice(last, m.index);
         if(before) frag.appendChild(document.createTextNode(before));
-        const bnum = match[1];
-        const span = document.createElement('button');
-        span.type = 'button';
-        span.className = 'blank empty';
-        span.setAttribute('data-blank', bnum);
-        span.setAttribute('aria-label', 'Blank ' + bnum + '. Press Enter to place token.');
-        span.setAttribute('tabindex', '0');
-        span.textContent = '___' + bnum + '___';
-        span.addEventListener('click', ()=> onBlankClick(bnum, span));
-        span.addEventListener('keydown', (ev)=> {
-          if(ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); onBlankClick(bnum, span); }
-          else if(ev.key === 'Escape'){ clearSelection(); }
+        const bnum = Number(m[1]);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'blank empty';
+        btn.setAttribute('data-blank', String(bnum));
+        btn.setAttribute('tabindex','0');
+        btn.setAttribute('aria-label', `Blank ${bnum}. Press Enter to place token.`);
+        btn.textContent = '___' + bnum + '___';
+        // click to place selected token / clear existing
+        btn.addEventListener('click', ()=> onBlankClick(bnum, btn));
+        btn.addEventListener('keydown', (e)=> {
+          if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); onBlankClick(bnum, btn); }
+          else if(e.key === 'Escape'){ clearSelection(); }
         });
-        frag.appendChild(span);
-        lastIndex = re.lastIndex;
+        // allow drag-drop
+        btn.addEventListener('dragover', (ev)=> { ev.preventDefault(); ev.dataTransfer.dropEffect='move'; });
+        btn.addEventListener('drop', onBlankDrop);
+        frag.appendChild(btn);
+        last = re.lastIndex;
       }
-      if(lastIndex < line.length){
-        frag.appendChild(document.createTextNode(line.slice(lastIndex)));
-      }
+      if(last < line.length) frag.appendChild(document.createTextNode(line.slice(last)));
       lineDiv.appendChild(frag);
       codeWrap.appendChild(lineDiv);
     });
     updateBlankDisplays();
   }
 
-  // Render bank tokens
   function renderBank(){
     bankEl.innerHTML = '';
-    bankEl.setAttribute('aria-label', 'Word bank. ' + bankTokens.length + ' tokens.');
-    bankTokens.forEach((tok, idx) => {
+    bankEl.setAttribute('aria-label','Word bank. ' + bankTokens.length + ' tokens.');
+    bankTokens.forEach((tok, i) => {
       const t = document.createElement('div');
       t.className = 'token';
       t.setAttribute('role','option');
       t.setAttribute('tabindex','0');
-      t.setAttribute('draggable','true');
-      t.setAttribute('data-index', idx);
+      t.setAttribute('data-index', String(i));
       t.setAttribute('data-token', tok);
       t.textContent = tok;
-      t.addEventListener('dragstart', onTokenDragStart);
-      t.addEventListener('click', ()=> onTokenClick(idx, t));
-      t.addEventListener('keydown', (ev) => {
-        if(ev.key === 'Enter' || ev.key === ' '){
-          ev.preventDefault();
-          onTokenClick(idx, t);
-        } else if(ev.key === 'Escape'){
-          clearSelection();
-        }
+      // drag start
+      t.addEventListener('dragstart', (ev)=> {
+        ev.dataTransfer.setData('text/plain', String(i));
+        ev.dataTransfer.effectAllowed = 'move';
+      });
+      // click to select
+      t.addEventListener('click', ()=> onTokenClick(i, t));
+      t.addEventListener('keydown', (ev)=> {
+        if(ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); onTokenClick(i, t); }
+        else if(ev.key === 'Escape'){ clearSelection(); }
       });
       bankEl.appendChild(t);
     });
-    // Make blanks droppable
-    const blanks = codeWrap.querySelectorAll('.blank');
-    blanks.forEach(b => {
-      b.addEventListener('dragover', onBlankDragOver);
-      b.addEventListener('drop', onBlankDrop);
-      b.addEventListener('dragstart', onBlankDragStart);
-      b.setAttribute('draggable','false');
-    });
-  }
 
-  // Update blank visuals based on blankState
-  function updateBlankDisplays(){
-    const blanks = codeWrap.querySelectorAll('.blank');
-    blanks.forEach(b => {
-      const bnum = Number(b.getAttribute('data-blank'));
-      const val = blankState[bnum];
-      b.classList.remove('empty','correct','incorrect');
-      if(val === null || typeof val === 'undefined'){
-        b.classList.add('empty');
-        b.textContent = '___' + bnum + '___';
-        b.setAttribute('aria-label','Blank ' + bnum + '. empty.');
-      } else {
-        b.textContent = val;
-        b.classList.remove('empty');
-        b.setAttribute('aria-label','Blank ' + bnum + '. contains token ' + val + '.');
+    // bank accepts drops from blanks to clear them (but tokens are reusable so we just clear)
+    bankEl.addEventListener('dragover', (ev)=> { ev.preventDefault(); ev.dataTransfer.dropEffect='move'; });
+    bankEl.addEventListener('drop', (ev)=> {
+      ev.preventDefault();
+      const data = ev.dataTransfer.getData('text/plain') || '';
+      if(data.startsWith('blank:')){
+        const bnum = Number(data.split(':')[1]);
+        if(!isNaN(bnum) && blankState[bnum]){
+          // clear blank (do not add token back since tokens are reusable)
+          blankState[bnum] = null;
+          updateBlankDisplays();
+          feedbackEl.textContent = '';
+        }
       }
     });
-    refreshBankVisualSelection();
   }
 
-  // --- Drag and drop handlers ---
-  let draggedTokenIndex = null; // index in bankTokens while dragging
-  function onTokenDragStart(ev){
-    const idx = Number(ev.target.getAttribute('data-index'));
-    draggedTokenIndex = idx;
-    ev.dataTransfer.setData('text/plain', String(idx));
-    ev.dataTransfer.effectAllowed = 'move';
+  function updateBlankDisplays(){
+    const blanks = codeWrap.querySelectorAll('.blank');
+    blanks.forEach(btn => {
+      const bnum = Number(btn.getAttribute('data-blank'));
+      const val = blankState[bnum];
+      btn.classList.remove('empty','correct','incorrect');
+      if(!val){
+        btn.classList.add('empty');
+        btn.textContent = '___' + bnum + '___';
+        btn.setAttribute('aria-label','Blank ' + bnum + '. empty.');
+      } else {
+        btn.textContent = val;
+        btn.setAttribute('aria-label','Blank ' + bnum + '. contains ' + val + '.');
+      }
+    });
+    refreshBankVisual();
   }
 
-  function onBlankDragOver(ev){
-    ev.preventDefault();
-    ev.dataTransfer.dropEffect = 'move';
-  }
-
-  function onBlankDrop(ev){
-    ev.preventDefault();
-    const target = ev.currentTarget;
-    const bnum = Number(target.getAttribute('data-blank'));
-    let idx = null;
-    const dt = ev.dataTransfer.getData('text/plain');
-    if(dt){
-      idx = Number(dt);
-    } else {
-      idx = draggedTokenIndex;
-    }
-    if(typeof idx !== 'number' || isNaN(idx)) return;
-    placeTokenIntoBlank(idx, bnum);
-    draggedTokenIndex = null;
-  }
-
-  // Drag from blank back to bank
-  function onBlankDragStart(ev){
-    const b = ev.currentTarget;
-    const bnum = Number(b.getAttribute('data-blank'));
-    const token = blankState[bnum];
-    if(token){
-      ev.dataTransfer.setData('text/plain', 'blank:' + bnum);
-      ev.dataTransfer.effectAllowed = 'move';
-      blankState[bnum] = null;
-      updateBlankDisplays();
-      bankTokens.push(token);
-      renderBank();
-    } else {
-      ev.preventDefault();
-    }
-  }
-
-  // Click-to-pick for tokens
-  function onTokenClick(index, el){
-    if(selectedTokenIndex === index){
-      clearSelection();
-      return;
-    }
-    selectedTokenIndex = index;
-    refreshBankVisualSelection();
-  }
-
-  function refreshBankVisualSelection(){
+  function refreshBankVisual(){
     const tokens = bankEl.querySelectorAll('.token');
     tokens.forEach(t => {
       const idx = Number(t.getAttribute('data-index'));
@@ -698,126 +655,204 @@
     });
   }
 
-  // Blank click handlers
-  function onBlankClick(bnum, element){
-    if(selectedTokenIndex !== null && bankTokens[selectedTokenIndex] !== undefined){
-      placeTokenIntoBlank(selectedTokenIndex, Number(bnum));
+  // token click
+  function onTokenClick(index, el){
+    if(selectedTokenIndex === index){ clearSelection(); return; }
+    selectedTokenIndex = index;
+    refreshBankVisual();
+  }
+
+  function clearSelection(){
+    selectedTokenIndex = null;
+    refreshBankVisual();
+  }
+
+  // blank click (place or clear)
+  function onBlankClick(bnum, el){
+    if(selectedTokenIndex !== null && typeof bankTokens[selectedTokenIndex] !== 'undefined'){
+      // place the selected token into the blank (but keep it in the bank — reusable)
+      blankState[bnum] = bankTokens[selectedTokenIndex];
+      updateBlankDisplays();
       clearSelection();
       return;
     }
-    const current = blankState[bnum];
-    if(current){
+    // If blank already has token, clicking clears it (since tokens are reusable)
+    if(blankState[bnum]){
       blankState[bnum] = null;
-      bankTokens.push(current);
-      shuffle(bankTokens);
-      renderBank();
       updateBlankDisplays();
       feedbackEl.textContent = '';
       return;
     }
+    // else nothing selected and blank empty: no-op
   }
 
-  // Place token into blank
-  function placeTokenIntoBlank(bankIndex, bnum){
-    const token = bankTokens[bankIndex];
-    if(typeof token === 'undefined') return;
-    const prev = blankState[bnum];
-    if(prev){
-      bankTokens.push(prev);
+  // drop handler for blank (from bank drag)
+  function onBlankDrop(ev){
+    ev.preventDefault();
+    const data = ev.dataTransfer.getData('text/plain');
+    let idx = null;
+    if(data && !data.startsWith('blank:')) idx = Number(data);
+    if(isNaN(idx)) return;
+    const bnum = Number(ev.currentTarget.getAttribute('data-blank'));
+    if(typeof bankTokens[idx] !== 'undefined'){
+      blankState[bnum] = bankTokens[idx];
+      updateBlankDisplays();
+      clearSelection();
     }
-    blankState[bnum] = token;
-    bankTokens.splice(bankIndex,1);
-    renderBank();
-    updateBlankDisplays();
-    feedbackEl.textContent = '';
   }
 
-  // Clear selection
-  function clearSelection(){
-    selectedTokenIndex = null;
-    refreshBankVisualSelection();
-  }
-
-  // Reset puzzle
-  function resetPuzzle(){
-    Object.keys(blankState).forEach(k=>{
-      const tok = blankState[k];
-      if(tok) bankTokens.push(tok);
-      blankState[k] = null;
+  // dragstart from blank to clear it (data 'blank:N')
+  // we attach dragstart directly when creating blanks, but implement here generically:
+  // (we need to add dragstart on blanks)
+  // Add dragstart to blanks dynamically:
+  function attachBlankDragStarts(){
+    const blanks = codeWrap.querySelectorAll('.blank');
+    blanks.forEach(b => {
+      if(!b._blankDragAssigned){
+        b.setAttribute('draggable','true');
+        b.addEventListener('dragstart', (ev)=> {
+          const bnum = Number(b.getAttribute('data-blank'));
+          if(blankState[bnum]){
+            ev.dataTransfer.setData('text/plain', 'blank:' + bnum);
+            // do not remove token from bank — tokens are reusable; clear blank on drop in bank
+          } else {
+            ev.preventDefault();
+          }
+        });
+        b._blankDragAssigned = true;
+      }
     });
-    bankTokens = shuffle(bankTokens);
-    renderBank();
-    updateBlankDisplays();
-    feedbackEl.textContent = 'Bank reshuffled. Fill the blanks again.';
-    clearSelection();
   }
 
-  // Submit
-  function submitPuzzle(){
+  // Submit: check blanks against solution mapping
+  function onSubmit(){
     const solution = currentPuzzle.solution || {};
     let allCorrect = true;
-    const blanks = Object.keys(blankState).map(n => Number(n));
-    blanks.forEach(n=>{
-      const placed = blankState[n];
+    Object.keys(blankState).forEach(k => {
+      const n = Number(k);
+      const placed = blankState[n] || null;
       const expected = solution[n];
-      const element = codeWrap.querySelector('.blank[data-blank="'+n+'"]');
-      element.classList.remove('correct','incorrect');
-      if(placed === expected && typeof expected !== 'undefined'){
-        element.classList.add('correct');
+      const el = codeWrap.querySelector('.blank[data-blank="'+n+'"]');
+      el.classList.remove('correct','incorrect');
+      if(typeof expected === 'undefined'){
+        // no expected answer defined -> leave neutral
       } else {
-        element.classList.add('incorrect');
-        allCorrect = false;
+        if(placed === expected){
+          el.classList.add('correct');
+        } else {
+          el.classList.add('incorrect');
+          allCorrect = false;
+        }
       }
     });
     if(allCorrect){
-      feedbackEl.textContent = "All correct! Well done 🎉";
+      feedbackEl.textContent = 'All correct! Well done 🎉';
     } else {
-      feedbackEl.textContent = "Some blanks are incorrect — incorrect blanks are highlighted red.";
+      feedbackEl.textContent = 'Some blanks are incorrect — incorrect blanks are highlighted.';
     }
   }
 
-  // Next
-  function nextPuzzle(){
+  // Reset: clear blanks, reshuffle bank (tokens reusable so we just shuffle)
+  function onReset(){
+    Object.keys(blankState).forEach(k => blankState[k] = null);
+    bankTokens = shuffle(currentPuzzle.bank.slice());
+    renderBank();
+    updateBlankDisplays();
+    feedbackEl.textContent = 'Reset — bank reshuffled.';
+    selectedTokenIndex = null;
+    updateRevealHintBtn();
+  }
+
+  // Next puzzle
+  function onNext(){
     const nextIndex = (puzzleIndex + 1) % puzzles.length;
     loadPuzzle(nextIndex);
-    feedbackEl.textContent = '';
   }
 
-  // Initial bindings
-  submitBtn.addEventListener('click', submitPuzzle);
-  resetBtn.addEventListener('click', resetPuzzle);
-  nextBtn.addEventListener('click', nextPuzzle);
-
-  document.addEventListener('keydown', (ev) => {
-    if(ev.key === 'Escape'){
-      clearSelection();
+  // Reveal hint: fill one randomly chosen incorrect (or empty) blank with its correct token
+  function onRevealHint(){
+    const used = usedHintsCount[puzzleIndex] || 0;
+    if(used >= 3){
+      feedbackEl.textContent = 'No hints left for this puzzle.';
+      return;
     }
-  });
+    const solution = currentPuzzle.solution || {};
+    // find eligible blanks where expected exists and placed != expected
+    const eligible = [];
+    Object.keys(blankState).forEach(k => {
+      const n = Number(k);
+      const expected = solution[n];
+      if(typeof expected === 'undefined') return;
+      const placed = blankState[n] || null;
+      if(placed !== expected) eligible.push(n);
+    });
+    if(eligible.length === 0){
+      feedbackEl.textContent = 'All blanks are already correct or there are no defined answers to reveal.';
+      return;
+    }
+    const pick = eligible[Math.floor(Math.random() * eligible.length)];
+    blankState[pick] = solution[pick];
+    usedHintsCount[puzzleIndex] = used + 1;
+    updateBlankDisplays();
+    feedbackEl.textContent = `Hint used: a blank has been filled (${usedHintsCount[puzzleIndex]} of 3).`;
+    updateRevealHintBtn();
+  }
 
-  // Initialize first puzzle
-  loadPuzzle(0);
+  function updateRevealHintBtn(){
+    const used = usedHintsCount[puzzleIndex] || 0;
+    const left = Math.max(0, 3 - used);
+    if(left <= 0){
+      revealHintBtn.disabled = true;
+      revealHintBtn.textContent = 'Reveal hint (used up)';
+      revealHintBtn.style.opacity = 0.6;
+    } else {
+      revealHintBtn.disabled = false;
+      revealHintBtn.textContent = `Reveal hint (${left} left)`;
+      revealHintBtn.style.opacity = 1;
+    }
+  }
 
-  // Allow dropping blank tokens back to bank
-  bankEl.addEventListener('dragover', (ev)=> { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; });
-  bankEl.addEventListener('drop', (ev)=>{
-    ev.preventDefault();
-    const data = ev.dataTransfer.getData('text/plain') || '';
-    if(data.startsWith('blank:')){
-      const bnum = Number(data.split(':')[1]);
-      const tok = blankState[bnum];
-      if(tok){
-        bankTokens.push(tok);
-        blankState[bnum] = null;
-        renderBank();
-        updateBlankDisplays();
+  function clearSelection(){
+    selectedTokenIndex = null;
+    refreshBankVisual();
+  }
+
+  // helper to attach blank dragstarts after render
+  function postRenderSetup(){
+    attachBlankDragStarts();
+  }
+
+  // initialize bank visuals refresh (called after render)
+  function refreshBankVisual(){
+    const tokens = bankEl.querySelectorAll('.token');
+    tokens.forEach(t => {
+      const idx = Number(t.getAttribute('data-index'));
+      if(selectedTokenIndex === idx){
+        t.setAttribute('aria-pressed','true');
+        t.classList.add('selected');
+      } else {
+        t.setAttribute('aria-pressed','false');
+        t.classList.remove('selected');
       }
-    }
-  });
+    });
+  }
 
-  // Expose simple helper for teachers to jump puzzle by index (optional)
-  window._puzzleControls = {
+  // wire up blank drop handling after each render
+  const observer = new MutationObserver(()=> {
+    // ensure blanks accept dragstart events
+    postRenderSetup();
+  });
+  observer.observe(codeWrap, { childList:true, subtree:true });
+
+  // load initial puzzle
+  loadPuzzle(0);
+  init();
+
+  // expose helpers for debugging (optional)
+  window._condPuzzle = {
+    puzzles,
     goTo: (i)=> loadPuzzle(i % puzzles.length),
-    listCount: () => puzzles.length
+    usedHintsCount,
   };
 
 })();

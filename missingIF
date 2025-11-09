@@ -528,7 +528,7 @@
     const re = /___(\d+)___/g;
     currentPuzzle.lines.forEach(line=>{
       const lineDiv = document.createElement('div');
-      lineDiv.className = 'code-line';
+  _   lineDiv.className = 'code-line';
       let last = 0;
       let m;
       const frag = document.createDocumentFragment();
@@ -554,7 +554,7 @@
         btn.addEventListener('drop', onBlankDrop);
         frag.appendChild(btn);
         last = re.lastIndex;
-  _   }
+      }
       if(last < line.length) frag.appendChild(document.createTextNode(line.slice(last)));
       lineDiv.appendChild(frag);
       codeWrap.appendChild(lineDiv);
@@ -672,7 +672,7 @@
     ev.preventDefault();
     const data = ev.dataTransfer.getData('text/plain');
     let idx = null;
-    if(data && !data.startsWith('blank:')) idx = Number(data);
+  _   if(data && !data.startsWith('blank:')) idx = Number(data);
     if(isNaN(idx)) return;
     const bnum = Number(ev.currentTarget.getAttribute('data-blank'));
     if(typeof bankTokens[idx] !== 'undefined'){
@@ -764,7 +764,7 @@
       const n = Number(k);
       const expected = solution[n];
       if(typeof expected === 'undefined') return;
-      const placed = blankState[n] || null;
+s     const placed = blankState[n] || null;
       if(placed !== expected) eligible.push(n);
     });
     if(eligible.length === 0){
@@ -789,7 +789,7 @@
     } else {
       revealHintBtn.disabled = false;
       revealHintBtn.textContent = `Reveal hint (${left} left)`;
-      revealHintBtn.style.opacity = 1;
+  _   revealHintBtn.style.opacity = 1;
     }
   }
 
@@ -803,23 +803,9 @@
     attachBlankDragStarts();
   }
 
-  // initialize bank visuals refresh (called after render)
-  function refreshBankVisual(){
-    const tokens = bankEl.querySelectorAll('.token');
-    tokens.forEach(t => {
-      const idx = Number(t.getAttribute('data-index'));
-      if(selectedTokenIndex === idx){
-        t.setAttribute('aria-pressed','true');
-        t.classList.add('selected');
-      } else {
-        t.setAttribute('aria-pressed','false');
-        t.classList.remove('selected');
-      }
-    });
-  }
-
   // wire up blank drop handling after each render
   const observer = new MutationObserver(()=> {
+What is this for?
     // ensure blanks accept dragstart events
     postRenderSetup();
   });
@@ -833,7 +819,7 @@
   window._condPuzzle = {
     puzzles,
     goTo: (i)=> loadPuzzle(i % puzzles.length),
-    usedHintsCount,
+s   usedHintsCount,
   };
 
 })();

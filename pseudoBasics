@@ -142,7 +142,7 @@ const puzzles = [
   {
     title:"Advanced string and number mix",
     description:"No input. Task: Write pseudocode that extracts part of a text, converts it into a number, adds 3 to it, rounds the result, and then outputs the final value. Variable names are Text, NumStr and Num (these are already provided).",
-    lines:["Text ___2___ ___3___ X12Y ___4___","NumStr ___6___ ___7___ ___8___ ___9___ ___10___ 2 ___11___ 2 ___12___","Num ___14___ ___15___ ___16___ ( ___17___ ) + 3","___18___ ___19___"],
+    lines:["Text ___2___ ___3___ X12Y ___4___","NumStr ___6___ ___7___ ___8___ ___9___ ___10___ 2 ___11___ 2 ___12___","Num ___14___ ___15___ ___16___  ___17___ ) + 3","___18___ ___19___"],
     bank:["Text","NumStr","Num","←","=","SUBSTRING","ROUND","OUTPUT","(","Text",",",")","+","-","*","2","3","\"","'"],
     answers:{"2":"←","3":"\"","4":"\"","6":"←","7":"SUBSTRING","8":"(","9":"Text","10":",","11":",","12":")","14":"←","15":"ROUND","16":"(","17":"NumStr","18":"OUTPUT","19":"Num"}
   }

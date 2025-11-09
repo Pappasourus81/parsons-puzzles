@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Code Shuffler – Syntax and Data Types</title>
+<title>Fill in the blanks</title>
 <style>
   body{font-family:Arial,Helvetica,sans-serif;background:#f6f8fb;margin:0;padding:0;}
   .wrap{max-width:960px;margin:30px auto;padding:20px;}
@@ -34,7 +34,7 @@
 </head>
 <body>
 <div class="wrap">
-<h1>Code Shuffler – Syntax and Data Types</h1>
+<h1>Fill in the blanks</h1>
 
 <div class="card">
   <div id="puzzleMeta" class="description"></div>
@@ -63,7 +63,7 @@ const puzzles = [
     description:"No input. Task: Write pseudocode that outputs the message \"Welcome to class\".",
     lines:["___1___ ___2___Welcome to class___3___"],
     bank:["OUTPUT","PRINT","\"","'","DISPLAY","OUTPUTS","("," )",":","Welcome to class"],
-    answers:{"1":"OUTPUT","2":'"',"3":'"'}
+    answers:{"1":"OUTPUT","2":"\"","3":"\""}
   },
   {
     title:"Ask for name and display it",
@@ -81,17 +81,17 @@ const puzzles = [
   },
   {
     title:"Combine text and number output",
-    description:"No input. Task: Create variables Name=\"Maya\" and Score=45, then output 'Maya scored 45 points'.",
-    lines:["Name ___1___ ___2___Maya___3___","Score ___4___ 45","___5___ Name , \" scored \" , Score , \" points\""],
-    bank:["←","=","OUTPUT","PRINT","'","\"","Name","Score","45","points"],
-    answers:{"1":"←","2":'"',"3":'"',"4":"←","5":"OUTPUT"}
+    description:"No input. Task: Create variables Name=\"Maya\" and Score=45, then output the sentence that shows who scored how many points.",
+    lines:["Name ___1___ ___2___Maya___3___","Score ___4___ 45","___5___ ___6___ ___7___ ___8___ ___9___ ___10___ ___11___"],
+    bank:["←","=","OUTPUT","PRINT","'","\"","Name","Score","45","points","\"scored\"",","Maya"],
+    answers:{"1":"←","2":"\"","3":"\"","4":"←","5":"OUTPUT","6":"Name","7":",","8":"\"scored\"","9":",","10":"Score","11":"points"}
   },
   {
     title:"Demonstrate CHAR vs STRING",
-    description:"No input. Task: Declare Char='B' and Word=\"B\". .",
+    description:"No input. Task: Declare Char='B' and Word=\"B\". Also ensure the program prints B and B so the student can see the difference.",
     lines:["Char ___1___ ___2___B___3___","Word ___4___ ___5___B___6___","___7___ Char , ___8___ and ___9___ , Word"],
     bank:["←","=","OUTPUT","DISPLAY","PRINT","'","\"","and","Char","Word"],
-    answers:{"1":"←","2":"'", "3":"'", "4":"←","5":'"',"6":'"',"7":"OUTPUT","8":'"',"9":'"'}
+    answers:{"1":"←","2":"'","3":"'","4":"←","5":"\"","6":"\"","7":"OUTPUT","8":"\"","9":"\""}
   },
   {
     title:"Use DIV and MOD",
@@ -102,7 +102,7 @@ const puzzles = [
   },
   {
     title:"Substring extraction",
-    description:"Input: Text. Task: Assign Part=SUBSTRING(Text,3,2) and output Part.",
+    description:"Input: Text. Task: Take a short slice from the input (starting near the third character) and store it in Part, then display Part.",
     lines:["INPUT Text","Part ___1___ ___2___ ___3___ Text ___4___ 3 ___5___ 2 ___6___","___7___ Part"],
     bank:["←","=","SUBSTRING","OUTPUT","PRINT","(","Text",",",")","3","2"],
     answers:{"1":"←","2":"SUBSTRING","3":"(","4":",","5":",","6":")","7":"OUTPUT"}
@@ -144,7 +144,7 @@ const puzzles = [
     description:"No input. Task: Write pseudocode that extracts part of a text, converts it into a number, adds 3 to it, rounds the result, and then outputs the final value.",
     lines:["___1___ ___2___ ___3___X12Y___4___","___5___ ___6___ ___7___ ___8___ ___9___ ___10___ 2 ___11___ 2 ___12___","___13___ ___14___ ___15___ ___16___ ( ___17___ ) + 3","___18___ ___19___"],
     bank:["Text","NumStr","Num","←","=","SUBSTRING","ROUND","OUTPUT","(","Text",",",")","+","-","*","2","3","\"","'"],
-    answers:{"1":"Text","2":"←","3":'"',"4":'"',"5":"NumStr","6":"←","7":"SUBSTRING","8":"(","9":"Text","10":",","11":",","12":")","13":"Num","14":"←","15":"ROUND","16":"(","17":"NumStr","18":"OUTPUT","19":"Num"}
+    answers:{"1":"Text","2":"←","3":"\"","4":"\"","5":"NumStr","6":"←","7":"SUBSTRING","8":"(","9":"Text","10":",","11":",","12":")","13":"Num","14":"←","15":"ROUND","16":"(","17":"NumStr","18":"OUTPUT","19":"Num"}
   }
 ];
 
@@ -178,7 +178,7 @@ function renderPuzzle(i){
 
 /* ✅ FIXED FUNCTION — safely handles tokens containing ' or " */
 function place(v, b) {
-  b.innerHTML = ''; // clear previous
+  b.innerHTML = '';
   const span = document.createElement('span');
   span.className = 'placed-clone';
   span.setAttribute('data-value', v);

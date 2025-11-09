@@ -295,12 +295,15 @@ const puzzleSelect = document.getElementById('puzzleSelect');
 const puzzleDescriptionEl = document.getElementById('puzzleDescription');
 const hintBtn = document.getElementById('hintBtn');
 
-puzzles.forEach((p, i) => {
-  const opt = document.createElement('option');
-  opt.value = i;
-  opt.textContent = `${i+1}. ${p.title}`;
-  puzzleSelect.appendChild(opt);
-});
+function populatePuzzleSelect() {
+  puzzleSelect.innerHTML = '';
+  puzzles.forEach((p, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${i+1}. ${p.title}`;
+    puzzleSelect.appendChild(opt);
+  });
+}
 
 puzzleSelect.addEventListener('change', e => {
   currentIndex = parseInt(e.target.value, 10);
@@ -373,33 +376,20 @@ function renderScrambled() {
 function moveItemInsert(from, to) {
   const item = currentOrder.splice(from, 1)[0];
   let insertAt = to;
-  if (from < to) insertAt = to; // keep as-is
-  if (from > to) insertAt = to; // keep as-is
   currentOrder.splice(insertAt, 0, item);
 }
 
 function animateInsert(from, to) {
-  // after renderScrambled, children reflect new order. We'll add slide classes to the elements that shifted.
   const children = Array.from(scrambledEl.children);
-  // clear any existing animation classes
   children.forEach(c => { c.classList.remove('slide-down','slide-up'); });
-
   if (from > to) {
-    // dragged from lower index to higher-up position: elements originally at [to..from-1] moved down one slot
-    // after render, those elements now occupy indices [to+1 .. from]
     const start = to + 1;
-    const end = from; // inclusive
-    for (let i = start; i <= end && i < children.length; i++) {
-      children[i].classList.add('slide-down');
-    }
+    const end = from;
+    for (let i = start; i <= end && i < children.length; i++) children[i].classList.add('slide-down');
   } else if (from < to) {
-    // dragged from higher-up to lower position: elements originally at [from+1..to] moved up one slot
-    // after render, those elements now occupy indices [from .. to-1]
     const start = from;
     const end = to - 1;
-    for (let i = start; i <= end && i < children.length; i++) {
-      children[i].classList.add('slide-up');
-    }
+    for (let i = start; i <= end && i < children.length; i++) children[i].classList.add('slide-up');
   }
 }
 
@@ -425,21 +415,14 @@ function submitPuzzle() {
     if (text === (correct[i] || '').trim()) {
       p.style.background = 'var(--ok)';
       p.style.borderColor = '#2a9a4a';
-      p.textContent = text; // NO indentation
     } else {
       p.style.background = 'var(--bad)';
       p.style.borderColor = '#c44';
       allCorrect = false;
-      p.textContent = text; // NO indentation
     }
   });
-  if (allCorrect) {
-    messageEl.textContent = 'All correct! Well done 🎉';
-    messageEl.style.color = '#1a7f3a';
-  } else {
-    messageEl.textContent = 'Some lines are incorrect — incorrect lines are highlighted.';
-    messageEl.style.color = '#a00';
-  }
+  messageEl.textContent = allCorrect ? 'All correct! Well done 🎉' : 'Some lines are incorrect — incorrect lines are highlighted.';
+  messageEl.style.color = allCorrect ? '#1a7f3a' : '#a00';
 }
 
 function nextPuzzle() {
@@ -454,49 +437,39 @@ function loadPuzzle(index) {
   resetPuzzle();
 }
 
-document.getElementById('submitBtn').addEventListener('click', submitPuzzle);
-document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
-document.getElementById('nextBtn').addEventListener('click', nextPuzzle);
-
+// hint logic
 hintBtn.addEventListener('click', () => {
   if (hintLeft <= 0) return;
   const puzzle = puzzles[currentIndex];
   const correct = puzzle.lines;
-  // find the first index where currentOrder is incorrect
   let targetIdx = -1;
   for (let i = 0; i < correct.length; i++) {
     if ((currentOrder[i] || '').trim() !== (correct[i] || '').trim()) { targetIdx = i; break; }
   }
-  if (targetIdx === -1) {
-    messageEl.textContent = 'Puzzle already solved or no mismatches.';
-    return;
-  }
-  // find where that correct line currently sits in currentOrder
+  if (targetIdx === -1) { messageEl.textContent = 'Puzzle already solved or no mismatches.'; return; }
   const wantLine = correct[targetIdx].trim();
   const foundIdx = currentOrder.findIndex(x => x.trim() === wantLine);
-  if (foundIdx === -1) {
-    // the correct line is missing (shouldn't happen) — insert it directly
-    currentOrder.splice(targetIdx, 0, correct[targetIdx]);
-  } else {
-    // move foundIdx to targetIdx using insert logic
-    moveItemInsert(foundIdx, targetIdx);
-  }
-  hintLeft -= 1;
+  if (foundIdx !== -1) moveItemInsert(foundIdx, targetIdx);
+  hintLeft--;
   hintBtn.textContent = `Hint (${hintLeft})`;
   renderScrambled();
-  // highlight the line placed by the hint
   const children = Array.from(scrambledEl.children);
   const highlighted = children[targetIdx];
-  if (highlighted) {
-    highlighted.classList.add('hinted');
-    setTimeout(()=>highlighted.classList.remove('hinted'),1500);
-  }
+  if (highlighted) { highlighted.classList.add('hinted'); setTimeout(()=>highlighted.classList.remove('hinted'),1500); }
   animateInsert(foundIdx === -1 ? targetIdx : foundIdx, targetIdx);
   messageEl.textContent = `Hint used — placed one correct line. ${hintLeft} hint(s) left.`;
 });
 
-puzzleSelect.value = 0;
-loadPuzzle(0);
+// initialisation
+populatePuzzleSelect();
+if (puzzles.length > 0) {
+  puzzleSelect.value = 0;
+  loadPuzzle(0);
+}
+
+document.getElementById('submitBtn').addEventListener('click', submitPuzzle);
+document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
+document.getElementById('nextBtn').addEventListener('click', nextPuzzle);
 </script>
 </body>
 </html>

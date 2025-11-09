@@ -5,822 +5,820 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Fill in the missing code — Conditionals</title>
 <style>
-  :root{
-    --bg:#f6f8fb;
-    --card:#ffffff;
-    --accent:#0b61d6;
-    --muted:#6b7280;
-    --success:#16a34a;
-    --danger:#ef4444;
-    --focus:#ffb703;
-    --bank-bg:#eef6ff;
-    --gap:12px;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  }
-  html,body{height:100%;}
-  body{
-    margin:16px;
-    background:linear-gradient(180deg,var(--bg),#eef3fb 60%);
-    color:#111827;
-    -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
-  }
-  .container{
-    max-width:980px;
-    margin:0 auto;
-    padding:20px;
-  }
-  header{
-    display:flex;
-    align-items:center;
-    gap:16px;
-    margin-bottom:18px;
-  }
-  h1{
-    font-size:20px;
-    margin:0;
-  }
-  .meta{
-    color:var(--muted);
-    font-size:13px;
-  }
+  :root{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --accent:#0b61d6;
+    --muted:#6b7280;
+    --success:#16a34a;
+    --danger:#ef4444;
+    --focus:#ffb703;
+    --bank-bg:#eef6ff;
+    --gap:12px;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  html,body{height:100%;}
+  body{
+    margin:16px;
+    background:linear-gradient(180deg,var(--bg),#eef3fb 60%);
+    color:#111827;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+  .container{
+    max-width:980px;
+    margin:0 auto;
+    padding:20px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-bottom:18px;
+  }
+  h1{
+    font-size:20px;
+    margin:0;
+  }
+  .meta{
+    color:var(--muted);
+    font-size:13px;
+  }
 
-  .puzzle-card{
-    background:var(--card);
-    border-radius:10px;
-    box-shadow:0 6px 20px rgba(15,23,42,0.06);
-    padding:18px;
-    margin-bottom:18px;
-    border:1px solid rgba(15,23,42,0.04);
-  }
+  .puzzle-card{
+    background:var(--card);
+    border-radius:10px;
+    box-shadow:0 6px 20px rgba(15,23,42,0.06);
+    padding:18px;
+    margin-bottom:18px;
+    border:1px solid rgba(15,23,42,0.04);
+  }
 
-  .desc{
-    background:linear-gradient(90deg,#fff,#fbfdff);
-    padding:12px;
-    border-radius:8px;
-    border:1px dashed rgba(11,97,214,0.08);
-    margin-bottom:12px;
-  }
-  .desc p{margin:6px 0;color:#0f172a;font-size:14px}
-  .example{color:var(--muted);font-size:13px;margin-top:6px}
+  .desc{
+    background:linear-gradient(90deg,#fff,#fbfdff);
+    padding:12px;
+    border-radius:8px;
+    border:1px dashed rgba(11,97,214,0.08);
+    margin-bottom:12px;
+  }
+  .desc p{margin:6px 0;color:#0f172a;font-size:14px}
+  .example{color:var(--muted);font-size:13px;margin-top:6px}
 
-  /* pseudocode area */
-  .code-wrap{
-    background:#0f172a;
-    color:#e6eef8;
-    border-radius:8px;
-    padding:12px;
-    font-family: "Courier New", Courier, monospace;
-    font-size:14px;
-    overflow:auto;
-    line-height:1.6;
-  }
-  .code-line{
-    white-space:pre;
-  }
-  .blank {
-    display:inline-block;
-    min-width:48px;
-    padding:2px 6px;
-    margin:0 2px;
-    border-radius:6px;
-    background:rgba(255,255,255,0.07);
-    color:#fff;
-    border:2px dashed rgba(255,255,255,0.08);
-    outline: none;
-    cursor:pointer;
-    vertical-align:baseline;
-  }
-  .blank:focus { box-shadow:0 0 0 3px rgba(255,183,3,0.14); border-color:var(--focus);}
-  .blank.empty{ color:#cbd5e1; font-style:italic;}
-  .blank.correct { background:rgba(22,163,74,0.18); border-color:rgba(22,163,74,0.5); color:var(--success); }
-  .blank.incorrect { background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.3); color:var(--danger); }
+  /* pseudocode area */
+  .code-wrap{
+    background:#0f172a;
+    color:#e6eef8;
+    border-radius:8px;
+    padding:12px;
+    font-family: "Courier New", Courier, monospace;
+    font-size:14px;
+    overflow:auto;
+    line-height:1.6;
+  }
+  .code-line{
+    white-space:pre;
+  }
+  .blank {
+    display:inline-block;
+    min-width:48px;
+    padding:2px 6px;
+    margin:0 2px;
+    border-radius:6px;
+    background:rgba(255,255,255,0.07);
+    color:#fff;
+    border:2px dashed rgba(255,255,255,0.08);
+    outline: none;
+    cursor:pointer;
+    vertical-align:baseline;
+  }
+  .blank:focus { box-shadow:0 0 0 3px rgba(255,183,3,0.14); border-color:var(--focus);} 
+  .blank.empty{ color:#cbd5e1; font-style:italic;}
+  .blank.correct { background:rgba(22,163,74,0.18); border-color:rgba(22,163,74,0.5); color:var(--success); }
+  .blank.incorrect { background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.3); color:var(--danger); }
 
-  /* bank */
-  .bank{
-    margin-top:12px;
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    background:var(--bank-bg);
-    padding:10px;
-    border-radius:8px;
-    border:1px solid rgba(11,97,214,0.06);
-  }
-  .token{
-    user-select:none;
-    padding:8px 10px;
-    border-radius:8px;
-    background:#fff;
-    border:1px solid rgba(2,6,23,0.06);
-    box-shadow:0 2px 6px rgba(2,6,23,0.04);
-    font-weight:600;
-    font-size:13px;
-    cursor:grab;
-  }
-  .token:active{ cursor:grabbing }
-  .token[aria-pressed="true"]{ outline:3px solid rgba(11,97,214,0.14); box-shadow:0 6px 18px rgba(11,97,214,0.08); }
-  .token:focus { box-shadow:0 0 0 3px rgba(11,97,214,0.10); outline:none; }
+  /* bank */
+  .bank{
+    margin-top:12px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    background:var(--bank-bg);
+    padding:10px;
+    border-radius:8px;
+    border:1px solid rgba(11,97,214,0.06);
+  }
+  .token{
+    user-select:none;
+    padding:8px 10px;
+    border-radius:8px;
+    background:#fff;
+    border:1px solid rgba(2,6,23,0.06);
+    box-shadow:0 2px 6px rgba(2,6,23,0.04);
+    font-weight:600;
+    font-size:13px;
+    cursor:grab;
+  }
+  .token:active{ cursor:grabbing }
+  .token[aria-pressed="true"]{ outline:3px solid rgba(11,97,214,0.14); box-shadow:0 6px 18px rgba(11,97,214,0.08); }
+  .token:focus { box-shadow:0 0 0 3px rgba(11,97,214,0.10); outline:none; }
 
-  /* controls */
-  .controls{
-    display:flex;
-    gap:10px;
-    margin-top:12px;
-    align-items:center;
-    flex-wrap:wrap;
-  }
-  button{
-    padding:9px 14px;
-    border-radius:8px;
-    border:0;
-    font-weight:600;
-    background:var(--accent);
-    color:white;
-    cursor:pointer;
-    box-shadow:0 6px 18px rgba(11,97,214,0.10);
-  }
-  button.secondary{
-    background:#fff; color:var(--accent); border:1px solid rgba(11,97,214,0.10);
-    box-shadow:none;
-  }
-  button.ghost{
-    background:transparent; color:var(--muted); border:1px dashed rgba(2,6,23,0.06);
-  }
-  .msg{ margin-left:8px; color:var(--muted); font-weight:600; }
+  /* controls */
+  .controls{
+    display:flex;
+    gap:10px;
+    margin-top:12px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  button{
+    padding:9px 14px;
+    border-radius:8px;
+    border:0;
+    font-weight:600;
+    background:var(--accent);
+    color:white;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(11,97,214,0.10);
+  }
+  button.secondary{
+    background:#fff; color:var(--accent); border:1px solid rgba(11,97,214,0.10);
+    box-shadow:none;
+  }
+  button.ghost{
+    background:transparent; color:var(--muted); border:1px dashed rgba(2,6,23,0.06);
+  }
+  .msg{ margin-left:8px; color:var(--muted); font-weight:600; }
 
-  select.puzzle-select{ padding:8px; border-radius:8px; border:1px solid rgba(2,6,23,0.06); background:#fff; color:#0f172a; font-weight:600; }
+  select.puzzle-select{ padding:8px; border-radius:8px; border:1px solid rgba(2,6,23,0.06); background:#fff; color:#0f172a; font-weight:600; }
 
-  /* small screens */
-  @media (max-width:640px){
-    .container{ padding:12px; }
-    header{ gap:8px; }
-    .code-wrap{ font-size:13px; }
-    .token{ font-size:12px; padding:7px 9px; }
-    button{ padding:8px 10px; font-size:14px; }
-  }
+  /* small screens */
+  @media (max-width:640px){
+    .container{ padding:12px; }
+    header{ gap:8px; }
+    .code-wrap{ font-size:13px; }
+    .token{ font-size:12px; padding:7px 9px; }
+    button{ padding:8px 10px; font-size:14px; }
+  }
 
-  /* focus outlines for keyboard users */
-  :focus { outline: none; }
-  .a11y-focus { box-shadow:0 0 0 3px rgba(255,183,3,0.14); border-radius:6px; }
+  /* focus outlines for keyboard users */
+  :focus { outline: none; }
+  .a11y-focus { box-shadow:0 0 0 3px rgba(255,183,3,0.14); border-radius:6px; }
 
-  /* subtle helper text */
-  .help{ color:var(--muted); font-size:13px; margin-top:10px;}
+  /* subtle helper text */
+  .help{ color:var(--muted); font-size:13px; margin-top:10px;}
 </style>
 </head>
 <body>
 <div class="container" id="app">
-  <header>
-    <div>
-      <h1>Fill in the missing code — Conditionals</h1>
-      <div class="meta">Drag or click tokens into blanks. Press Enter to place when using keyboard.</div>
-    </div>
-  </header>
+  <header>
+    <div>
+      <h1>Fill in the missing code — Conditionals</h1>
+      <div class="meta">Click or drag a token into a blank. Use the keyboard: Tab → Enter to select a token, Tab → Enter to place it; Esc cancels selection or clears a filled blank.</div>
+    </div>
+  </header>
 
-  <main>
-    <section class="puzzle-card" id="puzzleCard" aria-live="polite">
-      <div class="desc" id="descBox" role="region" aria-label="Puzzle description"></div>
+  <main>
+    <section class="puzzle-card" id="puzzleCard" aria-live="polite">
+      <div class="desc" id="descBox" role="region" aria-label="Puzzle description"></div>
 
-      <div class="code-wrap" id="codeWrap" role="region" aria-label="Pseudocode area">
-              </div>
+      <div class="code-wrap" id="codeWrap" role="region" aria-label="Pseudocode area">
+        <!-- lines inserted here -->
+      </div>
 
-      <div class="bank" id="bank" aria-label="Word bank" role="listbox" tabindex="0"></div>
+      <div class="bank" id="bank" aria-label="Word bank" role="listbox" tabindex="0"></div>
 
-      <div class="controls" style="justify-content:flex-start;">
-        <button id="submitBtn">Submit</button>
-        <button id="revealHintBtn" class="ghost">Reveal hint (3 left)</button>
-        <button class="secondary" id="resetBtn">Reset (reshuffle)</button>
-        <button class="ghost" id="nextBtn">Next Puzzle →</button>
+      <div class="controls" style="justify-content:flex-start;">
+        <button id="submitBtn">Submit</button>
+        <button id="revealHintBtn" class="ghost">Reveal hint (3 left)</button>
+        <button class="secondary" id="resetBtn">Reset (reshuffle)</button>
+        <button class="ghost" id="nextBtn">Next Puzzle →</button>
 
-        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
-          <label style="color:var(--muted); font-weight:600;">Puzzle</label>
-          <select id="puzzleSelect" class="puzzle-select" aria-label="Select puzzle"></select>
-        </div>
+        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+          <label style="color:var(--muted); font-weight:600;">Puzzle</label>
+          <select id="puzzleSelect" class="puzzle-select" aria-label="Select puzzle"></select>
+        </div>
 
-        <div class="msg" id="feedback" aria-live="assertive"></div>
-      </div>
+        <div class="msg" id="feedback" aria-live="assertive"></div>
+      </div>
 
-      <div class="help">Keyboard: <strong>Tab</strong> to move, <strong>Enter</strong> to pick/place, <strong>Escape</strong> to drop.</div>
-    </section>
+      <div class="help">How to play: Click or drag a token into a blank. Keyboard: Tab to a token → Enter to pick it; Tab to a blank → Enter to place. Press Esc to cancel or clear a filled blank.</div>
+    </section>
 
-    
-  </main>
+  </main>
 </div>
 
 <script>
 /*
-  Conditionals fill-in-the-blanks
-  - Reusable tokens
-  - Drag & drop + keyboard
-  - Submit / Reset / Next / Puzzle selector
-  - Reveal hint (fills a random incorrect blank), up to 3 per puzzle (in-session)
-  - Puzzles array comes from your provided file (unmodified)
+  Conditionals fill-in-the-blanks
+  - Reusable tokens
+  - Drag & drop + keyboard
+  - Submit / Reset / Next / Puzzle selector
+  - Reveal hint (fills a random incorrect blank), up to 3 per puzzle (in-session)
+  - Puzzles array is included below (edited per user request)
 */
 
 (function(){
-  // Utility: shuffle array copy
-  function shuffle(a){
-    const arr = a.slice();
-    for(let i=arr.length-1;i>0;i--){
-      const j=Math.floor(Math.random()*(i+1));
-      [arr[i],arr[j]]=[arr[j],arr[i]];
-    }
-    return arr;
-  }
+  // Utility: shuffle array copy
+  function shuffle(a){
+    const arr = a.slice();
+    for(let i=arr.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+    return arr;
+  }
 
-  // --- puzzles (taken from your provided content) ---
-  const puzzles = [
-    {
-      title: "Basic IF — positive check",
-      description: "Read an integer and output whether it is positive. Input: one number. Output: a short message when the number is positive.",
-      example: "If the input is 5 the program should output: The number is positive",
-      lines: [
+  // --- puzzles (edited as requested) ---
+  const puzzles = [
+    {
+      title: "Basic IF — positive check",
+      description: "Read an integer and output whether it is positive. Input: one number.",
+      example: "If the input is 5 the program should output: The number is positive",
+      lines: [
 "INPUT number",
 "IF number ___1___ 0 ___2___",
-"    OUTPUT \"The number is positive\"",
+"OUTPUT \"The number is positive\"",
 "ENDIF"
-      ],
-      bank: ["THEN", ">", "<", "ELSE"],
-      solution: {1: ">", 2: "THEN"}
-    },
-    {
-      title: "IF-ELSE — even or odd (MOD)",
-      description: "Read an integer and print whether it is even or odd. Use the MOD operator to test divisibility.",
-      example: "Input 4 -> outputs: Even",
-      lines: [
+      ],
+      bank: ["THEN", ">", "<", "ELSE"],
+      solution: {1: ">", 2: "THEN"}
+    },
+    {
+      title: "IF-ELSE — even or odd (MOD)",
+      description: "Read an integer and print whether it is even or odd. Use the MOD operator to test divisibility.",
+      example: "Input 4 -> outputs: Even",
+      lines: [
 "INPUT n",
 "IF n ___1___ 2 ___2___ 0 ___3___",
-"    OUTPUT \"Even\"",
+"OUTPUT \"Even\"",
 "ELSE",
-"    OUTPUT \"Odd\"",
+"OUTPUT \"Odd\"",
 "ENDIF"
-      ],
-      bank: ["MOD","THEN","=","ELSE","%","<>"],
-      solution: {1: "MOD", 2: "=", 3: "THEN"}
-    },
-    {
-      title: "Nested IF-ELSE (single nested) — positive & large",
-      description: "Read a number. If it is positive, check whether it is larger than 100 and respond. This puzzle has one nested IF-ELSE.",
-      example: "Input 150 -> outputs: Large and positive",
-      lines: [
+      ],
+      bank: ["MOD","THEN","=","ELSE","%","<>"],
+      solution: {1: "MOD", 2: "=", 3: "THEN"}
+    },
+    {
+      title: "Nested IF-ELSE (single nested) — positive & large",
+      description: "Read a number. If it is positive, check whether it is larger than 100 and respond.",
+      example: "Input 150 -> outputs: Large and positive",
+      lines: [
 "INPUT x",
 "IF x ___1___ 0 ___2___",
-"    IF x ___3___ 100 ___4___",
-"        OUTPUT \"Large and positive\"",
-"    ELSE",
-"        OUTPUT \"Positive but not large\"",
-"    ENDIF",
+"IF x ___3___ 100 ___4___",
+"OUTPUT \"Large and positive\"",
 "ELSE",
-"    OUTPUT \"Not positive\"",
+"OUTPUT \"Positive but not large\"",
+"ENDIF",
+"ELSE",
+"OUTPUT \"Not positive\"",
 "ENDIF"
-      ],
-      bank: [">","THEN","<","ELSE","="],
-      solution: {1: ">", 2: "THEN", 3: ">", 4: "THEN"}
-    },
-    {
-      title: "IF with ELSE — zero or not",
-      description: "Read a number and report if it is zero or not zero.",
-      example: "Input 0 -> outputs: Zero",
-      lines: [
+      ],
+      bank: [">","THEN","<","ELSE","="],
+      solution: {1: ">", 2: "THEN", 3: ">", 4: "THEN"}
+    },
+    {
+      title: "IF with ELSE — zero or not",
+      description: "Read a number and report if it is zero or not zero. ",
+      example: "Input 0 -> outputs: Zero",
+      lines: [
 "INPUT number",
-"___3___ number ___1___ 0 ___2___",
-"    OUTPUT \"Zero\"",
+"___1___ number ___2___ 0 ___3___",
+"OUTPUT \"Zero\"",
 "___4___",
-"    OUTPUT \"Not zero\"",
-"___5___"
-      ],
-      bank: ["THEN","=","MOD","ELSE","<>", "IF", "ENDIF"],
-      solution: {1: "=", 2: "THEN", 3: "IF", 4: "ELSE", 5: "ENDIF"}
-    },
-    {
-      title: "Basic CASE — options",
-      description: "Read a code and select one of three options.",
-      example: "Input 2 -> outputs: Option Two",
-      lines: [
+"OUTPUT \"Not zero\"",
+"ENDIF"
+      ],
+      bank: ["IF","THEN","=","MOD","ELSE","<>","<>"],
+      solution: {1: "IF", 2: "=", 3: "THEN", 4: "ELSE"}
+    },
+    {
+      title: "Basic CASE — options",
+      description: "Read a code and select one of three options.",
+      example: "Input 2 -> outputs: Option Two",
+      lines: [
 "INPUT code",
 "___1___ code ___2___",
-"    1: OUTPUT \"Option One\"",
-"    2: OUTPUT \"Option Two\"",
-"    3: OUTPUT \"Option Three\"",
-"    ___3___",
-"        OUTPUT \"Unknown\"",
+"1: OUTPUT \"Option One\"",
+"2: OUTPUT \"Option Two\"",
+"3: OUTPUT \"Option Three\"",
+"___3___: OUTPUT \"Unknown\"",
 "___4___"
-      ],
-      bank: ["CASE","OF","OTHERWISE","ENDCASE","WHEN","SWITCH", "DEFAULT"],
-      solution: {1: "CASE", 2: "OF", 3: "OTHERWISE", 4: "ENDCASE"}
-    },
-    {
-      title: "CASE inside IF — admin message",
-      description: "If admin is 1 show a CASE with specific admin welcome messages.",
-      example: "Input admin=1 and code=1 -> outputs: Welcome, superadmin",
-      lines: [
+      ],
+      bank: ["CASE","OF","DEFAULT","ENDCASE","WHEN","SWITCH"],
+      solution: {1: "CASE", 2: "OF", 3: "DEFAULT", 4: "ENDCASE"}
+    },
+    {
+      title: "CASE inside IF — admin message",
+      description: "If admin is 1 show a CASE with specific admin welcome messages.",
+      example: "Input admin=1 and code=1 -> outputs: Welcome, superadmin",
+      lines: [
 "INPUT admin",
 "INPUT code",
 "IF admin ___1___ 1 ___2___",
-"    CASE code ___3___",
-"        1: OUTPUT \"Welcome, superadmin\"",
-"        2: OUTPUT \"Welcome, admin\"",
-"        ___4___",
-"            OUTPUT \"Welcome\"",
-"    ___5___",
+"CASE code ___3___",
+"1: OUTPUT \"Welcome, superadmin\"",
+"2: OUTPUT \"Welcome, admin\"",
+"___4___: OUTPUT \"Welcome\"",
+"___5___",
 "ENDIF"
-      ],
-      bank: ["=","THEN","OF","OTHERWISE","ENDCASE","<>","ELSE", "DEFAULT"],
-      solution: {1: "=", 2: "THEN", 3: "OF", 4: "OTHERWISE", 5: "ENDCASE"}
-    },
-    {
-      title: "IF with CASEs in both branches",
-      description: "If userType = 1 run a CASE for admin options; otherwise run a CASE for guest options.",
-      example: "userType=2 and choice=1 -> outputs: Guest: View",
-      lines: [
+      ],
+      bank: ["=","THEN","OF","DEFAULT","ENDCASE","<>","ELSE"],
+      solution: {1: "=", 2: "THEN", 3: "OF", 4: "DEFAULT", 5: "ENDCASE"}
+    },
+    {
+      title: "IF with CASEs in both branches",
+      description: "If userType = 1 run a CASE for admin options; otherwise run a CASE for guest options.",
+      example: "userType=2 and choice=1 -> outputs: Guest: View",
+      lines: [
 "INPUT userType",
 "INPUT choice",
 "IF userType ___1___ 1 ___2___",
-"    ___3___ choice ___4___",
-"        1: OUTPUT \"Admin: Edit\"",
-"        2: OUTPUT \"Admin: Delete\"",
-"        ___5___",
-"            OUTPUT \"Admin: Unknown\"",
-"    ___6___",
-"___7___",
-"    ___8___ choice ___9___",
-"        1: OUTPUT \"Guest: View\"",
-"        2: OUTPUT \"Guest: Browse\"",
-"        ___10___",
-"            OUTPUT \"Guest: Unknown\"",
-"    ___11___",
+"___3___ choice ___4___",
+"1: OUTPUT \"Admin: Edit\"",
+"2: OUTPUT \"Admin: Delete\"",
+"___5___: OUTPUT \"Admin: Unknown\"",
+"___6___",
+"ELSE",
+"___7___ choice ___8___",
+"1: OUTPUT \"Guest: View\"",
+"2: OUTPUT \"Guest: Browse\"",
+"___9___: OUTPUT \"Guest: Unknown\"",
+"___10___",
 "ENDIF"
-      ],
-      bank: ["=","THEN","OF","ENDCASE","ELSE","CASE","OTHERWISE", "DEFAULT", "END"],
-      solution: {
-        1: "=", 2: "THEN", 3: "CASE", 4: "OF", 5: "OTHERWISE", 6: "ENDCASE",
-        7: "ELSE", 8: "CASE", 9: "OF", 10: "OTHERWISE", 11: "ENDCASE"
-    }
-    },
-    {
-      title: "Two separate IF-ELSE statements (independent)",
-      description: "Read temperature and windSpeed. Check two independent conditions and output messages for each. Fill relational operators and THENs.",
-      example: "temp=30 -> 'Hot'; windSpeed=25 -> 'Windy'",
-      lines: [
+      ],
+      bank: ["=","THEN","OF","ENDCASE","ELSE","CASE","DEFAULT"],
+      solution: {1: "=", 2: "THEN", 3: "CASE", 4: "OF", 5: "DEFAULT", 6: "ENDCASE", 7: "CASE", 8: "OF", 9: "DEFAULT", 10: "ENDCASE"}
+    },
+    {
+      title: "Two separate IF-ELSE statements (independent)",
+      description: "Read temperature and windSpeed. Check two independent conditions and output messages for each.",
+      example: "temp=30 -> 'Hot'; windSpeed=25 -> 'Windy'",
+      lines: [
 "INPUT temp",
 "INPUT windSpeed",
-"___5___ temp ___1___ 25 ___2___",
-"    ___6___ \"Hot\"",
-"___7___",
-"    ___8___ \"Not hot\"",
-"___9___",
-"IF windSpeed ___3___ 20 ___4___",
-"    OUTPUT \"Windy\"",
+"IF temp ___1___ 25 ___2___",
+"OUTPUT \"Hot\"",
 "ELSE",
-"    OUTPUT \"Calm\"",
-"___10___"
-      ],
-      bank: [">","THEN","MOD","<","=","ELSE","<>", "IF", "OUTPUT", "ENDIF"],
-      solution: {1: ">", 2: "THEN", 3: ">", 4: "THEN", 5: "IF", 6: "OUTPUT", 7: "ELSE", 8: "OUTPUT", 9: "ENDIF", 10: "ENDIF"}
-    },
-    {
-      title: "IF using SUBSTRING — prefix check",
-      description: "Read a word. If its first three letters are 'pre' output a message.",
-      example: "Input 'prefix' -> outputs: Starts with pre",
-      lines: [
-"___5___ word",
-"___6___ ___1___(word,___7___,___8___) ___2___ ___3___ ___4___",
-"    ___9___ \"Starts with pre\"",
-"___10___",
-"    ___11___ \"Different prefix\"",
-"___12___"
-      ],
-      bank: ["SUBSTRING","=","\"pre\"","THEN","ELSE","LEFT","MID", "INPUT", "IF", "1", "3", "OUTPUT", "ENDIF"],
-      solution: {1: "SUBSTRING", 2: "=", 3: "\"pre\"", 4: "THEN", 5: "INPUT", 6: "IF", 7: "1", 8: "3", 9: "OUTPUT", 10: "ELSE", 11: "OUTPUT", 12: "ENDIF"}
-    },
-    {
-      title: "Final: CASE + SUBSTRING + ROUND (hard)",
-      description: "Read a name and a score. If the name's prefix (first 3 letters) matches \"Ann\", greet them. Otherwise, round the score and use a CASE to output a message based on the rounded value.",
-      example: "name='Ann'; score=4.6 -> rounded 5 -> outputs: Excellent",
-      lines: [
+"OUTPUT \"Not hot\"",
+"ENDIF",
+"IF windSpeed ___3___ 20 ___4___",
+"OUTPUT \"Windy\"",
+"ELSE",
+"OUTPUT \"Calm\"",
+"ENDIF"
+      ],
+      bank: ["INPUT", ">","THEN","MOD","<","=","ELSE","<>"],
+      solution: {1: ">", 2: "THEN", 3: ">", 4: "THEN"}
+    },
+    {
+      title: "IF using SUBSTRING — prefix check",
+      description: "Read a word. If its first three letters are 'pre' output a message.",
+      example: "Input 'prefix' -> outputs: Starts with pre",
+      lines: [
+"INPUT word",
+"IF ___1___(word,1,3) ___2___ ___3___ ___4___",
+"OUTPUT \"Starts with pre\"",
+"ELSE",
+"OUTPUT \"Different prefix\"",
+"ENDIF"
+      ],
+      bank: ["SUBSTRING","=","\"pre\"","THEN","ELSE","LEFT","MID"],
+      solution: {1: "SUBSTRING", 2: "=", 3: "\"pre\"", 4: "THEN"}
+    },
+    {
+      title: "Final: CASE + SUBSTRING + ROUND (hard)",
+      description: "Read a name and a score. If the first three letters of the name match the string \"Ann\", output a greeting; otherwise round the score to the nearest integer and use a CASE to output feedback based on the rounded score.",
+
+      example: "name='Ann'; score=4.6 -> rounded 5 -> outputs: Excellent",
+      lines: [
 "INPUT name",
 "INPUT score",
-"",
-"___1___ ___2___(name, 1, 3) = ___3___ ___4___",
-"    OUTPUT \"Hello Ann\"",
-"___5___",
-"    scoreRounded ← ___6___(score)",
-"    ___7___ ___8___ ___9___",
-"        5: OUTPUT \"Excellent\"",
-"        4: OUTPUT \"Good\"",
-"        ___10___",
-"            OUTPUT \"Keep trying\"",
-"    ___11___",
-"___12___"
-      ],
-      bank: [
-        "IF", "SUBSTRING", "\"Ann\"", "THEN", "ELSE", "ROUND", "CASE", "scoreRounded", "OF", "OTHERWISE", "ENDCASE", "ENDIF",
-        "INPUT", "OUTPUT", "DEFAULT", "PRINT", "RANDOM", "SUBSTR", "LET", "<-", "="
-      ],
-      solution: {
-        1: "IF",
-        2: "SUBSTRING",
-        3: "\"Ann\"",
-        4: "THEN",
-        5: "ELSE",
-        6: "ROUND",
-        7: "CASE",
-        8: "scoreRounded",
-        9: "OF",
-        10: "OTHERWISE",
-        11: "ENDCASE",
-        12: "ENDIF"
-      }
-    }
-  ];
-  // --- end-of-puzzles ---
+"IF ___1___(name,1,3) ___2___ ___3___",
+"___4___ \"Hello Ann\"",
+"ELSE",
+"___5___ scoreRounded <- ___6___(score)",
+"___7___ scoreRounded ___8___",
+"5: ___9___ \"Excellent\"",
+"4: ___10___ \"Good\"",
+"DEFAULT: ___11___ \"Keep trying\"",
+"___12___",
+"___13___"
+      ],
+      bank: [
+        "INPUT","OUTPUT","SUBSTRING","=","\"Ann\"","THEN","ROUND","scoreRounded","OF","ENDCASE","CASE","LET","<-","PRINT"
+      ],
+      solution: {
+        1: "SUBSTRING",
+        2: "=",
+        3: "THEN",
+        4: "OUTPUT",
+        5: "LET",
+        6: "ROUND",
+        7: "CASE",
+        8: "OF",
+        9: "OUTPUT",
+        10: "OUTPUT",
+        11: "OUTPUT",
+        12: "ENDCASE",
+        13: "ENDIF"
+      }
+    }
+  ];
+  // --- end-of-puzzles ---
 
-  // App state
-  let puzzleIndex = 0;
-  let currentPuzzle = null;
-  let bankTokens = [];
-  let blankState = {}; // blankNum -> token string or null
-  let selectedTokenIndex = null; // index into bankTokens for keyboard selection
-  const usedHintsCount = {}; // puzzleIndex -> used hints
+  // App state
+  let puzzleIndex = 0;
+  let currentPuzzle = null;
+  let bankTokens = [];
+  let blankState = {}; // blankNum -> token string or null
+  let selectedTokenIndex = null; // index into bankTokens for keyboard selection
+  const usedHintsCount = {}; // puzzleIndex -> used hints
 
-  // Elements
-  const descBox = document.getElementById('descBox');
-  const codeWrap = document.getElementById('codeWrap');
-  const bankEl = document.getElementById('bank');
-  const feedbackEl = document.getElementById('feedback');
-  const submitBtn = document.getElementById('submitBtn');
-  const resetBtn = document.getElementById('resetBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const revealHintBtn = document.getElementById('revealHintBtn');
-  const puzzleSelect = document.getElementById('puzzleSelect');
+  // Elements
+  const descBox = document.getElementById('descBox');
+  const codeWrap = document.getElementById('codeWrap');
+  const bankEl = document.getElementById('bank');
+  const feedbackEl = document.getElementById('feedback');
+  const submitBtn = document.getElementById('submitBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const revealHintBtn = document.getElementById('revealHintBtn');
+  const puzzleSelect = document.getElementById('puzzleSelect');
 
-  // Init
-  function init(){
-    populatePuzzleSelect();
-    loadPuzzle(0);
-    // events
-    submitBtn.addEventListener('click', onSubmit);
-    resetBtn.addEventListener('click', onReset);
-    nextBtn.addEventListener('click', onNext);
-    revealHintBtn.addEventListener('click', onRevealHint);
-    puzzleSelect.addEventListener('change', (e)=> loadPuzzle(Number(e.target.value)));
-    document.addEventListener('keydown', (e)=> { if(e.key === 'Escape'){ clearSelection(); } });
-  }
+  // Init
+  function init(){
+    populatePuzzleSelect();
+    loadPuzzle(0);
+    // events
+    submitBtn.addEventListener('click', onSubmit);
+    resetBtn.addEventListener('click', onReset);
+    nextBtn.addEventListener('click', onNext);
+    revealHintBtn.addEventListener('click', onRevealHint);
+    puzzleSelect.addEventListener('change', (e)=> loadPuzzle(Number(e.target.value)));
+    document.addEventListener('keydown', (e)=> { if(e.key === 'Escape'){ clearSelection(); } });
+  }
 
-  function populatePuzzleSelect(){
-    puzzleSelect.innerHTML = '';
-    puzzles.forEach((p,i)=>{
-      const opt = document.createElement('option');
-      opt.value = i;
-      opt.textContent = `${i+1}. ${p.title}`;
-      puzzleSelect.appendChild(opt);
-    });
-  }
+  function populatePuzzleSelect(){
+    puzzleSelect.innerHTML = '';
+    puzzles.forEach((p,i)=>{
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `${i+1}. ${p.title}`;
+      puzzleSelect.appendChild(opt);
+    });
+  }
 
-  function loadPuzzle(index){
-    puzzleIndex = index % puzzles.length;
-    currentPuzzle = JSON.parse(JSON.stringify(puzzles[puzzleIndex])); // copy to avoid in-place edits
-    bankTokens = shuffle(currentPuzzle.bank.slice());
-    // set blanks
-    const blanks = extractBlanks(currentPuzzle.lines);
-    blankState = {};
-    blanks.forEach(n => blankState[n] = null);
-    selectedTokenIndex = null;
-    feedbackEl.textContent = '';
-    // ensure usedHintsCount key exists
-    if(typeof usedHintsCount[puzzleIndex] === 'undefined') usedHintsCount[puzzleIndex] = 0;
-    // render
-    renderDescription();
-    renderCode();
-    renderBank();
-    updateRevealHintBtn();
-    puzzleSelect.value = puzzleIndex;
-  }
+  function loadPuzzle(index){
+    puzzleIndex = index % puzzles.length;
+    currentPuzzle = JSON.parse(JSON.stringify(puzzles[puzzleIndex])); // copy to avoid in-place edits
+    bankTokens = shuffle(currentPuzzle.bank.slice());
+    // set blanks
+    const blanks = extractBlanks(currentPuzzle.lines);
+    blankState = {};
+    blanks.forEach(n => blankState[n] = null);
+    selectedTokenIndex = null;
+    feedbackEl.textContent = '';
+    // ensure usedHintsCount key exists
+    if(typeof usedHintsCount[puzzleIndex] === 'undefined') usedHintsCount[puzzleIndex] = 0;
+    // render
+    renderDescription();
+    renderCode();
+    renderBank();
+    updateRevealHintBtn();
+    puzzleSelect.value = puzzleIndex;
+  }
 
-  function extractBlanks(lines){
-    const re = /___(\d+)___/g;
-    const set = new Set();
-    lines.forEach(line=>{
-      let m;
-      while((m=re.exec(line))!==null) set.add(Number(m[1]));
-    });
-    return Array.from(set).sort((a,b)=>a-b);
-  }
+  function extractBlanks(lines){
+    const re = /___(\d+)___/g;
+    const set = new Set();
+    lines.forEach(line=>{
+      let m;
+      while((m=re.exec(line))!==null) set.add(Number(m[1]));
+    });
+    return Array.from(set).sort((a,b)=>a-b);
+  }
 
-  function renderDescription(){
-    descBox.innerHTML = '';
-    const title = document.createElement('strong');
-    title.textContent = currentPuzzle.title;
-    const p = document.createElement('p');
-    p.textContent = currentPuzzle.description || '';
-    descBox.appendChild(title);
-    descBox.appendChild(p);
-    if(currentPuzzle.example){
-      const ex = document.createElement('div');
-      ex.className = 'example';
-      ex.textContent = 'Example: ' + currentPuzzle.example;
-      descBox.appendChild(ex);
-    }
-  }
+  function renderDescription(){
+    descBox.innerHTML = '';
+    const title = document.createElement('strong');
+    title.textContent = currentPuzzle.title;
+    const p = document.createElement('p');
+    p.textContent = currentPuzzle.description || '';
+    descBox.appendChild(title);
+    descBox.appendChild(p);
+    if(currentPuzzle.example){
+      const ex = document.createElement('div');
+      ex.className = 'example';
+      ex.textContent = 'Example: ' + currentPuzzle.example;
+      descBox.appendChild(ex);
+    }
+  }
 
-  function renderCode(){
-    codeWrap.innerHTML = '';
-    const re = /___(\d+)___/g;
-    currentPuzzle.lines.forEach(line=>{
-      const lineDiv = document.createElement('div');
-  _   lineDiv.className = 'code-line';
-      let last = 0;
-      let m;
-      const frag = document.createDocumentFragment();
-      while((m = re.exec(line)) !== null){
-        const before = line.slice(last, m.index);
-        if(before) frag.appendChild(document.createTextNode(before));
-        const bnum = Number(m[1]);
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'blank empty';
-        btn.setAttribute('data-blank', String(bnum));
-        btn.setAttribute('tabindex','0');
-        btn.setAttribute('aria-label', `Blank ${bnum}. Press Enter to place token.`);
-        btn.textContent = '___' + bnum + '___';
-        // click to place selected token / clear existing
-        btn.addEventListener('click', ()=> onBlankClick(bnum, btn));
-        btn.addEventListener('keydown', (e)=> {
-          if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); onBlankClick(bnum, btn); }
-          else if(e.key === 'Escape'){ clearSelection(); }
-        });
-        // allow drag-drop
-        btn.addEventListener('dragover', (ev)=> { ev.preventDefault(); ev.dataTransfer.dropEffect='move'; });
-        btn.addEventListener('drop', onBlankDrop);
-        frag.appendChild(btn);
-        last = re.lastIndex;
-      }
-      if(last < line.length) frag.appendChild(document.createTextNode(line.slice(last)));
-      lineDiv.appendChild(frag);
-      codeWrap.appendChild(lineDiv);
-    });
-    updateBlankDisplays();
-  }
+  function renderCode(){
+    codeWrap.innerHTML = '';
+    const re = /___(\d+)___/g;
+    currentPuzzle.lines.forEach(line=>{
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'code-line';
+      let last = 0;
+      let m;
+      const frag = document.createDocumentFragment();
+      while((m = re.exec(line)) !== null){
+        const before = line.slice(last, m.index);
+        if(before) frag.appendChild(document.createTextNode(before));
+        const bnum = Number(m[1]);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'blank empty';
+        btn.setAttribute('data-blank', String(bnum));
+        btn.setAttribute('tabindex','0');
+        btn.setAttribute('aria-label', `Blank ${bnum}. Press Enter to place token.`);
+        btn.textContent = '___' + bnum + '___';
+        // click to place selected token / clear existing
+        btn.addEventListener('click', ()=> onBlankClick(bnum, btn));
+        btn.addEventListener('keydown', (e)=> {
+          if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); onBlankClick(bnum, btn); }
+          else if(e.key === 'Escape'){ clearSelection(); }
+        });
+        // allow drag-drop
+        btn.addEventListener('dragover', (ev)=> { ev.preventDefault(); ev.dataTransfer.dropEffect='move'; });
+        btn.addEventListener('drop', onBlankDrop);
+        frag.appendChild(btn);
+        last = re.lastIndex;
+      }
+      if(last < line.length) frag.appendChild(document.createTextNode(line.slice(last)));
+      lineDiv.appendChild(frag);
+      codeWrap.appendChild(lineDiv);
+    });
+    updateBlankDisplays();
+  }
 
-  function renderBank(){
-    bankEl.innerHTML = '';
-    bankEl.setAttribute('aria-label','Word bank. ' + bankTokens.length + ' tokens.');
-    bankTokens.forEach((tok, i) => {
-      const t = document.createElement('div');
-      t.className = 'token';
-      t.setAttribute('role','option');
-      t.setAttribute('tabindex','0');
-      t.setAttribute('data-index', String(i));
-      t.setAttribute('data-token', tok);
-      t.textContent = tok;
-      // drag start
-      t.addEventListener('dragstart', (ev)=> {
-        ev.dataTransfer.setData('text/plain', String(i));
-        ev.dataTransfer.effectAllowed = 'move';
-      });
-      // click to select
-      t.addEventListener('click', ()=> onTokenClick(i, t));
-      t.addEventListener('keydown', (ev)=> {
-        if(ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); onTokenClick(i, t); }
-        else if(ev.key === 'Escape'){ clearSelection(); }
-      });
-      bankEl.appendChild(t);
-    });
+  function renderBank(){
+    bankEl.innerHTML = '';
+    bankEl.setAttribute('aria-label','Word bank. ' + bankTokens.length + ' tokens.');
+    bankTokens.forEach((tok, i) => {
+      const t = document.createElement('div');
+      t.className = 'token';
+      t.setAttribute('role','option');
+      t.setAttribute('tabindex','0');
+      t.setAttribute('data-index', String(i));
+      t.setAttribute('data-token', tok);
+      t.textContent = tok;
+      // drag start
+      t.addEventListener('dragstart', (ev)=> {
+        ev.dataTransfer.setData('text/plain', String(i));
+        ev.dataTransfer.effectAllowed = 'move';
+      });
+      // click to select
+      t.addEventListener('click', ()=> onTokenClick(i, t));
+      t.addEventListener('keydown', (ev)=> {
+        if(ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); onTokenClick(i, t); }
+        else if(ev.key === 'Escape'){ clearSelection(); }
+      });
+      bankEl.appendChild(t);
+    });
 
-    // bank accepts drops from blanks to clear them (but tokens are reusable so we just clear)
-    bankEl.addEventListener('dragover', (ev)=> { ev.preventDefault(); ev.dataTransfer.dropEffect='move'; });
-    bankEl.addEventListener('drop', (ev)=> {
-      ev.preventDefault();
-      const data = ev.dataTransfer.getData('text/plain') || '';
-      if(data.startsWith('blank:')){
-        const bnum = Number(data.split(':')[1]);
-        if(!isNaN(bnum) && blankState[bnum]){
-          // clear blank (do not add token back since tokens are reusable)
-          blankState[bnum] = null;
-          updateBlankDisplays();
-          feedbackEl.textContent = '';
-        }
-      }
-    });
-  }
+    // bank accepts drops from blanks to clear them (but tokens are reusable so we just clear)
+    bankEl.addEventListener('dragover', (ev)=> { ev.preventDefault(); ev.dataTransfer.dropEffect='move'; });
+    bankEl.addEventListener('drop', (ev)=> {
+      ev.preventDefault();
+      const data = ev.dataTransfer.getData('text/plain') || '';
+      if(data.startsWith('blank:')){
+        const bnum = Number(data.split(':')[1]);
+        if(!isNaN(bnum) && blankState[bnum]){
+          // clear blank (do not add token back since tokens are reusable)
+          blankState[bnum] = null;
+          updateBlankDisplays();
+          feedbackEl.textContent = '';
+        }
+      }
+    });
+  }
 
-  function updateBlankDisplays(){
-    const blanks = codeWrap.querySelectorAll('.blank');
-    blanks.forEach(btn => {
-      const bnum = Number(btn.getAttribute('data-blank'));
-      const val = blankState[bnum];
-      btn.classList.remove('empty','correct','incorrect');
-      if(!val){
-        btn.classList.add('empty');
-        btn.textContent = '___' + bnum + '___';
-        btn.setAttribute('aria-label','Blank ' + bnum + '. empty.');
-      } else {
-        btn.textContent = val;
-        btn.setAttribute('aria-label','Blank ' + bnum + '. contains ' + val + '.');
-      }
-    });
-    refreshBankVisual();
-  }
+  function updateBlankDisplays(){
+    const blanks = codeWrap.querySelectorAll('.blank');
+    blanks.forEach(btn => {
+      const bnum = Number(btn.getAttribute('data-blank'));
+      const val = blankState[bnum];
+      btn.classList.remove('empty','correct','incorrect');
+      if(!val){
+        btn.classList.add('empty');
+        btn.textContent = '___' + bnum + '___';
+        btn.setAttribute('aria-label','Blank ' + bnum + '. empty.');
+      } else {
+        btn.textContent = val;
+        btn.setAttribute('aria-label','Blank ' + bnum + '. contains ' + val + '.');
+      }
+    });
+    refreshBankVisual();
+  }
 
-  function refreshBankVisual(){
-    const tokens = bankEl.querySelectorAll('.token');
-    tokens.forEach(t => {
-      const idx = Number(t.getAttribute('data-index'));
-      if(selectedTokenIndex === idx){
-        t.setAttribute('aria-pressed','true');
-        t.classList.add('selected');
-      } else {
-        t.setAttribute('aria-pressed','false');
-        t.classList.remove('selected');
-      }
-    });
-  }
+  function refreshBankVisual(){
+    const tokens = bankEl.querySelectorAll('.token');
+    tokens.forEach(t => {
+      const idx = Number(t.getAttribute('data-index'));
+      if(selectedTokenIndex === idx){
+        t.setAttribute('aria-pressed','true');
+        t.classList.add('selected');
+      } else {
+        t.setAttribute('aria-pressed','false');
+        t.classList.remove('selected');
+      }
+    });
+  }
 
-  // token click
-  function onTokenClick(index, el){
-    if(selectedTokenIndex === index){ clearSelection(); return; }
-    selectedTokenIndex = index;
-    refreshBankVisual();
-  }
+  // token click
+  function onTokenClick(index, el){
+    if(selectedTokenIndex === index){ clearSelection(); return; }
+    selectedTokenIndex = index;
+    refreshBankVisual();
+  }
 
-  function clearSelection(){
-    selectedTokenIndex = null;
-    refreshBankVisual();
-  }
+  function clearSelection(){
+    selectedTokenIndex = null;
+    refreshBankVisual();
+  }
 
-  // blank click (place or clear)
-  function onBlankClick(bnum, el){
-    if(selectedTokenIndex !== null && typeof bankTokens[selectedTokenIndex] !== 'undefined'){
-      // place the selected token into the blank (but keep it in the bank — reusable)
-      blankState[bnum] = bankTokens[selectedTokenIndex];
-      updateBlankDisplays();
-      clearSelection();
-      return;
-    }
-    // If blank already has token, clicking clears it (since tokens are reusable)
-    if(blankState[bnum]){
-      blankState[bnum] = null;
-      updateBlankDisplays();
-      feedbackEl.textContent = '';
-      return;
-    }
-    // else nothing selected and blank empty: no-op
-  }
+  // blank click (place or clear)
+  function onBlankClick(bnum, el){
+    if(selectedTokenIndex !== null && typeof bankTokens[selectedTokenIndex] !== 'undefined'){
+      // place the selected token into the blank (but keep it in the bank — reusable)
+      blankState[bnum] = bankTokens[selectedTokenIndex];
+      updateBlankDisplays();
+      clearSelection();
+      return;
+    }
+    // If blank already has token, clicking clears it (since tokens are reusable)
+    if(blankState[bnum]){
+      blankState[bnum] = null;
+      updateBlankDisplays();
+      feedbackEl.textContent = '';
+      return;
+    }
+    // else nothing selected and blank empty: no-op
+  }
 
-  // drop handler for blank (from bank drag)
-  function onBlankDrop(ev){
-    ev.preventDefault();
-    const data = ev.dataTransfer.getData('text/plain');
-    let idx = null;
-  _   if(data && !data.startsWith('blank:')) idx = Number(data);
-    if(isNaN(idx)) return;
-    const bnum = Number(ev.currentTarget.getAttribute('data-blank'));
-    if(typeof bankTokens[idx] !== 'undefined'){
-      blankState[bnum] = bankTokens[idx];
-      updateBlankDisplays();
-      clearSelection();
-    }
-  }
+  // drop handler for blank (from bank drag)
+  function onBlankDrop(ev){
+    ev.preventDefault();
+    const data = ev.dataTransfer.getData('text/plain');
+    let idx = null;
+    if(data && !data.startsWith('blank:')) idx = Number(data);
+    if(isNaN(idx)) return;
+    const bnum = Number(ev.currentTarget.getAttribute('data-blank'));
+    if(typeof bankTokens[idx] !== 'undefined'){
+      blankState[bnum] = bankTokens[idx];
+      updateBlankDisplays();
+      clearSelection();
+    }
+  }
 
-  // dragstart from blank to clear it (data 'blank:N')
-  // we attach dragstart directly when creating blanks, but implement here generically:
-  // (we need to add dragstart on blanks)
-  // Add dragstart to blanks dynamically:
-  function attachBlankDragStarts(){
-    const blanks = codeWrap.querySelectorAll('.blank');
-    blanks.forEach(b => {
-      if(!b._blankDragAssigned){
-        b.setAttribute('draggable','true');
-        b.addEventListener('dragstart', (ev)=> {
-          const bnum = Number(b.getAttribute('data-blank'));
-          if(blankState[bnum]){
-            ev.dataTransfer.setData('text/plain', 'blank:' + bnum);
-            // do not remove token from bank — tokens are reusable; clear blank on drop in bank
-          } else {
-            ev.preventDefault();
-          }
-        });
-        b._blankDragAssigned = true;
-      }
-    });
-  }
+  // dragstart from blank to clear it (data 'blank:N')
+  function attachBlankDragStarts(){
+    const blanks = codeWrap.querySelectorAll('.blank');
+    blanks.forEach(b => {
+      if(!b._blankDragAssigned){
+        b.setAttribute('draggable','true');
+        b.addEventListener('dragstart', (ev)=> {
+          const bnum = Number(b.getAttribute('data-blank'));
+          if(blankState[bnum]){
+            ev.dataTransfer.setData('text/plain', 'blank:' + bnum);
+            // do not remove token from bank — tokens are reusable; clear blank on drop in bank
+          } else {
+            ev.preventDefault();
+          }
+        });
+        b._blankDragAssigned = true;
+      }
+    });
+  }
 
-  // Submit: check blanks against solution mapping
-  function onSubmit(){
-    const solution = currentPuzzle.solution || {};
-    let allCorrect = true;
-    Object.keys(blankState).forEach(k => {
-      const n = Number(k);
-      const placed = blankState[n] || null;
-      const expected = solution[n];
-      const el = codeWrap.querySelector('.blank[data-blank="'+n+'"]');
-      el.classList.remove('correct','incorrect');
-      if(typeof expected === 'undefined'){
-        // no expected answer defined -> leave neutral
-      } else {
-        if(placed === expected){
-          el.classList.add('correct');
-        } else {
-          el.classList.add('incorrect');
-          allCorrect = false;
-        }
-      }
-    });
-    if(allCorrect){
-      feedbackEl.textContent = 'All correct! Well done 🎉';
-    } else {
-      feedbackEl.textContent = 'Some blanks are incorrect — incorrect blanks are highlighted.';
-    }
-  }
+  // Submit: check blanks against solution mapping
+  function onSubmit(){
+    const solution = currentPuzzle.solution || {};
+    let allCorrect = true;
+    Object.keys(blankState).forEach(k => {
+      const n = Number(k);
+      const placed = blankState[n] || null;
+      const expected = solution[n];
+      const el = codeWrap.querySelector('.blank[data-blank="'+n+'"]');
+      el.classList.remove('correct','incorrect');
+      if(typeof expected === 'undefined'){
+        // no expected answer defined -> leave neutral
+      } else {
+        if(placed === expected){
+          el.classList.add('correct');
+        } else {
+          el.classList.add('incorrect');
+          allCorrect = false;
+        }
+      }
+    });
+    if(allCorrect){
+      feedbackEl.textContent = 'All correct! Well done 🎉';
+    } else {
+      feedbackEl.textContent = 'Some blanks are incorrect — incorrect blanks are highlighted.';
+    }
+  }
 
-  // Reset: clear blanks, reshuffle bank (tokens reusable so we just shuffle)
-  function onReset(){
-    Object.keys(blankState).forEach(k => blankState[k] = null);
-    bankTokens = shuffle(currentPuzzle.bank.slice());
-    renderBank();
-    updateBlankDisplays();
-    feedbackEl.textContent = 'Reset — bank reshuffled.';
-    selectedTokenIndex = null;
-    updateRevealHintBtn();
-  }
+  // Reset: clear blanks, reshuffle bank (tokens reusable so we just shuffle)
+  function onReset(){
+    Object.keys(blankState).forEach(k => blankState[k] = null);
+    bankTokens = shuffle(currentPuzzle.bank.slice());
+    renderBank();
+    updateBlankDisplays();
+    feedbackEl.textContent = 'Reset — bank reshuffled.';
+    selectedTokenIndex = null;
+    updateRevealHintBtn();
+  }
 
-  // Next puzzle
-  function onNext(){
-    const nextIndex = (puzzleIndex + 1) % puzzles.length;
-    loadPuzzle(nextIndex);
-  }
+  // Next puzzle
+  function onNext(){
+    const nextIndex = (puzzleIndex + 1) % puzzles.length;
+    loadPuzzle(nextIndex);
+  }
 
-  // Reveal hint: fill one randomly chosen incorrect (or empty) blank with its correct token
-  function onRevealHint(){
-    const used = usedHintsCount[puzzleIndex] || 0;
-    if(used >= 3){
-      feedbackEl.textContent = 'No hints left for this puzzle.';
-      return;
-    }
-    const solution = currentPuzzle.solution || {};
-    // find eligible blanks where expected exists and placed != expected
-    const eligible = [];
-    Object.keys(blankState).forEach(k => {
-      const n = Number(k);
-      const expected = solution[n];
-      if(typeof expected === 'undefined') return;
-s     const placed = blankState[n] || null;
-      if(placed !== expected) eligible.push(n);
-    });
-    if(eligible.length === 0){
-      feedbackEl.textContent = 'All blanks are already correct or there are no defined answers to reveal.';
-      return;
-    }
-    const pick = eligible[Math.floor(Math.random() * eligible.length)];
-    blankState[pick] = solution[pick];
-    usedHintsCount[puzzleIndex] = used + 1;
-    updateBlankDisplays();
-    feedbackEl.textContent = `Hint used: a blank has been filled (${usedHintsCount[puzzleIndex]} of 3).`;
-    updateRevealHintBtn();
-  }
+  // Reveal hint: fill one randomly chosen incorrect (or empty) blank with its correct token
+  function onRevealHint(){
+    const used = usedHintsCount[puzzleIndex] || 0;
+    if(used >= 3){
+      feedbackEl.textContent = 'No hints left for this puzzle.';
+      return;
+    }
+    const solution = currentPuzzle.solution || {};
+    // find eligible blanks where expected exists and placed != expected
+    const eligible = [];
+    Object.keys(blankState).forEach(k => {
+      const n = Number(k);
+      const expected = solution[n];
+      if(typeof expected === 'undefined') return;
+      const placed = blankState[n] || null;
+      if(placed !== expected) eligible.push(n);
+    });
+    if(eligible.length === 0){
+      feedbackEl.textContent = 'All blanks are already correct or there are no defined answers to reveal.';
+      return;
+    }
+    const pick = eligible[Math.floor(Math.random() * eligible.length)];
+    blankState[pick] = solution[pick];
+    usedHintsCount[puzzleIndex] = used + 1;
+    updateBlankDisplays();
+    feedbackEl.textContent = `Hint used: a blank has been filled (${usedHintsCount[puzzleIndex]} of 3).`;
+    updateRevealHintBtn();
+  }
 
-  function updateRevealHintBtn(){
-    const used = usedHintsCount[puzzleIndex] || 0;
-    const left = Math.max(0, 3 - used);
-    if(left <= 0){
-      revealHintBtn.disabled = true;
-      revealHintBtn.textContent = 'Reveal hint (used up)';
-      revealHintBtn.style.opacity = 0.6;
-    } else {
-      revealHintBtn.disabled = false;
-      revealHintBtn.textContent = `Reveal hint (${left} left)`;
-  _   revealHintBtn.style.opacity = 1;
-    }
-  }
+  function updateRevealHintBtn(){
+    const used = usedHintsCount[puzzleIndex] || 0;
+    const left = Math.max(0, 3 - used);
+    if(left <= 0){
+      revealHintBtn.disabled = true;
+      revealHintBtn.textContent = 'Reveal hint (used up)';
+      revealHintBtn.style.opacity = 0.6;
+    } else {
+      revealHintBtn.disabled = false;
+      revealHintBtn.textContent = `Reveal hint (${left} left)`;
+      revealHintBtn.style.opacity = 1;
+    }
+  }
 
-  function clearSelection(){
-    selectedTokenIndex = null;
-    refreshBankVisual();
-  }
+  // helper to attach blank dragstarts after render
+  function postRenderSetup(){
+    attachBlankDragStarts();
+  }
 
-  // helper to attach blank dragstarts after render
-  function postRenderSetup(){
-    attachBlankDragStarts();
-  }
+  // initialize bank visuals refresh (called after render)
+  function refreshBankVisual(){
+    const tokens = bankEl.querySelectorAll('.token');
+    tokens.forEach(t => {
+      const idx = Number(t.getAttribute('data-index'));
+      if(selectedTokenIndex === idx){
+        t.setAttribute('aria-pressed','true');
+        t.classList.add('selected');
+      } else {
+        t.setAttribute('aria-pressed','false');
+        t.classList.remove('selected');
+      }
+    });
+  }
 
-  // wire up blank drop handling after each render
-  const observer = new MutationObserver(()=> {
-What is this for?
-    // ensure blanks accept dragstart events
-    postRenderSetup();
-  });
-  observer.observe(codeWrap, { childList:true, subtree:true });
+  // wire up blank drop handling after each render
+  const observer = new MutationObserver(()=> {
+    // ensure blanks accept dragstart events
+    postRenderSetup();
+  });
+  observer.observe(codeWrap, { childList:true, subtree:true });
 
-  // load initial puzzle
-  loadPuzzle(0);
-  init();
+  // load initial puzzle
+  loadPuzzle(0);
+  init();
 
-  // expose helpers for debugging (optional)
-  window._condPuzzle = {
-    puzzles,
-    goTo: (i)=> loadPuzzle(i % puzzles.length),
-s   usedHintsCount,
-  };
+  // expose helpers for debugging (optional)
+  window._condPuzzle = {
+    puzzles,
+    goTo: (i)=> loadPuzzle(i % puzzles.length),
+    usedHintsCount,
+  };
 
 })();
 </script>

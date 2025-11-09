@@ -124,8 +124,167 @@
   </div>
 
 <script>
-// Puzzle data (unchanged)
-const puzzles = [...]; // omitted for brevity
+const puzzles = [
+  {
+    title: "Basic IF (Pseudocode)",
+    description: "Input: the user types a number. Output: if the number is greater than 0 the program shows a message saying the number is positive. For example, if the user enters 5 the program shows The number is positive.",
+    lines: [
+      "OUTPUT \"Enter a number: \"",
+      "INPUT number",
+      "IF number > 0 THEN",
+      "OUTPUT \"The number is positive\"",
+      "ENDIF"
+    ]
+  },
+  {
+    title: "IF-ELSE (Pseudocode)",
+    description: "Input: the user types a number. Output: the program checks if the number is even or odd using MOD. It prints The number is even when the remainder is 0, otherwise it prints The number is odd. For example, entering 4 prints The number is even.",
+    lines: [
+      "OUTPUT \"Enter a number: \"",
+      "INPUT number",
+      "IF number MOD 2 = 0 THEN",
+      "OUTPUT \"The number is even\"",
+      "ELSE",
+      "OUTPUT \"The number is odd\"",
+      "ENDIF"
+    ]
+  },
+  {
+    title: "Nested IF (Pseudocode)",
+    description: "Input: the user types a number. Output: first the program checks if the number is positive. If it is positive it then checks if it is greater than 100 and prints either The number is large and positive or The number is small but positive. For example, entering 150 prints The number is large and positive.",
+    lines: [
+      "OUTPUT \"Enter a number: \"",
+      "INPUT number",
+      "IF number > 0 THEN",
+      "IF number > 100 THEN",
+      "OUTPUT \"The number is large and positive\"",
+      "ELSE",
+      "OUTPUT \"The number is small but positive\"",
+      "ENDIF",
+      "ENDIF"
+    ]
+  },
+  {
+    title: "Nested IF with ELSE (Pseudocode)",
+    description: "Input: the user types a number. Output: the program classifies the number as large positive, small positive, negative, or zero. It first checks if the number is positive and then checks size; otherwise it checks for negative or zero. For example, entering 0 prints The number is zero.",
+    lines: [
+      "OUTPUT \"Enter a number: \"",
+      "INPUT number",
+      "IF number > 0 THEN",
+      "IF number > 100 THEN",
+      "OUTPUT \"The number is large and positive\"",
+      "ELSE",
+      "OUTPUT \"The number is small but positive\"",
+      "ENDIF",
+      "ELSE",
+      "IF number < 0 THEN",
+      "OUTPUT \"The number is negative\"",
+      "ELSE",
+      "OUTPUT \"The number is zero\"",
+      "ENDIF",
+      "ENDIF"
+    ]
+  },
+  {
+    title: "Basic CASE (Pseudocode)",
+    description: "Input: the user types a small code number (for example 1, 2 or 3). Output: the program uses a CASE statement to print a label depending on the code. For example, entering 2 prints Option Two. If the code is not 1–3 it prints Unknown code.",
+    lines: [
+      "OUTPUT \"Enter code (1-3): \"",
+      "INPUT code",
+      "CASE code OF",
+      "1: OUTPUT \"Option One\"",
+      "2: OUTPUT \"Option Two\"",
+      "3: OUTPUT \"Option Three\"",
+      "DEFAULT: OUTPUT \"Unknown code\"",
+      "ENDCASE"
+    ]
+  },
+  {
+    title: "CASE inside IF (Pseudocode)",
+    description: "Input: the user types 2 for superadmin, 1 for admin or 0 for not admin. Output: if the user is admin (1) or superadmin (2) the program enters a CASE inside the IF and shows an appropriate admin message. For example, entering 2 shows Welcome, superadmin.",
+    lines: [
+      "OUTPUT \"Is the user admin? (2=super,1=yes,0=no): \"",
+      "INPUT isAdmin",
+      "IF isAdmin >= 1 THEN",
+      "CASE isAdmin OF",
+      "1: OUTPUT \"Welcome, admin\"",
+      "2: OUTPUT \"Welcome, superadmin\"",
+      "DEFAULT: OUTPUT \"Strange value\"",
+      "ENDCASE",
+      "ENDIF"
+    ]
+  },
+  {
+    title: "IF with different CASEs (Pseudocode)",
+    description: "Input: the user enters a level number. Output: if the level is 2 or higher the program runs one CASE block; otherwise it runs a different CASE block in the ELSE branch. Example: entering 3 runs the first CASE and prints Level three actions.",
+    lines: [
+      "OUTPUT \"Enter level (1-3): \"",
+      "INPUT level",
+      "IF level >= 2 THEN",
+      "CASE level OF",
+      "2: OUTPUT \"Level two actions\"",
+      "3: OUTPUT \"Level three actions\"",
+      "DEFAULT: OUTPUT \"Other level\"",
+      "ENDCASE",
+      "ELSE",
+      "CASE level OF",
+      "1: OUTPUT \"Basic actions\"",
+      "DEFAULT: OUTPUT \"Unknown\"",
+      "ENDCASE",
+      "ENDIF"
+    ]
+  },
+  {
+    title: "Two separate IF-ELSE statements (Pseudocode)",
+    description: "Input: the user types a temperature value. Output: the program checks two independent conditions in sequence. First it tells if it is hot (temp > 30) and then it tells if it is freezing (temp < 0). For example, entering -5 prints It is not hot and then Freezing.",
+    lines: [
+      "OUTPUT \"Enter temperature: \"",
+      "INPUT temp",
+      "IF temp > 30 THEN",
+      "OUTPUT \"It is hot\"",
+      "ELSE",
+      "OUTPUT \"It is not hot\"",
+      "ENDIF",
+      "IF temp < 0 THEN",
+      "OUTPUT \"Freezing\"",
+      "ELSE",
+      "OUTPUT \"Above freezing\"",
+      "ENDIF"
+    ]
+  },
+  {
+    title: "IF using SUBSTRING (Pseudocode)",
+    description: "Input: the user types a word. Output: the program checks the first three letters using SUBSTRING and tells if the word starts with pre. For example, entering prevent results in Word starts with pre.",
+    lines: [
+      "OUTPUT \"Enter a word: \"",
+      "INPUT word",
+      "IF SUBSTRING(word,1,3) = \"pre\" THEN",
+      "OUTPUT \"Word starts with pre\"",
+      "ELSE",
+      "OUTPUT \"Different start\"",
+      "ENDIF"
+    ]
+  },
+  {
+    title: "CASE using SUBSTRING, ROUND and RANDOM (Pseudocode)",
+    description: "Input: this example uses a name and a random number. Output: it checks the name prefix and may use a rounded random value in a nested CASE to decide what to show. For example, for name Alice the prefix is Ali so it prints Hello Ali; otherwise a rounded random score may produce Top grade or Excellent.",
+    lines: [
+      "name = \"Alice\"",
+      "prefix = SUBSTRING(name,1,3)",
+      "rand = RANDOM(1,100)",
+      "scaled = ROUND(rand / 10)",
+      "CASE prefix OF",
+      "Ali: OUTPUT \"Hello Ali\"",
+      "DEFAULT:",
+      "CASE scaled OF",
+      "10: OUTPUT \"Top grade\"",
+      "9: OUTPUT \"Excellent\"",
+      "DEFAULT: OUTPUT \"Keep trying\"",
+      "ENDCASE",
+      "ENDCASE"
+    ]
+  }
+];
 
 let currentIndex = 0;
 let currentOrder = [];
@@ -136,6 +295,25 @@ const puzzleSelect = document.getElementById('puzzleSelect');
 const puzzleDescriptionEl = document.getElementById('puzzleDescription');
 const hintBtn = document.getElementById('hintBtn');
 
+puzzles.forEach((p, i) => {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `${i+1}. ${p.title}`;
+  puzzleSelect.appendChild(opt);
+});
+
+puzzleSelect.addEventListener('change', e => {
+  currentIndex = parseInt(e.target.value, 10);
+  loadPuzzle(currentIndex);
+});
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
 function renderScrambled() {
   scrambledEl.innerHTML = '';
   currentOrder.forEach((line, idx) => {
@@ -144,19 +322,25 @@ function renderScrambled() {
     el.draggable = true;
     el.dataset.index = idx;
     el.dataset.line = line;
-    el.textContent = line.trim();
+    el.textContent = line.trim(); // NO indentation, always show trimmed
 
     el.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', idx);
       e.dataTransfer.effectAllowed = 'move';
       el.classList.add('picked');
     });
+
     el.addEventListener('dragend', () => el.classList.remove('picked'));
-    el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('dragover'); });
+
+    el.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      el.classList.add('dragover');
+    });
     el.addEventListener('dragleave', () => el.classList.remove('dragover'));
 
     el.addEventListener('drop', (e) => {
-      e.preventDefault(); el.classList.remove('dragover');
+      e.preventDefault();
+      el.classList.remove('dragover');
       const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
       const toIdx = parseInt(el.dataset.index, 10);
       if (!Number.isNaN(fromIdx) && !Number.isNaN(toIdx) && fromIdx !== toIdx) {
@@ -180,20 +364,43 @@ function renderScrambled() {
         el.classList.add('picked');
       }
     });
+
     scrambledEl.appendChild(el);
   });
 }
 
+// insertion move: remove item at from and insert at to, shifting others accordingly
 function moveItemInsert(from, to) {
   const item = currentOrder.splice(from, 1)[0];
-  currentOrder.splice(to, 0, item);
+  let insertAt = to;
+  if (from < to) insertAt = to; // keep as-is
+  if (from > to) insertAt = to; // keep as-is
+  currentOrder.splice(insertAt, 0, item);
 }
 
 function animateInsert(from, to) {
+  // after renderScrambled, children reflect new order. We'll add slide classes to the elements that shifted.
   const children = Array.from(scrambledEl.children);
+  // clear any existing animation classes
   children.forEach(c => { c.classList.remove('slide-down','slide-up'); });
-  if (from > to) for (let i = to + 1; i <= from; i++) children[i]?.classList.add('slide-down');
-  if (from < to) for (let i = from; i < to; i++) children[i]?.classList.add('slide-up');
+
+  if (from > to) {
+    // dragged from lower index to higher-up position: elements originally at [to..from-1] moved down one slot
+    // after render, those elements now occupy indices [to+1 .. from]
+    const start = to + 1;
+    const end = from; // inclusive
+    for (let i = start; i <= end && i < children.length; i++) {
+      children[i].classList.add('slide-down');
+    }
+  } else if (from < to) {
+    // dragged from higher-up to lower position: elements originally at [from+1..to] moved up one slot
+    // after render, those elements now occupy indices [from .. to-1]
+    const start = from;
+    const end = to - 1;
+    for (let i = start; i <= end && i < children.length; i++) {
+      children[i].classList.add('slide-up');
+    }
+  }
 }
 
 function resetPuzzle() {
@@ -218,39 +425,78 @@ function submitPuzzle() {
     if (text === (correct[i] || '').trim()) {
       p.style.background = 'var(--ok)';
       p.style.borderColor = '#2a9a4a';
+      p.textContent = text; // NO indentation
     } else {
       p.style.background = 'var(--bad)';
       p.style.borderColor = '#c44';
       allCorrect = false;
+      p.textContent = text; // NO indentation
     }
   });
-  messageEl.textContent = allCorrect ? 'All correct! Well done 🎉' : 'Some lines are incorrect — incorrect lines are highlighted.';
-  messageEl.style.color = allCorrect ? '#1a7f3a' : '#a00';
+  if (allCorrect) {
+    messageEl.textContent = 'All correct! Well done 🎉';
+    messageEl.style.color = '#1a7f3a';
+  } else {
+    messageEl.textContent = 'Some lines are incorrect — incorrect lines are highlighted.';
+    messageEl.style.color = '#a00';
+  }
 }
+
+function nextPuzzle() {
+  currentIndex = (currentIndex + 1) % puzzles.length;
+  puzzleSelect.value = currentIndex;
+  loadPuzzle(currentIndex);
+}
+
+function loadPuzzle(index) {
+  currentIndex = index;
+  puzzleDescriptionEl.textContent = puzzles[index].description || '';
+  resetPuzzle();
+}
+
+document.getElementById('submitBtn').addEventListener('click', submitPuzzle);
+document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
+document.getElementById('nextBtn').addEventListener('click', nextPuzzle);
 
 hintBtn.addEventListener('click', () => {
   if (hintLeft <= 0) return;
   const puzzle = puzzles[currentIndex];
   const correct = puzzle.lines;
+  // find the first index where currentOrder is incorrect
   let targetIdx = -1;
   for (let i = 0; i < correct.length; i++) {
     if ((currentOrder[i] || '').trim() !== (correct[i] || '').trim()) { targetIdx = i; break; }
   }
-  if (targetIdx === -1) return;
+  if (targetIdx === -1) {
+    messageEl.textContent = 'Puzzle already solved or no mismatches.';
+    return;
+  }
+  // find where that correct line currently sits in currentOrder
   const wantLine = correct[targetIdx].trim();
   const foundIdx = currentOrder.findIndex(x => x.trim() === wantLine);
-  if (foundIdx !== -1) moveItemInsert(foundIdx, targetIdx);
-  hintLeft--;
+  if (foundIdx === -1) {
+    // the correct line is missing (shouldn't happen) — insert it directly
+    currentOrder.splice(targetIdx, 0, correct[targetIdx]);
+  } else {
+    // move foundIdx to targetIdx using insert logic
+    moveItemInsert(foundIdx, targetIdx);
+  }
+  hintLeft -= 1;
   hintBtn.textContent = `Hint (${hintLeft})`;
   renderScrambled();
+  // highlight the line placed by the hint
   const children = Array.from(scrambledEl.children);
   const highlighted = children[targetIdx];
   if (highlighted) {
     highlighted.classList.add('hinted');
     setTimeout(()=>highlighted.classList.remove('hinted'),1500);
   }
+  animateInsert(foundIdx === -1 ? targetIdx : foundIdx, targetIdx);
   messageEl.textContent = `Hint used — placed one correct line. ${hintLeft} hint(s) left.`;
 });
+
+puzzleSelect.value = 0;
+loadPuzzle(0);
 </script>
 </body>
 </html>

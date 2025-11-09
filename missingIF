@@ -91,7 +91,7 @@
     cursor:pointer;
     vertical-align:baseline;
   }
-  .blank:focus { box-shadow:0 0 0 3px rgba(255,183,3,0.14); border-color:var(--focus);}
+  .blank:focus { box-shadow:0 0 0 3px rgba(255,183,3,0.14); border-color:var(--focus);} 
   .blank.empty{ color:#cbd5e1; font-style:italic;}
   .blank.correct { background:rgba(22,163,74,0.18); border-color:rgba(22,163,74,0.5); color:var(--success); }
   .blank.incorrect { background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.3); color:var(--danger); }
@@ -201,12 +201,9 @@
         <div class="msg" id="feedback" aria-live="assertive"></div>
       </div>
 
-      <div class="help">Keyboard: Tab to a token, press Enter to pick; Tab to a blank, press Enter to place. Use Escape to clear selection.</div>
+      <div class="help">Keyboard: focus a token and press Enter to select it. Then focus a blank and press Enter to place. Press Escape to cancel.</div>
     </section>
 
-    <p style="color:var(--muted);font-size:13px;margin-top:8px">
-      The puzzles are easy to edit in the source: see the <code>puzzles</code> array at the end of the JS.
-    </p>
   </main>
 </div>
 
@@ -217,7 +214,7 @@
   - Drag & drop + keyboard
   - Submit / Reset / Next / Puzzle selector
   - Reveal hint (fills a random incorrect blank), up to 3 per puzzle (in-session)
-  - Puzzles array comes from your provided file (unmodified)
+  - Puzzles array comes from your provided content (modified per instructions)
 */
 
 (function(){
@@ -231,46 +228,41 @@
     return arr;
   }
 
-  // --- puzzles (taken from your provided content) ---
+  // --- puzzles (modified as requested) ---
   const puzzles = [
     {
       title: "Basic IF — positive check",
       description: "Read an integer and output whether it is positive. Input: one number. Output: a short message when the number is positive.",
       example: "If the input is 5 the program should output: The number is positive",
       lines: [
-"BEGIN",
 "INPUT number",
 "IF number ___1___ 0 ___2___",
 "OUTPUT \"The number is positive\"",
-"ENDIF",
-"END"
+"ENDIF"
       ],
       bank: ["THEN", ">", "<", "ELSE"],
       solution: {1: ">", 2: "THEN"}
     },
     {
       title: "IF-ELSE — even or odd (MOD)",
-      description: "Read an integer and print whether it is even or odd. Use the MOD operator to test divisibility. Fill the operator, equality and THEN.",
+      description: "Read an integer and print whether it is even or odd. Use the MOD operator to test divisibility.",
       example: "Input 4 -> outputs: Even",
       lines: [
-"BEGIN",
 "INPUT n",
 "IF n ___1___ 2 ___2___ 0 ___3___",
 "OUTPUT \"Even\"",
 "ELSE",
 "OUTPUT \"Odd\"",
-"ENDIF",
-"END"
+"ENDIF"
       ],
       bank: ["MOD","THEN","=","ELSE","%","<>"],
       solution: {1: "MOD", 2: "=", 3: "THEN"}
     },
     {
       title: "Nested IF-ELSE (single nested) — positive & large",
-      description: "Read a number. If it is positive, check whether it is larger than 100 and respond. This puzzle has one nested IF-ELSE.",
+      description: "Read a number. If it is positive, check whether it is larger than 100 and respond.",
       example: "Input 150 -> outputs: Large and positive",
       lines: [
-"BEGIN",
 "INPUT x",
 "IF x ___1___ 0 ___2___",
 "IF x ___3___ 100 ___4___",
@@ -280,53 +272,47 @@
 "ENDIF",
 "ELSE",
 "OUTPUT \"Not positive\"",
-"ENDIF",
-"END"
+"ENDIF"
       ],
       bank: [">","THEN","<","ELSE","="],
       solution: {1: ">", 2: "THEN", 3: ">", 4: "THEN"}
     },
     {
       title: "IF with ELSE — zero or not",
-      description: "Read a number and report if it is zero or not zero. Fill in the comparison and THEN.",
+      description: "Read a number and report if it is zero or not zero.",
       example: "Input 0 -> outputs: Zero",
       lines: [
-"BEGIN",
 "INPUT number",
 "IF number ___1___ 0 ___2___",
 "OUTPUT \"Zero\"",
 "ELSE",
 "OUTPUT \"Not zero\"",
-"ENDIF",
-"END"
+"ENDIF"
       ],
       bank: ["THEN","=","MOD","ELSE","<>"],
       solution: {1: "=", 2: "THEN"}
     },
     {
       title: "Basic CASE — options",
-      description: "Read a code and select one of three options. Use CASE with OF and DEFAULT. Fill the CASE structure tokens.",
+      description: "Read a code and select one of three options.",
       example: "Input 2 -> outputs: Option Two",
       lines: [
-"BEGIN",
 "INPUT code",
 "___1___ code ___2___",
 "1: OUTPUT \"Option One\"",
 "2: OUTPUT \"Option Two\"",
 "3: OUTPUT \"Option Three\"",
 "___3___: OUTPUT \"Unknown\"",
-"___4___",
-"END"
+"___4___"
       ],
       bank: ["CASE","OF","DEFAULT","ENDCASE","WHEN","SWITCH"],
       solution: {1: "CASE", 2: "OF", 3: "DEFAULT", 4: "ENDCASE"}
     },
     {
       title: "CASE inside IF — admin message",
-      description: "If admin is 1 show a CASE with specific admin welcome messages. Fill in the IF THEN, CASE tokens, and ENDCASE.",
-      example: "Input admin=1 and code=1 -> outputs: Welcome, superadmin",
+      description: "If admin is 1 show a CASE with specific admin welcome messages.",
+      example: "Input admin=2 and code=1 -> outputs: Welcome, superadmin",
       lines: [
-"BEGIN",
 "INPUT admin",
 "INPUT code",
 "IF admin ___1___ 1 ___2___",
@@ -335,24 +321,22 @@
 "2: OUTPUT \"Welcome, admin\"",
 "___4___: OUTPUT \"Welcome\"",
 "___5___",
-"ENDIF",
-"END"
+"ENDIF"
       ],
       bank: ["=","THEN","OF","DEFAULT","ENDCASE","<>","ELSE"],
       solution: {1: "=", 2: "THEN", 3: "OF", 4: "DEFAULT", 5: "ENDCASE"}
     },
     {
       title: "IF with CASEs in both branches",
-      description: "If userType = 1 run a CASE for admin options; otherwise run a CASE for guest options. Fill THEN and CASE tokens.",
+      description: "If userType = 1 run a CASE for admin options; otherwise run a CASE for guest options. (Harder: extra blanks added.)",
       example: "userType=2 and choice=1 -> outputs: Guest: View",
       lines: [
-"BEGIN",
 "INPUT userType",
 "INPUT choice",
 "IF userType ___1___ 1 ___2___",
 "CASE choice ___3___",
-"1: OUTPUT \"Admin: Edit\"",
-"2: OUTPUT \"Admin: Delete\"",
+"1: ___7___ \"Admin: Edit\"",
+"2: ___8___ \"Admin: Delete\"",
 "DEFAULT: OUTPUT \"Admin: Unknown\"",
 "___4___",
 "ELSE",
@@ -361,95 +345,68 @@
 "2: OUTPUT \"Guest: Browse\"",
 "DEFAULT: OUTPUT \"Guest: Unknown\"",
 "___6___",
-"ENDIF",
-"END"
+"ENDIF"
       ],
-      bank: ["=","THEN","OF","ENDCASE","ELSE","CASE","DEFAULT","END"],
-      solution: {1: "=", 2: "THEN", 3: "OF", 4: "ENDCASE", 5: "OF", 6: "ENDCASE"}
+      bank: ["=","THEN","OF","ENDCASE","ELSE","CASE","DEFAULT","OUTPUT"],
+      solution: {1: "=", 2: "THEN", 3: "OF", 4: "ENDCASE", 5: "OF", 6: "ENDCASE", 7: "OUTPUT", 8: "OUTPUT"}
     },
     {
       title: "Two separate IF-ELSE statements (independent)",
-      description: "Read temperature and windSpeed. Check two independent conditions and output messages for each. Fill relational operators and THENs.",
+      description: "Read temperature and windSpeed. Check two independent conditions and output messages for each. (Increased blanks.)",
       example: "temp=30 -> 'Hot'; windSpeed=25 -> 'Windy'",
       lines: [
-"BEGIN",
 "INPUT temp",
 "INPUT windSpeed",
 "IF temp ___1___ 25 ___2___",
-"OUTPUT \"Hot\"",
+"___5___ \"Hot\"",
 "ELSE",
 "OUTPUT \"Not hot\"",
 "ENDIF",
 "IF windSpeed ___3___ 20 ___4___",
-"OUTPUT \"Windy\"",
+"___6___ \"Windy\"",
 "ELSE",
 "OUTPUT \"Calm\"",
-"ENDIF",
-"END"
+"ENDIF"
       ],
-      bank: [">","THEN","MOD","<","=","ELSE","<>"],
-      solution: {1: ">", 2: "THEN", 3: ">", 4: "THEN"}
+      bank: [">","THEN","MOD","<","=","ELSE","<>","OUTPUT"],
+      solution: {1: ">", 2: "THEN", 3: ">", 4: "THEN", 5: "OUTPUT", 6: "OUTPUT"}
     },
     {
       title: "IF using SUBSTRING — prefix check",
-      description: "Read a word. If its first three letters are 'pre' output a message. Fill SUBSTRING, equality, literal and THEN.",
+      description: "Read a word. If its first three letters are 'pre' output a message.",
       example: "Input 'prefix' -> outputs: Starts with pre",
       lines: [
-"BEGIN",
 "INPUT word",
 "IF ___1___(word,1,3) ___2___ ___3___ ___4___",
-"OUTPUT \"Starts with pre\"",
+"___5___ \"Starts with pre\"",
 "ELSE",
-"OUTPUT \"Different prefix\"",
-"ENDIF",
-"END"
+"___6___ \"Different prefix\"",
+"ENDIF"
       ],
-      bank: ["SUBSTRING","=","\"pre\"","THEN","ELSE","LEFT","MID"],
-      solution: {1: "SUBSTRING", 2: "=", 3: "\"pre\"", 4: "THEN"}
+      bank: ["SUBSTRING","=","\"pre\"","THEN","ELSE","LEFT","MID","OUTPUT"],
+      solution: {1: "SUBSTRING", 2: "=", 3: "\"pre\"", 4: "THEN", 5: "OUTPUT", 6: "OUTPUT"}
     },
     {
       title: "Final: CASE + SUBSTRING + ROUND (hard)",
-      description: "Read a name and a score. If the name prefix matches, greet; otherwise round the score and use a CASE. This final puzzle has many blanks — more than half of the code tokens are missing.",
+      description: "Read a name and a score. If the name prefix matches, greet; otherwise round the score and use a CASE.",
       example: "name='Ann'; score=4.6 -> rounded 5 -> outputs: Excellent",
       lines: [
-"___1___",
-"___2___ name",
-"___3___ score",
-"IF ___4___(name,1,3) ___5___ ___6___",
-"___7___ \"Hello Ann\"",
-"ELSE",
-"___8___Rounded <- ___9___(score)",
-"CASE ___10___ ___11___",
-"5: ___12___ \"Excellent\"",
-"4: ___13___ \"Good\"",
-"DEFAULT: ___14___ \"Keep trying\"",
-"___15___",
-"___16___",
-"END"
+"name = \"Alice\"",
+"prefix = SUBSTRING(name,1,3)",
+"rand = RANDOM(1,100)",
+"scaled = ROUND(rand / 10)",
+"CASE prefix OF",
+"Ali: OUTPUT \"Hello Ali\"",
+"DEFAULT:",
+"CASE scaled OF",
+"10: OUTPUT \"Top grade\"",
+"9: OUTPUT \"Excellent\"",
+"DEFAULT: OUTPUT \"Keep trying\"",
+"ENDCASE",
+"ENDCASE"
       ],
-      bank: [
-        "BEGIN","INPUT","OUTPUT","SUBSTRING","=","\"Ann\"","THEN","OUTPUT","ELSE",
-        "scoreRounded","ROUND","OF","ENDCASE","CASE","END","DEFAULT",
-        "PRINT","RANDOM","SUBSTR","->","LET","<-","ELIF"
-      ],
-      solution: {
-        1: "BEGIN",
-        2: "INPUT",
-        3: "INPUT",
-        4: "SUBSTRING",
-        5: "=",
-        6: "THEN",
-        7: "OUTPUT",
-        8: "scoreRounded <-",
-        9: "ROUND",
-        10: "scoreRounded",
-        11: "OF",
-        12: "OUTPUT",
-        13: "OUTPUT",
-        14: "OUTPUT",
-        15: "ENDCASE",
-        16: "ENDIF"
-      }
+      bank: ["name","prefix","rand","scaled","SUBSTRING","RANDOM","ROUND","CASE","OF","DEFAULT","OUTPUT","ENDCASE","Ali","10","9"],
+      solution: { }
     }
   ];
   // --- end-of-puzzles ---
@@ -499,7 +456,7 @@
   function loadPuzzle(index){
     puzzleIndex = index % puzzles.length;
     currentPuzzle = JSON.parse(JSON.stringify(puzzles[puzzleIndex])); // copy to avoid in-place edits
-    bankTokens = shuffle(currentPuzzle.bank.slice());
+    bankTokens = shuffle(currentPuzzle.bank ? currentPuzzle.bank.slice() : []);
     // set blanks
     const blanks = extractBlanks(currentPuzzle.lines);
     blankState = {};
@@ -755,7 +712,7 @@
   // Reset: clear blanks, reshuffle bank (tokens reusable so we just shuffle)
   function onReset(){
     Object.keys(blankState).forEach(k => blankState[k] = null);
-    bankTokens = shuffle(currentPuzzle.bank.slice());
+    bankTokens = shuffle(currentPuzzle.bank ? currentPuzzle.bank.slice() : []);
     renderBank();
     updateBlankDisplays();
     feedbackEl.textContent = 'Reset — bank reshuffled.';

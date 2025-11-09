@@ -1,500 +1,838 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Code Shuffler – Conditionals (Hints & Insert)</title>
-  <style>
-    :root{
-      --gap: 12px;
-      --card-bg: #f8f9fb;
-      --slot-border: #ccccd6;
-      --ok: #d4f7d9;
-      --bad: #ffd6d6;
-      --accent: #0066cc;
-      --hint-highlight: #e8f1ff;
-    }
-    body{
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      margin: 18px;
-      background: #ffffff;
-      color:#111;
-    }
-    h1{ margin: 0 0 14px 0; font-size: 20px; }
-    .controls{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center }
-    button{
-      background:var(--accent);
-      color:white;
-      border: none;
-      padding:8px 12px;
-      border-radius:8px;
-      cursor:pointer;
-      font-weight:600;
-      font-size:14px;
-    }
-    button.secondary{ background:#666; }
-    .layout{
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
-      align-items:start;
-    }
-    .panel{
-      background:var(--card-bg);
-      padding:12px;
-      border-radius:10px;
-      box-shadow: 0 2px 6px rgba(10,10,20,0.03);
-    }
-    .puzzle-box{
-      margin:10px 0 12px 0;
-      padding:10px 12px;
-      border-radius:8px;
-      border:1px solid #d1d7df;
-      background:#ffffff;
-      box-shadow:0 1px 3px rgba(10,10,20,0.04);
-      font-size:14px;
-      font-weight:600;
-      color:#222;
-    }
-    .scrambled-box{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      padding:10px;
-      border: 2px dashed var(--slot-border);
-      min-height: 120px;
-      border-radius:8px;
-      background: #fff;
-    }
-    .piece{
-      padding:8px 10px;
-      background:white;
-      border-radius:6px;
-      box-shadow:0 1px 2px rgba(0,0,0,0.05);
-      cursor:grab;
-      user-select:none;
-      white-space:pre-wrap;
-      font-family: "Courier New", monospace;
-      font-size: 13px;
-      border:1px solid transparent;
-      transition: transform 260ms ease, background-color 200ms ease, border-color 200ms ease, margin 260ms ease;
-    }
-    .piece.dragover{ outline:2px dashed #0066cc; }
-    .piece.picked{ transform: scale(1.02); box-shadow:0 4px 10px rgba(0,0,0,0.08); }
-    .slide-down { animation: slideDown 320ms ease; }
-    .slide-up { animation: slideUp 320ms ease; }
-    .hinted { background: var(--hint-highlight) !important; transition: background-color 800ms ease; }
-    @keyframes slideDown {
-      0% { transform: translateY(-18px); opacity:0.0; }
-      60% { transform: translateY(6px); opacity:0.9; }
-      100% { transform: translateY(0); opacity:1; }
-    }
-    @keyframes slideUp {
-      0% { transform: translateY(18px); opacity:0.0; }
-      60% { transform: translateY(-6px); opacity:0.9; }
-      100% { transform: translateY(0); opacity:1; }
-    }
-    .message{ margin-top:10px; font-weight:600; }
-    .meta{ font-size:14px; color:#444; margin-bottom:8px; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Fill in the missing code — Conditionals</title>
+<style>
+  :root{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --accent:#0b61d6;
+    --muted:#6b7280;
+    --success:#16a34a;
+    --danger:#ef4444;
+    --focus:#ffb703;
+    --bank-bg:#eef6ff;
+    --gap:12px;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  html,body{height:100%;}
+  body{
+    margin:16px;
+    background:linear-gradient(180deg,var(--bg),#eef3fb 60%);
+    color:#111827;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+  .container{
+    max-width:980px;
+    margin:0 auto;
+    padding:20px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-bottom:18px;
+  }
+  h1{
+    font-size:20px;
+    margin:0;
+  }
+  .meta{
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .puzzle-card{
+    background:var(--card);
+    border-radius:10px;
+    box-shadow:0 6px 20px rgba(15,23,42,0.06);
+    padding:18px;
+    margin-bottom:18px;
+    border:1px solid rgba(15,23,42,0.04);
+  }
+
+  .desc{
+    background:linear-gradient(90deg,#fff,#fbfdff);
+    padding:12px;
+    border-radius:8px;
+    border:1px dashed rgba(11,97,214,0.08);
+    margin-bottom:12px;
+  }
+  .desc p{margin:6px 0;color:#0f172a;font-size:14px}
+  .example{color:var(--muted);font-size:13px;margin-top:6px}
+
+  /* pseudocode area */
+  .code-wrap{
+    background:#0f172a;
+    color:#e6eef8;
+    border-radius:8px;
+    padding:12px;
+    font-family: "Courier New", Courier, monospace;
+    font-size:14px;
+    overflow:auto;
+    line-height:1.6;
+  }
+  .code-line{
+    white-space:pre;
+  }
+  .blank {
+    display:inline-block;
+    min-width:48px;
+    padding:2px 6px;
+    margin:0 2px;
+    border-radius:6px;
+    background:rgba(255,255,255,0.07);
+    color:#fff;
+    border:2px dashed rgba(255,255,255,0.08);
+    outline: none;
+    cursor:pointer;
+    vertical-align:baseline;
+  }
+  .blank:focus { box-shadow:0 0 0 3px rgba(255,183,3,0.14); border-color:var(--focus);}
+  .blank.empty{ color:#cbd5e1; font-style:italic;}
+  .blank.correct { background:rgba(22,163,74,0.18); border-color:rgba(22,163,74,0.5); color:var(--success); }
+  .blank.incorrect { background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.3); color:var(--danger); }
+
+  /* bank */
+  .bank{
+    margin-top:12px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    background:var(--bank-bg);
+    padding:10px;
+    border-radius:8px;
+    border:1px solid rgba(11,97,214,0.06);
+  }
+  .token{
+    user-select:none;
+    padding:8px 10px;
+    border-radius:8px;
+    background:#fff;
+    border:1px solid rgba(2,6,23,0.06);
+    box-shadow:0 2px 6px rgba(2,6,23,0.04);
+    font-weight:600;
+    font-size:13px;
+    cursor:grab;
+  }
+  .token:active{ cursor:grabbing }
+  .token[aria-pressed="true"]{ outline:3px solid rgba(11,97,214,0.14); box-shadow:0 6px 18px rgba(11,97,214,0.08); }
+  .token:focus { box-shadow:0 0 0 3px rgba(11,97,214,0.10); outline:none; }
+
+  /* controls */
+  .controls{
+    display:flex;
+    gap:10px;
+    margin-top:12px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  button{
+    padding:9px 14px;
+    border-radius:8px;
+    border:0;
+    font-weight:600;
+    background:var(--accent);
+    color:white;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(11,97,214,0.10);
+  }
+  button.secondary{
+    background:#fff; color:var(--accent); border:1px solid rgba(11,97,214,0.10);
+    box-shadow:none;
+  }
+  button.ghost{
+    background:transparent; color:var(--muted); border:1px dashed rgba(2,6,23,0.06);
+  }
+  .msg{ margin-left:8px; color:var(--muted); font-weight:600; }
+
+  select.puzzle-select{ padding:8px; border-radius:8px; border:1px solid rgba(2,6,23,0.06); background:#fff; color:#0f172a; font-weight:600; }
+
+  /* small screens */
+  @media (max-width:640px){
+    .container{ padding:12px; }
+    header{ gap:8px; }
+    .code-wrap{ font-size:13px; }
+    .token{ font-size:12px; padding:7px 9px; }
+    button{ padding:8px 10px; font-size:14px; }
+  }
+
+  /* focus outlines for keyboard users */
+  :focus { outline: none; }
+  .a11y-focus { box-shadow:0 0 0 3px rgba(255,183,3,0.14); border-radius:6px; }
+
+  /* subtle helper text */
+  .help{ color:var(--muted); font-size:13px; margin-top:10px;}
+</style>
 </head>
 <body>
-  <h1>Code Shuffler – Conditionals</h1>
-  <div class="meta">Drag lines to insert them. Drop a line onto another to insert at that position (lines below will shift). Submit to check.</div>
-
-  <div class="puzzle-box" id="puzzleDescription">Select a puzzle to see its description.</div>
-
-  <div class="layout">
-    <div class="panel">
-      <strong>Scrambled code (reorder here)</strong>
-      <div id="scrambled" class="scrambled-box" aria-label="scrambled code lines"></div>
-      <div class="controls">
-        <button id="submitBtn">Submit</button>
-        <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
-        <button id="nextBtn">New Puzzle</button>
-        <button id="hintBtn" class="secondary">Hint (3)</button>
-        <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
-          <label style="font-size:13px; color:#333">Puzzle:
-            <select id="puzzleSelect" style="margin-left:6px; padding:6px; border-radius:6px;"></select>
-          </label>
-        </div>
-      </div>
-      <div id="message" class="message" role="status"></div>
+<div class="container" id="app">
+  <header>
+    <div>
+      <h1>Fill in the missing code — Conditionals</h1>
+      <div class="meta">Drag or click tokens into blanks. Press Enter to place when using keyboard.</div>
     </div>
-  </div>
+  </header>
+
+  <main>
+    <section class="puzzle-card" id="puzzleCard" aria-live="polite">
+      <div class="desc" id="descBox" role="region" aria-label="Puzzle description"></div>
+
+      <div class="code-wrap" id="codeWrap" role="region" aria-label="Pseudocode area">
+        <!-- lines inserted here -->
+      </div>
+
+      <div class="bank" id="bank" aria-label="Word bank" role="listbox" tabindex="0"></div>
+
+      <div class="controls" style="justify-content:flex-start;">
+        <button id="submitBtn">Submit</button>
+        <button id="revealHintBtn" class="ghost">Reveal hint (3 left)</button>
+        <button class="secondary" id="resetBtn">Reset (reshuffle)</button>
+        <button class="ghost" id="nextBtn">Next Puzzle →</button>
+
+        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+          <label style="color:var(--muted); font-weight:600;">Puzzle</label>
+          <select id="puzzleSelect" class="puzzle-select" aria-label="Select puzzle"></select>
+        </div>
+
+        <div class="msg" id="feedback" aria-live="assertive"></div>
+      </div>
+
+      <div class="help">Keyboard: Tab to a token and press Enter to select it. Tab to a blank and press Enter to place the selected token. Press Escape to cancel selection or clear a filled blank.</div>
+    </section>
+
+  </main>
+</div>
 
 <script>
-const puzzles = [
-  {
-    title: "Basic IF (Pseudocode)",
-    description: "Input: the user types a number. Output: if the number is greater than 0 the program shows a message saying the number is positive. For example, if the user enters 5 the program shows The number is positive.",
-    lines: [
-      "OUTPUT \"Enter a number: \"",
-      "INPUT number",
-      "IF number > 0 THEN",
-      "OUTPUT \"The number is positive\"",
-      "ENDIF"
-    ]
-  },
-  {
-    title: "IF-ELSE (Pseudocode)",
-    description: "Input: the user types a number. Output: the program checks if the number is even or odd using MOD. It prints The number is even when the remainder is 0, otherwise it prints The number is odd. For example, entering 4 prints The number is even.",
-    lines: [
-      "OUTPUT \"Enter a number: \"",
-      "INPUT number",
-      "IF number MOD 2 = 0 THEN",
-      "OUTPUT \"The number is even\"",
-      "ELSE",
-      "OUTPUT \"The number is odd\"",
-      "ENDIF"
-    ]
-  },
-  {
-    title: "Nested IF (Pseudocode)",
-    description: "Input: the user types a number. Output: first the program checks if the number is positive. If it is positive it then checks if it is greater than 100 and prints either The number is large and positive or The number is small but positive. For example, entering 150 prints The number is large and positive.",
-    lines: [
-      "OUTPUT \"Enter a number: \"",
-      "INPUT number",
-      "IF number > 0 THEN",
-      "IF number > 100 THEN",
-      "OUTPUT \"The number is large and positive\"",
-      "ELSE",
-      "OUTPUT \"The number is small but positive\"",
-      "ENDIF",
-      "ENDIF"
-    ]
-  },
-  {
-    title: "Nested IF with ELSE (Pseudocode)",
-    description: "Input: the user types a number. Output: the program classifies the number as large positive, small positive, negative, or zero. It first checks if the number is positive and then checks size; otherwise it checks for negative or zero. For example, entering 0 prints The number is zero.",
-    lines: [
-      "OUTPUT \"Enter a number: \"",
-      "INPUT number",
-      "IF number > 0 THEN",
-      "IF number > 100 THEN",
-      "OUTPUT \"The number is large and positive\"",
-      "ELSE",
-      "OUTPUT \"The number is small but positive\"",
-      "ENDIF",
-      "ELSE",
-      "IF number < 0 THEN",
-      "OUTPUT \"The number is negative\"",
-      "ELSE",
-      "OUTPUT \"The number is zero\"",
-      "ENDIF",
-      "ENDIF"
-    ]
-  },
-  {
-    title: "Basic CASE (Pseudocode)",
-    description: "Input: the user types a small code number (for example 1, 2 or 3). Output: the program uses a CASE statement to print a label depending on the code. For example, entering 2 prints Option Two. If the code is not 1–3 it prints Unknown code.",
-    lines: [
-      "OUTPUT \"Enter code (1-3): \"",
-      "INPUT code",
-      "CASE code OF",
-      "1: OUTPUT \"Option One\"",
-      "2: OUTPUT \"Option Two\"",
-      "3: OUTPUT \"Option Three\"",
-      "DEFAULT: OUTPUT \"Unknown code\"",
-      "ENDCASE"
-    ]
-  },
-  {
-    title: "CASE inside IF (Pseudocode)",
-    description: "Input: the user types 2 for superadmin, 1 for admin or 0 for not admin. Output: if the user is admin (1) or superadmin (2) the program enters a CASE inside the IF and shows an appropriate admin message. For example, entering 2 shows Welcome, superadmin.",
-    lines: [
-      "OUTPUT \"Is the user admin? (2=super,1=yes,0=no): \"",
-      "INPUT isAdmin",
-      "IF isAdmin >= 1 THEN",
-      "CASE isAdmin OF",
-      "1: OUTPUT \"Welcome, admin\"",
-      "2: OUTPUT \"Welcome, superadmin\"",
-      "DEFAULT: OUTPUT \"Strange value\"",
-      "ENDCASE",
-      "ENDIF"
-    ]
-  },
-  {
-    title: "IF with different CASEs (Pseudocode)",
-    description: "Input: the user enters a level number. Output: if the level is 2 or higher the program runs one CASE block; otherwise it runs a different CASE block in the ELSE branch. Example: entering 3 runs the first CASE and prints Level three actions.",
-    lines: [
-      "OUTPUT \"Enter level (1-3): \"",
-      "INPUT level",
-      "IF level >= 2 THEN",
-      "CASE level OF",
-      "2: OUTPUT \"Level two actions\"",
-      "3: OUTPUT \"Level three actions\"",
-      "DEFAULT: OUTPUT \"Other level\"",
-      "ENDCASE",
-      "ELSE",
-      "CASE level OF",
-      "1: OUTPUT \"Basic actions\"",
-      "DEFAULT: OUTPUT \"Unknown\"",
-      "ENDCASE",
-      "ENDIF"
-    ]
-  },
-  {
-    title: "Two separate IF-ELSE statements (Pseudocode)",
-    description: "Input: the user types a temperature value. Output: the program checks two independent conditions in sequence. First it tells if it is hot (temp > 30) and then it tells if it is freezing (temp < 0). For example, entering -5 prints It is not hot and then Freezing.",
-    lines: [
-      "OUTPUT \"Enter temperature: \"",
-      "INPUT temp",
-      "IF temp > 30 THEN",
-      "OUTPUT \"It is hot\"",
-      "ELSE",
-      "OUTPUT \"It is not hot\"",
-      "ENDIF",
-      "IF temp < 0 THEN",
-      "OUTPUT \"Freezing\"",
-      "ELSE",
-      "OUTPUT \"Above freezing\"",
-      "ENDIF"
-    ]
-  },
-  {
-    title: "IF using SUBSTRING (Pseudocode)",
-    description: "Input: the user types a word. Output: the program checks the first three letters using SUBSTRING and tells if the word starts with pre. For example, entering prevent results in Word starts with pre.",
-    lines: [
-      "OUTPUT \"Enter a word: \"",
-      "INPUT word",
-      "IF SUBSTRING(word,1,3) = \"pre\" THEN",
-      "OUTPUT \"Word starts with pre\"",
-      "ELSE",
-      "OUTPUT \"Different start\"",
-      "ENDIF"
-    ]
-  },
-  /* FINAL PUZZLE — REPLACED: uses blanks, token bank and solution mapping */
-  {
-    title: "Final: CASE + SUBSTRING + ROUND (hard)",
-    description: "Read a name and a score. If the name prefix matches, greet; otherwise round the score and use a CASE.",
-    lines: [
-      "___1___",
-      "___2___ name",
-      "___3___ score",
-      "IF ___4___(name,1,3) ___5___ ___6___",
-      "___7___ \"Hello Ann\"",
-      "ELSE",
-      "___8___Rounded <- ___9___(score)",
-      "CASE ___10___ ___11___",
-      "5: ___12___ \"Excellent\"",
-      "4: ___13___ \"Good\"",
-      "DEFAULT: ___14___ \"Keep trying\"",
-      "___15___",
-      "___16___"
-    ],
-    bank: [
-      "BEGIN","INPUT","OUTPUT","SUBSTRING","=","\"Ann\"","THEN","OUTPUT","ELSE",
-      "scoreRounded","ROUND","OF","ENDCASE","CASE","END","DEFAULT",
-      "PRINT","RANDOM","SUBSTR","->","LET","<-","ELIF"
-    ],
-    solution: {
-      1: "BEGIN",
-      2: "INPUT",
-      3: "INPUT",
-      4: "SUBSTRING",
-      5: "=",
-      6: "THEN",
-      7: "OUTPUT",
-      8: "scoreRounded <-",
-      9: "ROUND",
-      10: "scoreRounded",
-      11: "OF",
-      12: "OUTPUT",
-      13: "OUTPUT",
-      14: "OUTPUT",
-      15: "ENDCASE",
-      16: "ENDIF"
+/*
+  Conditionals fill-in-the-blanks
+  - Reusable tokens
+  - Drag & drop + keyboard
+  - Submit / Reset / Next / Puzzle selector
+  - Reveal hint (fills a random incorrect blank), up to 3 per puzzle (in-session)
+  - Puzzles array comes from your provided file (modified as requested)
+*/
+
+(function(){
+  // Utility: shuffle array copy
+  function shuffle(a){
+    const arr = a.slice();
+    for(let i=arr.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+    return arr;
+  }
+
+  // --- puzzles (modified per user requests) ---
+  const puzzles = [
+    {
+      title: "Basic IF — positive check",
+      description: "Read an integer and output whether it is positive. Input: one number. Output: a short message when the number is positive.",
+      example: "If the input is 5 the program should output: The number is positive",
+      lines: [
+"INPUT number",
+"IF number ___1___ 0 ___2___",
+"OUTPUT \"The number is positive\"",
+"ENDIF"
+      ],
+      bank: ["THEN", ">", "<", "ELSE"],
+      solution: {1: ">", 2: "THEN"}
+    },
+    {
+      title: "IF-ELSE — even or odd (MOD)",
+      description: "Read an integer and print whether it is even or odd. Use the MOD operator to test divisibility.",
+      example: "Input 4 -> outputs: Even",
+      lines: [
+"INPUT n",
+"IF n ___1___ 2 ___2___ 0 ___3___",
+"OUTPUT \"Even\"",
+"ELSE",
+"OUTPUT \"Odd\"",
+"ENDIF"
+      ],
+      bank: ["MOD","THEN","=","ELSE","%","<>"],
+      solution: {1: "MOD", 2: "=", 3: "THEN"}
+    },
+    {
+      title: "Nested IF-ELSE (single nested) — positive & large",
+      description: "Read a number. If it is positive, check whether it is larger than 100 and respond. This puzzle has one nested IF-ELSE.",
+      example: "Input 150 -> outputs: Large and positive",
+      lines: [
+"INPUT x",
+"IF x ___1___ 0 ___2___",
+"IF x ___3___ 100 ___4___",
+"OUTPUT \"Large and positive\"",
+"ELSE",
+"OUTPUT \"Positive but not large\"",
+"ENDIF",
+"ELSE",
+"OUTPUT \"Not positive\"",
+"ENDIF"
+      ],
+      bank: [">","THEN","<","ELSE","="],
+      solution: {1: ">", 2: "THEN", 3: ">", 4: "THEN"}
+    },
+    {
+      title: "IF with ELSE — zero or not",
+      description: "Read a number and report if it is zero or not zero.",
+      example: "Input 0 -> outputs: Zero",
+      lines: [
+"INPUT number",
+"IF number ___1___ 0 ___2___",
+"OUTPUT \"Zero\"",
+"ELSE",
+"OUTPUT \"Not zero\"",
+"ENDIF"
+      ],
+      bank: ["THEN","=","MOD","ELSE","<>"],
+      solution: {1: "=", 2: "THEN"}
+    },
+    {
+      title: "Basic CASE — options",
+      description: "Read a code and select one of three options.",
+      example: "Input 2 -> outputs: Option Two",
+      lines: [
+"INPUT code",
+"___1___ code ___2___",
+"1: OUTPUT \"Option One\"",
+"2: OUTPUT \"Option Two\"",
+"3: OUTPUT \"Option Three\"",
+"___3___: OUTPUT \"Unknown\"",
+"___4___"
+      ],
+      bank: ["CASE","OF","DEFAULT","ENDCASE","WHEN","SWITCH"],
+      solution: {1: "CASE", 2: "OF", 3: "DEFAULT", 4: "ENDCASE"}
+    },
+    {
+      title: "CASE inside IF — admin message",
+      description: "If admin is 1 show a CASE with specific admin welcome messages.",
+      example: "Input admin=1 and code=1 -> outputs: Welcome, superadmin",
+      lines: [
+"INPUT admin",
+"INPUT code",
+"IF admin ___1___ 1 ___2___",
+"CASE code ___3___",
+"1: OUTPUT \"Welcome, superadmin\"",
+"2: OUTPUT \"Welcome, admin\"",
+"___4___: OUTPUT \"Welcome\"",
+"___5___",
+"ENDIF"
+      ],
+      bank: ["=","THEN","OF","DEFAULT","ENDCASE","<>","ELSE"],
+      solution: {1: "=", 2: "THEN", 3: "OF", 4: "DEFAULT", 5: "ENDCASE"}
+    },
+    {
+      title: "IF with CASEs in both branches",
+      description: "If userType = 1 run a CASE for admin options; otherwise run a CASE for guest options.",
+      example: "userType=2 and choice=1 -> outputs: Guest: View",
+      lines: [
+"INPUT userType",
+"INPUT choice",
+"IF userType ___1___ 1 ___2___",
+"CASE choice ___3___",
+"1: ___4___ \"Admin: Edit\"",
+"2: ___5___ \"Admin: Delete\"",
+"___6___: ___7___ \"Admin: Unknown\"",
+"___8___",
+"ELSE",
+"CASE choice ___9___",
+"1: ___10___ \"Guest: View\"",
+"2: ___11___ \"Guest: Browse\"",
+"___12___: ___13___ \"Guest: Unknown\"",
+"___14___",
+"ENDIF"
+      ],
+      bank: ["=","THEN","OF","OUTPUT","DEFAULT","ENDCASE","ELSE","CASE"],
+      solution: {1: "=", 2: "THEN", 3: "OF", 4: "OUTPUT", 5: "OUTPUT", 6: "DEFAULT", 7: "OUTPUT", 8: "ENDCASE", 9: "OF", 10: "OUTPUT", 11: "OUTPUT", 12: "DEFAULT", 13: "OUTPUT", 14: "ENDCASE"}
+    },
+    {
+      title: "Two separate IF-ELSE statements (independent)",
+      description: "Read temperature and windSpeed. Check two independent conditions and output messages for each.",
+      example: "temp=30 -> 'Hot'; windSpeed=25 -> 'Windy'",
+      lines: [
+"INPUT temp",
+"INPUT windSpeed",
+"IF temp ___1___ 25 ___2___",
+"___3___ \"Hot\"",
+"ELSE",
+"___4___ \"Not hot\"",
+"ENDIF",
+"IF windSpeed ___5___ 20 ___6___",
+"___7___ \"Windy\"",
+"ELSE",
+"___8___ \"Calm\"",
+"ENDIF"
+      ],
+      bank: [">","THEN","OUTPUT","<","=","ELSE","<>"],
+      solution: {1: ">", 2: "THEN", 3: "OUTPUT", 4: "OUTPUT", 5: ">", 6: "THEN", 7: "OUTPUT", 8: "OUTPUT"}
+    },
+    {
+      title: "IF using SUBSTRING — prefix check",
+      description: "Read a word. If its first three letters are 'pre' output a message.",
+      example: "Input 'prefix' -> outputs: Starts with pre",
+      lines: [
+"INPUT word",
+"IF ___1___(word,1,3) ___2___ ___3___ ___4___",
+"___5___ \"Starts with pre\"",
+"ELSE",
+"___6___ \"Different prefix\"",
+"ENDIF"
+      ],
+      bank: ["SUBSTRING","=","\"pre\"","THEN","ELSE","OUTPUT","LEFT","MID"],
+      solution: {1: "SUBSTRING", 2: "=", 3: "\"pre\"", 4: "THEN", 5: "OUTPUT", 6: "OUTPUT"}
+    },
+    {
+      title: "Final: CASE + SUBSTRING + ROUND (hard)",
+      description: "Read a name and a score. If the name prefix matches, greet; otherwise round the score and use a CASE.",
+      example: "name='Ann'; score=4.6 -> rounded 5 -> outputs: Excellent",
+      lines: [
+"___1___",
+"___2___ name",
+"___3___ score",
+"IF ___4___(name,1,3) ___5___ ___6___",
+"___7___ \"Hello Ann\"",
+"ELSE",
+"___8___Rounded <- ___9___(score)",
+"CASE ___10___ ___11___",
+"5: ___12___ \"Excellent\"",
+"4: ___13___ \"Good\"",
+"DEFAULT: ___14___ \"Keep trying\"",
+"___15___",
+"___16___"
+      ],
+      bank: [
+        "INPUT","OUTPUT","SUBSTRING","=","\"Ann\"","THEN","OUTPUT","ELSE",
+        "scoreRounded","ROUND","OF","ENDCASE","CASE","DEFAULT","PRINT","<-","LET","RANDOM"
+      ],
+      solution: {
+        1: "INPUT",
+        2: "INPUT",
+        3: "INPUT",
+        4: "SUBSTRING",
+        5: "=",
+        6: "THEN",
+        7: "OUTPUT",
+        8: "scoreRounded <-",
+        9: "ROUND",
+        10: "scoreRounded",
+        11: "OF",
+        12: "OUTPUT",
+        13: "OUTPUT",
+        14: "OUTPUT",
+        15: "ENDCASE",
+        16: "ENDIF"
+      }
+    }
+  ];
+  // --- end-of-puzzles ---
+
+  // App state
+  let puzzleIndex = 0;
+  let currentPuzzle = null;
+  let bankTokens = [];
+  let blankState = {}; // blankNum -> token string or null
+  let selectedTokenIndex = null; // index into bankTokens for keyboard selection
+  const usedHintsCount = {}; // puzzleIndex -> used hints
+
+  // Elements
+  const descBox = document.getElementById('descBox');
+  const codeWrap = document.getElementById('codeWrap');
+  const bankEl = document.getElementById('bank');
+  const feedbackEl = document.getElementById('feedback');
+  const submitBtn = document.getElementById('submitBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const revealHintBtn = document.getElementById('revealHintBtn');
+  const puzzleSelect = document.getElementById('puzzleSelect');
+
+  // Init
+  function init(){
+    populatePuzzleSelect();
+    loadPuzzle(0);
+    // events
+    submitBtn.addEventListener('click', onSubmit);
+    resetBtn.addEventListener('click', onReset);
+    nextBtn.addEventListener('click', onNext);
+    revealHintBtn.addEventListener('click', onRevealHint);
+    puzzleSelect.addEventListener('change', (e)=> loadPuzzle(Number(e.target.value)));
+    document.addEventListener('keydown', (e)=> { if(e.key === 'Escape'){ clearSelection(); } });
+  }
+
+  function populatePuzzleSelect(){
+    puzzleSelect.innerHTML = '';
+    puzzles.forEach((p,i)=>{
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `${i+1}. ${p.title}`;
+      puzzleSelect.appendChild(opt);
+    });
+  }
+
+  function loadPuzzle(index){
+    puzzleIndex = index % puzzles.length;
+    currentPuzzle = JSON.parse(JSON.stringify(puzzles[puzzleIndex])); // copy to avoid in-place edits
+    bankTokens = shuffle(currentPuzzle.bank.slice());
+    // set blanks
+    const blanks = extractBlanks(currentPuzzle.lines);
+    blankState = {};
+    blanks.forEach(n => blankState[n] = null);
+    selectedTokenIndex = null;
+    feedbackEl.textContent = '';
+    // ensure usedHintsCount key exists
+    if(typeof usedHintsCount[puzzleIndex] === 'undefined') usedHintsCount[puzzleIndex] = 0;
+    // render
+    renderDescription();
+    renderCode();
+    renderBank();
+    updateRevealHintBtn();
+    puzzleSelect.value = puzzleIndex;
+  }
+
+  function extractBlanks(lines){
+    const re = /___(\d+)___/g;
+    const set = new Set();
+    lines.forEach(line=>{
+      let m;
+      while((m=re.exec(line))!==null) set.add(Number(m[1]));
+    });
+    return Array.from(set).sort((a,b)=>a-b);
+  }
+
+  function renderDescription(){
+    descBox.innerHTML = '';
+    const title = document.createElement('strong');
+    title.textContent = currentPuzzle.title;
+    const p = document.createElement('p');
+    p.textContent = currentPuzzle.description || '';
+    descBox.appendChild(title);
+    descBox.appendChild(p);
+    if(currentPuzzle.example){
+      const ex = document.createElement('div');
+      ex.className = 'example';
+      ex.textContent = 'Example: ' + currentPuzzle.example;
+      descBox.appendChild(ex);
     }
   }
-];
 
-let currentIndex = 0;
-let currentOrder = [];
-let hintLeft = 3;
-const scrambledEl = document.getElementById('scrambled');
-const messageEl = document.getElementById('message');
-const puzzleSelect = document.getElementById('puzzleSelect');
-const puzzleDescriptionEl = document.getElementById('puzzleDescription');
-const hintBtn = document.getElementById('hintBtn');
-
-function populatePuzzleSelect() {
-  puzzleSelect.innerHTML = '';
-  puzzles.forEach((p, i) => {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = `${i+1}. ${p.title}`;
-    puzzleSelect.appendChild(opt);
-  });
-}
-
-puzzleSelect.addEventListener('change', e => {
-  currentIndex = parseInt(e.target.value, 10);
-  loadPuzzle(currentIndex);
-});
-
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+  function renderCode(){
+    codeWrap.innerHTML = '';
+    const re = /___(\d+)___/g;
+    currentPuzzle.lines.forEach(line=>{
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'code-line';
+      let last = 0;
+      let m;
+      const frag = document.createDocumentFragment();
+      while((m = re.exec(line)) !== null){
+        const before = line.slice(last, m.index);
+        if(before) frag.appendChild(document.createTextNode(before));
+        const bnum = Number(m[1]);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'blank empty';
+        btn.setAttribute('data-blank', String(bnum));
+        btn.setAttribute('tabindex','0');
+        btn.setAttribute('aria-label', `Blank ${bnum}. Press Enter to place token.`);
+        btn.textContent = '___' + bnum + '___';
+        // click to place selected token / clear existing
+        btn.addEventListener('click', ()=> onBlankClick(bnum, btn));
+        btn.addEventListener('keydown', (e)=> {
+          if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); onBlankClick(bnum, btn); }
+          else if(e.key === 'Escape'){ clearSelection(); }
+        });
+        // allow drag-drop
+        btn.addEventListener('dragover', (ev)=> { ev.preventDefault(); ev.dataTransfer.dropEffect='move'; });
+        btn.addEventListener('drop', onBlankDrop);
+        frag.appendChild(btn);
+        last = re.lastIndex;
+      }
+      if(last < line.length) frag.appendChild(document.createTextNode(line.slice(last)));
+      lineDiv.appendChild(frag);
+      codeWrap.appendChild(lineDiv);
+    });
+    updateBlankDisplays();
   }
-}
 
-function renderScrambled() {
-  scrambledEl.innerHTML = '';
-  currentOrder.forEach((line, idx) => {
-    const el = document.createElement('div');
-    el.className = 'piece';
-    el.draggable = true;
-    el.dataset.index = idx;
-    el.dataset.line = line;
-    el.textContent = line.trim(); // NO indentation, always show trimmed
-
-    el.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/plain', idx);
-      e.dataTransfer.effectAllowed = 'move';
-      el.classList.add('picked');
+  function renderBank(){
+    bankEl.innerHTML = '';
+    bankEl.setAttribute('aria-label','Word bank. ' + bankTokens.length + ' tokens.');
+    bankTokens.forEach((tok, i) => {
+      const t = document.createElement('div');
+      t.className = 'token';
+      t.setAttribute('role','option');
+      t.setAttribute('tabindex','0');
+      t.setAttribute('data-index', String(i));
+      t.setAttribute('data-token', tok);
+      t.textContent = tok;
+      // drag start
+      t.addEventListener('dragstart', (ev)=> {
+        ev.dataTransfer.setData('text/plain', String(i));
+        ev.dataTransfer.effectAllowed = 'move';
+      });
+      // click to select
+      t.addEventListener('click', ()=> onTokenClick(i, t));
+      t.addEventListener('keydown', (ev)=> {
+        if(ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); onTokenClick(i, t); }
+        else if(ev.key === 'Escape'){ clearSelection(); }
+      });
+      bankEl.appendChild(t);
     });
 
-    el.addEventListener('dragend', () => el.classList.remove('picked'));
-
-    el.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      el.classList.add('dragover');
-    });
-    el.addEventListener('dragleave', () => el.classList.remove('dragover'));
-
-    el.addEventListener('drop', (e) => {
-      e.preventDefault();
-      el.classList.remove('dragover');
-      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
-      const toIdx = parseInt(el.dataset.index, 10);
-      if (!Number.isNaN(fromIdx) && !Number.isNaN(toIdx) && fromIdx !== toIdx) {
-        moveItemInsert(fromIdx, toIdx);
-        renderScrambled();
-        animateInsert(fromIdx, toIdx);
+    // bank accepts drops from blanks to clear them (but tokens are reusable so we just clear)
+    bankEl.addEventListener('dragover', (ev)=> { ev.preventDefault(); ev.dataTransfer.dropEffect='move'; });
+    bankEl.addEventListener('drop', (ev)=> {
+      ev.preventDefault();
+      const data = ev.dataTransfer.getData('text/plain') || '';
+      if(data.startsWith('blank:')){
+        const bnum = Number(data.split(':')[1]);
+        if(!isNaN(bnum) && blankState[bnum]){
+          // clear blank (do not add token back since tokens are reusable)
+          blankState[bnum] = null;
+          updateBlankDisplays();
+          feedbackEl.textContent = '';
+        }
       }
     });
+  }
 
-    el.addEventListener('click', () => {
-      const prev = scrambledEl.querySelector('.picked');
-      if (prev && prev !== el) {
-        const i1 = parseInt(prev.dataset.index,10);
-        const i2 = parseInt(el.dataset.index,10);
-        moveItemInsert(i1, i2);
-        prev.classList.remove('picked');
-        renderScrambled();
-        animateInsert(i1, i2);
+  function updateBlankDisplays(){
+    const blanks = codeWrap.querySelectorAll('.blank');
+    blanks.forEach(btn => {
+      const bnum = Number(btn.getAttribute('data-blank'));
+      const val = blankState[bnum];
+      btn.classList.remove('empty','correct','incorrect');
+      if(!val){
+        btn.classList.add('empty');
+        btn.textContent = '___' + bnum + '___';
+        btn.setAttribute('aria-label','Blank ' + bnum + '. empty.');
       } else {
-        scrambledEl.querySelectorAll('.picked').forEach(x=>x.classList.remove('picked'));
-        el.classList.add('picked');
+        btn.textContent = val;
+        btn.setAttribute('aria-label','Blank ' + bnum + '. contains ' + val + '.');
       }
     });
-
-    scrambledEl.appendChild(el);
-  });
-}
-
-// insertion move: remove item at from and insert at to, shifting others accordingly
-function moveItemInsert(from, to) {
-  const item = currentOrder.splice(from, 1)[0];
-  let insertAt = to;
-  currentOrder.splice(insertAt, 0, item);
-}
-
-function animateInsert(from, to) {
-  const children = Array.from(scrambledEl.children);
-  children.forEach(c => { c.classList.remove('slide-down','slide-up'); });
-  if (from > to) {
-    const start = to + 1;
-    const end = from;
-    for (let i = start; i <= end && i < children.length; i++) children[i].classList.add('slide-down');
-  } else if (from < to) {
-    const start = from;
-    const end = to - 1;
-    for (let i = start; i <= end && i < children.length; i++) children[i].classList.add('slide-up');
+    refreshBankVisual();
   }
-}
 
-function resetPuzzle() {
-  const puzzle = puzzles[currentIndex];
-  // If puzzle object contains a 'bank' and 'solution' (like final puzzle), show its lines but keep them as items to reorder.
-  currentOrder = puzzle.lines.slice();
-  shuffle(currentOrder);
-  hintLeft = 3;
-  hintBtn.textContent = `Hint (${hintLeft})`;
-  renderScrambled();
-  messageEl.textContent = '';
-}
+  function refreshBankVisual(){
+    const tokens = bankEl.querySelectorAll('.token');
+    tokens.forEach(t => {
+      const idx = Number(t.getAttribute('data-index'));
+      if(selectedTokenIndex === idx){
+        t.setAttribute('aria-pressed','true');
+        t.classList.add('selected');
+      } else {
+        t.setAttribute('aria-pressed','false');
+        t.classList.remove('selected');
+      }
+    });
+  }
 
-function submitPuzzle() {
-  const puzzle = puzzles[currentIndex];
-  const correct = puzzle.lines;
-  let allCorrect = true;
-  const pieces = Array.from(scrambledEl.children);
-  pieces.forEach((p, i) => {
-    p.style.background = '';
-    p.style.borderColor = '';
-    const text = p.dataset.line.trim();
-    if (text === (correct[i] || '').trim()) {
-      p.style.background = 'var(--ok)';
-      p.style.borderColor = '#2a9a4a';
-    } else {
-      p.style.background = 'var(--bad)';
-      p.style.borderColor = '#c44';
-      allCorrect = false;
+  // token click
+  function onTokenClick(index, el){
+    if(selectedTokenIndex === index){ clearSelection(); return; }
+    selectedTokenIndex = index;
+    refreshBankVisual();
+  }
+
+  function clearSelection(){
+    selectedTokenIndex = null;
+    refreshBankVisual();
+  }
+
+  // blank click (place or clear)
+  function onBlankClick(bnum, el){
+    if(selectedTokenIndex !== null && typeof bankTokens[selectedTokenIndex] !== 'undefined'){
+      // place the selected token into the blank (but keep it in the bank — reusable)
+      blankState[bnum] = bankTokens[selectedTokenIndex];
+      updateBlankDisplays();
+      clearSelection();
+      return;
     }
-  });
-  messageEl.textContent = allCorrect ? 'All correct! Well done 🎉' : 'Some lines are incorrect — incorrect lines are highlighted.';
-  messageEl.style.color = allCorrect ? '#1a7f3a' : '#a00';
-}
-
-function nextPuzzle() {
-  currentIndex = (currentIndex + 1) % puzzles.length;
-  puzzleSelect.value = currentIndex;
-  loadPuzzle(currentIndex);
-}
-
-function loadPuzzle(index) {
-  currentIndex = index;
-  puzzleDescriptionEl.textContent = puzzles[index].description || '';
-  resetPuzzle();
-}
-
-// hint logic: tries to place the first mismatched correct line into its proper position
-hintBtn.addEventListener('click', () => {
-  if (hintLeft <= 0) return;
-  const puzzle = puzzles[currentIndex];
-  const correct = puzzle.lines;
-  let targetIdx = -1;
-  for (let i = 0; i < correct.length; i++) {
-    if ((currentOrder[i] || '').trim() !== (correct[i] || '').trim()) { targetIdx = i; break; }
+    // If blank already has token, clicking clears it (since tokens are reusable)
+    if(blankState[bnum]){
+      blankState[bnum] = null;
+      updateBlankDisplays();
+      feedbackEl.textContent = '';
+      return;
+    }
+    // else nothing selected and blank empty: no-op
   }
-  if (targetIdx === -1) { messageEl.textContent = 'Puzzle already solved or no mismatches.'; return; }
-  const wantLine = correct[targetIdx].trim();
-  const foundIdx = currentOrder.findIndex(x => x.trim() === wantLine);
-  if (foundIdx !== -1) moveItemInsert(foundIdx, targetIdx);
-  hintLeft--;
-  hintBtn.textContent = `Hint (${hintLeft})`;
-  renderScrambled();
-  const children = Array.from(scrambledEl.children);
-  const highlighted = children[targetIdx];
-  if (highlighted) { highlighted.classList.add('hinted'); setTimeout(()=>highlighted.classList.remove('hinted'),1500); }
-  animateInsert(foundIdx === -1 ? targetIdx : foundIdx, targetIdx);
-  messageEl.textContent = `Hint used — placed one correct line. ${hintLeft} hint(s) left.`;
-});
 
-// initialisation
-populatePuzzleSelect();
-if (puzzles.length > 0) {
-  puzzleSelect.value = 0;
+  // drop handler for blank (from bank drag)
+  function onBlankDrop(ev){
+    ev.preventDefault();
+    const data = ev.dataTransfer.getData('text/plain');
+    let idx = null;
+    if(data && !data.startsWith('blank:')) idx = Number(data);
+    if(isNaN(idx)) return;
+    const bnum = Number(ev.currentTarget.getAttribute('data-blank'));
+    if(typeof bankTokens[idx] !== 'undefined'){
+      blankState[bnum] = bankTokens[idx];
+      updateBlankDisplays();
+      clearSelection();
+    }
+  }
+
+  // dragstart from blank to clear it (data 'blank:N')
+  // we attach dragstart directly when creating blanks, but implement here generically:
+  // (we need to add dragstart on blanks)
+  // Add dragstart to blanks dynamically:
+  function attachBlankDragStarts(){
+    const blanks = codeWrap.querySelectorAll('.blank');
+    blanks.forEach(b => {
+      if(!b._blankDragAssigned){
+        b.setAttribute('draggable','true');
+        b.addEventListener('dragstart', (ev)=> {
+          const bnum = Number(b.getAttribute('data-blank'));
+          if(blankState[bnum]){
+            ev.dataTransfer.setData('text/plain', 'blank:' + bnum);
+            // do not remove token from bank — tokens are reusable; clear blank on drop in bank
+          } else {
+            ev.preventDefault();
+          }
+        });
+        b._blankDragAssigned = true;
+      }
+    });
+  }
+
+  // Submit: check blanks against solution mapping
+  function onSubmit(){
+    const solution = currentPuzzle.solution || {};
+    let allCorrect = true;
+    Object.keys(blankState).forEach(k => {
+      const n = Number(k);
+      const placed = blankState[n] || null;
+      const expected = solution[n];
+      const el = codeWrap.querySelector('.blank[data-blank="'+n+'"]');
+      el.classList.remove('correct','incorrect');
+      if(typeof expected === 'undefined'){
+        // no expected answer defined -> leave neutral
+      } else {
+        if(placed === expected){
+          el.classList.add('correct');
+        } else {
+          el.classList.add('incorrect');
+          allCorrect = false;
+        }
+      }
+    });
+    if(allCorrect){
+      feedbackEl.textContent = 'All correct! Well done 🎉';
+    } else {
+      feedbackEl.textContent = 'Some blanks are incorrect — incorrect blanks are highlighted.';
+    }
+  }
+
+  // Reset: clear blanks, reshuffle bank (tokens reusable so we just shuffle)
+  function onReset(){
+    Object.keys(blankState).forEach(k => blankState[k] = null);
+    bankTokens = shuffle(currentPuzzle.bank.slice());
+    renderBank();
+    updateBlankDisplays();
+    feedbackEl.textContent = 'Reset — bank reshuffled.';
+    selectedTokenIndex = null;
+    updateRevealHintBtn();
+  }
+
+  // Next puzzle
+  function onNext(){
+    const nextIndex = (puzzleIndex + 1) % puzzles.length;
+    loadPuzzle(nextIndex);
+  }
+
+  // Reveal hint: fill one randomly chosen incorrect (or empty) blank with its correct token
+  function onRevealHint(){
+    const used = usedHintsCount[puzzleIndex] || 0;
+    if(used >= 3){
+      feedbackEl.textContent = 'No hints left for this puzzle.';
+      return;
+    }
+    const solution = currentPuzzle.solution || {};
+    // find eligible blanks where expected exists and placed != expected
+    const eligible = [];
+    Object.keys(blankState).forEach(k => {
+      const n = Number(k);
+      const expected = solution[n];
+      if(typeof expected === 'undefined') return;
+      const placed = blankState[n] || null;
+      if(placed !== expected) eligible.push(n);
+    });
+    if(eligible.length === 0){
+      feedbackEl.textContent = 'All blanks are already correct or there are no defined answers to reveal.';
+      return;
+    }
+    const pick = eligible[Math.floor(Math.random() * eligible.length)];
+    blankState[pick] = solution[pick];
+    usedHintsCount[puzzleIndex] = used + 1;
+    updateBlankDisplays();
+    feedbackEl.textContent = `Hint used: a blank has been filled (${usedHintsCount[puzzleIndex]} of 3).`;
+    updateRevealHintBtn();
+  }
+
+  function updateRevealHintBtn(){
+    const used = usedHintsCount[puzzleIndex] || 0;
+    const left = Math.max(0, 3 - used);
+    if(left <= 0){
+      revealHintBtn.disabled = true;
+      revealHintBtn.textContent = 'Reveal hint (used up)';
+      revealHintBtn.style.opacity = 0.6;
+    } else {
+      revealHintBtn.disabled = false;
+      revealHintBtn.textContent = `Reveal hint (${left} left)`;
+      revealHintBtn.style.opacity = 1;
+    }
+  }
+
+  function clearSelection(){
+    selectedTokenIndex = null;
+    refreshBankVisual();
+  }
+
+  // helper to attach blank dragstarts after render
+  function postRenderSetup(){
+    attachBlankDragStarts();
+  }
+
+  // initialize bank visuals refresh (called after render)
+  function refreshBankVisual(){
+    const tokens = bankEl.querySelectorAll('.token');
+    tokens.forEach(t => {
+      const idx = Number(t.getAttribute('data-index'));
+      if(selectedTokenIndex === idx){
+        t.setAttribute('aria-pressed','true');
+        t.classList.add('selected');
+      } else {
+        t.setAttribute('aria-pressed','false');
+        t.classList.remove('selected');
+      }
+    });
+  }
+
+  // wire up blank drop handling after each render
+  const observer = new MutationObserver(()=> {
+    // ensure blanks accept dragstart events
+    postRenderSetup();
+  });
+  observer.observe(codeWrap, { childList:true, subtree:true });
+
+  // load initial puzzle
   loadPuzzle(0);
-}
+  init();
 
-document.getElementById('submitBtn').addEventListener('click', submitPuzzle);
-document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
-document.getElementById('nextBtn').addEventListener('click', nextPuzzle);
+  // expose helpers for debugging (optional)
+  window._condPuzzle = {
+    puzzles,
+    goTo: (i)=> loadPuzzle(i % puzzles.length),
+    usedHintsCount,
+  };
+
+})();
 </script>
 </body>
 </html>

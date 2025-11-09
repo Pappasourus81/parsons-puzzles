@@ -76,7 +76,7 @@
       font-family: "Courier New", monospace;
       font-size: 13px;
       border:1px solid transparent;
-      transition: transform 200ms ease, background-color 200ms ease, border-color 200ms ease;
+      transition: transform 260ms ease, background-color 200ms ease, border-color 200ms ease, margin 260ms ease;
     }
     .piece.dragover{ outline:2px dashed #0066cc; }
     .piece.picked{ transform: scale(1.02); box-shadow:0 4px 10px rgba(0,0,0,0.08); }
@@ -88,6 +88,18 @@
       25% { transform: translateY(-6px) scale(1.02); }
       60% { transform: translateY(2px) scale(.995); }
       100% { transform: translateY(0) scale(1); }
+    }
+    .slide-down { animation: slideDown 320ms ease; }
+    .slide-up { animation: slideUp 320ms ease; }
+    @keyframes slideDown {
+      0% { transform: translateY(-18px); opacity:0.0; }
+      60% { transform: translateY(6px); opacity:0.9; }
+      100% { transform: translateY(0); opacity:1; }
+    }
+    @keyframes slideUp {
+      0% { transform: translateY(18px); opacity:0.0; }
+      60% { transform: translateY(-6px); opacity:0.9; }
+      100% { transform: translateY(0); opacity:1; }
     }
     .message{ margin-top:10px; font-weight:600; }
     .meta{ font-size:14px; color:#444; margin-bottom:8px; }
@@ -314,16 +326,13 @@ function shuffle(array) {
 
 function renderScrambled() {
   scrambledEl.innerHTML = '';
-  const correct = puzzles[currentIndex].lines;
   currentOrder.forEach((line, idx) => {
     const el = document.createElement('div');
     el.className = 'piece';
     el.draggable = true;
     el.dataset.index = idx;
     el.dataset.line = line;
-    // indent if this line is correct for this position
-    const displayText = (line.trim() === (correct[idx] || '').trim()) ? '    ' + line.trim() : line.trim();
-    el.textContent = displayText;
+    el.textContent = line.trim(); // NO indentation, always show trimmed
 
     el.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', idx);
@@ -347,7 +356,7 @@ function renderScrambled() {
       if (!Number.isNaN(fromIdx) && !Number.isNaN(toIdx) && fromIdx !== toIdx) {
         moveItemInsert(fromIdx, toIdx);
         renderScrambled();
-        animateSwap(toIdx, fromIdx);
+        animateInsert(fromIdx, toIdx);
       }
     });
 
@@ -359,7 +368,7 @@ function renderScrambled() {
         moveItemInsert(i1, i2);
         prev.classList.remove('picked');
         renderScrambled();
-        animateSwap(i2, i1);
+        animateInsert(i1, i2);
       } else {
         scrambledEl.querySelectorAll('.picked').forEach(x=>x.classList.remove('picked'));
         el.classList.add('picked');
@@ -370,24 +379,39 @@ function renderScrambled() {
   });
 }
 
-function animateSwap(aIdx, bIdx) {
-  setTimeout(() => {
-    const children = Array.from(scrambledEl.children);
-    const a = children[aIdx];
-    const b = children[bIdx];
-    if (a) { a.classList.add('swap-anim'); setTimeout(()=>a.classList.remove('swap-anim'), 300); }
-    if (b) { b.classList.add('swap-anim'); setTimeout(()=>b.classList.remove('swap-anim'), 300); }
-  }, 10);
-}
-
 // insertion move: remove item at from and insert at to, shifting others accordingly
 function moveItemInsert(from, to) {
   const item = currentOrder.splice(from, 1)[0];
-  // if removing earlier in array and inserting later, after removal the target index decreases by 1
   let insertAt = to;
-  if (from < to) insertAt = to; // after removal, indices shift left so inserting at to keeps desired position
-  if (from > to) insertAt = to; // same
+  // when removing an earlier item and inserting later, after splice the desired insert index is to
+  if (from < to) insertAt = to; // keep as-is
+  if (from > to) insertAt = to; // keep as-is
   currentOrder.splice(insertAt, 0, item);
+}
+
+function animateInsert(from, to) {
+  // after renderScrambled, children reflect new order. We'll add slide classes to the elements that shifted.
+  const children = Array.from(scrambledEl.children);
+  // clear any existing animation classes
+  children.forEach(c => { c.classList.remove('slide-down','slide-up'); });
+
+  if (from > to) {
+    // dragged from lower index to higher-up position: elements originally at [to..from-1] moved down one slot
+    // after render, those elements now occupy indices [to+1 .. from]
+    const start = to + 1;
+    const end = from; // inclusive
+    for (let i = start; i <= end && i < children.length; i++) {
+      children[i].classList.add('slide-down');
+    }
+  } else if (from < to) {
+    // dragged from higher-up to lower position: elements originally at [from+1..to] moved up one slot
+    // after render, those elements now occupy indices [from .. to-1]
+    const start = from;
+    const end = to - 1;
+    for (let i = start; i <= end && i < children.length; i++) {
+      children[i].classList.add('slide-up');
+    }
+  }
 }
 
 function resetPuzzle() {
@@ -412,14 +436,12 @@ function submitPuzzle() {
     if (text === (correct[i] || '').trim()) {
       p.style.background = 'var(--ok)';
       p.style.borderColor = '#2a9a4a';
-      // ensure it displays indented when correct
-      p.textContent = '    ' + text;
+      p.textContent = text; // NO indentation
     } else {
       p.style.background = 'var(--bad)';
       p.style.borderColor = '#c44';
       allCorrect = false;
-      // display without indent for incorrect
-      p.textContent = text;
+      p.textContent = text; // NO indentation
     }
   });
   if (allCorrect) {
@@ -473,8 +495,7 @@ hintBtn.addEventListener('click', () => {
   hintLeft -= 1;
   hintBtn.textContent = `Hint (${hintLeft})`;
   renderScrambled();
-  // animate
-  animateSwap(targetIdx, foundIdx === -1 ? targetIdx : foundIdx);
+  animateInsert(foundIdx === -1 ? targetIdx : foundIdx, targetIdx);
   messageEl.textContent = `Hint used — placed one correct line. ${hintLeft} hint(s) left.`;
 });
 

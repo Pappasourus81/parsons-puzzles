@@ -30,7 +30,6 @@
   .desc p{margin:6px 0;color:#0f172a;font-size:14px}
   .example{color:var(--muted);font-size:13px;margin-top:6px}
   .code-wrap{background:#0f172a;color:#e6eef8;border-radius:8px;padding:12px;font-family:"Courier New",monospace;font-size:14px;line-height:1.6;overflow:auto;}
-  .code-line{white-space:pre;}
   .blank{display:inline-block;min-width:48px;padding:2px 6px;margin:0 2px;border-radius:6px;background:rgba(255,255,255,0.07);border:2px dashed rgba(255,255,255,0.08);color:#fff;cursor:pointer;}
   .blank.empty{color:#cbd5e1;font-style:italic;}
   .blank.correct{background:rgba(22,163,74,0.18);border-color:rgba(22,163,74,0.5);color:var(--success);}
@@ -240,37 +239,146 @@ solution:{
 }
 ];
 
-let puzzleIndex=0,currentPuzzle=null,bankTokens=[],blankState={},selectedTokenIndex=null;const usedHintsCount={};
-const descBox=document.getElementById('descBox'),codeWrap=document.getElementById('codeWrap'),bankEl=document.getElementById('bank'),
-feedbackEl=document.getElementById('feedback'),submitBtn=document.getElementById('submitBtn'),resetBtn=document.getElementById('resetBtn'),
-nextBtn=document.getElementById('nextBtn'),revealHintBtn=document.getElementById('revealHintBtn'),puzzleSelect=document.getElementById('puzzleSelect');
+let puzzleIndex=0,currentPuzzle=null,bankTokens=[],blankState={},selectedTokenIndex=null;
+const usedHintsCount={};
+const descBox=document.getElementById('descBox');
+const codeWrap=document.getElementById('codeWrap');
+const bankEl=document.getElementById('bank');
+const feedbackEl=document.getElementById('feedback');
+const submitBtn=document.getElementById('submitBtn');
+const resetBtn=document.getElementById('resetBtn');
+const nextBtn=document.getElementById('nextBtn');
+const revealHintBtn=document.getElementById('revealHintBtn');
+const puzzleSelect=document.getElementById('puzzleSelect');
 
-function init(){populatePuzzleSelect();loadPuzzle(0);
-submitBtn.onclick=onSubmit;resetBtn.onclick=onReset;nextBtn.onclick=onNext;revealHintBtn.onclick=onRevealHint;
-puzzleSelect.onchange=e=>loadPuzzle(+e.target.value);document.addEventListener('keydown',e=>{if(e.key==='Escape')clearSelection();});}
-function populatePuzzleSelect(){puzzleSelect.innerHTML='';puzzles.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${i+1}. ${p.title}`;puzzleSelect.appendChild(o);});}
-function loadPuzzle(i){puzzleIndex=i%puzzles.length;currentPuzzle=JSON.parse(JSON.stringify(puzzles[puzzleIndex]));bankTokens=shuffle(currentPuzzle.bank);
-const blanks=[...new Set(currentPuzzle.lines.join().match(/___(\\d+)___/g)||[])]
-.map(s=>+s.replace(/[^0-9]/g,''));blankState={};blanks.forEach(n=>blankState[n]=null);
-if(!usedHintsCount[puzzleIndex])usedHintsCount[puzzleIndex]=0;render();}
-function render(){renderDescription();renderCode();renderBank();updateRevealHintBtn();feedbackEl.textContent='';puzzleSelect.value=puzzleIndex;}
-function renderDescription(){descBox.innerHTML=`<strong>${currentPuzzle.title}</strong><p>${currentPuzzle.description}</p><div class='example'>Example: ${currentPuzzle.example}</div>`;}
-function renderCode(){codeWrap.innerHTML='';currentPuzzle.lines.forEach(line=>{const div=document.createElement('div');div.className='code-line';
-div.innerHTML=line.replace(/___(\\d+)___/g,(m,n)=>`<button type='button' class='blank empty' data-blank='${n}'>___${n}___</button>`);codeWrap.appendChild(div);});
-updateBlankDisplays();codeWrap.querySelectorAll('.blank').forEach(btn=>{btn.onclick=()=>onBlankClick(+btn.dataset.blank);});}
-function renderBank(){bankEl.innerHTML='';bankTokens.forEach((tok,i)=>{const t=document.createElement('div');t.className='token';t.tabIndex=0;t.dataset.index=i;t.textContent=tok;t.onclick=()=>onTokenClick(i);bankEl.appendChild(t);});refreshBankVisual();}
-function onTokenClick(i){selectedTokenIndex=selectedTokenIndex===i?null:i;refreshBankVisual();}
-function onBlankClick(n){if(selectedTokenIndex!=null){blankState[n]=bankTokens[selectedTokenIndex];clearSelection();updateBlankDisplays();return;}
-if(blankState[n]){blankState[n]=null;updateBlankDisplays();}}
-function updateBlankDisplays(){codeWrap.querySelectorAll('.blank').forEach(b=>{const n=+b.dataset.blank,v=blankState[n];b.textContent=v||`___${n}___`;b.className='blank'+(v?'':' empty');});refreshBankVisual();}
-function refreshBankVisual(){bankEl.querySelectorAll('.token').forEach((t,i)=>t.classList.toggle('selected',i===selectedTokenIndex));}
+function init(){
+populatePuzzleSelect();
+loadPuzzle(0);
+submitBtn.onclick=onSubmit;
+resetBtn.onclick=onReset;
+nextBtn.onclick=onNext;
+revealHintBtn.onclick=onRevealHint;
+puzzleSelect.onchange=e=>loadPuzzle(+e.target.value);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')clearSelection();});
+}
+function populatePuzzleSelect(){
+puzzleSelect.innerHTML='';
+puzzles.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${i+1}. ${p.title}`;puzzleSelect.appendChild(o);});
+}
+function loadPuzzle(i){
+puzzleIndex=i%puzzles.length;
+currentPuzzle=JSON.parse(JSON.stringify(puzzles[puzzleIndex]));
+bankTokens=shuffle(currentPuzzle.bank);
+blankState={};
+const regex=/___(\\d+)___/g;
+currentPuzzle.lines.join().replace(regex,(m,n)=>blankState[+n]=null);
+usedHintsCount[puzzleIndex]=usedHintsCount[puzzleIndex]||0;
+render();
+}
+function render(){
+renderDescription();
+renderCode();
+renderBank();
+updateRevealHintBtn();
+feedbackEl.textContent='';
+puzzleSelect.value=puzzleIndex;
+}
+function renderDescription(){
+descBox.innerHTML=`<strong>${currentPuzzle.title}</strong><p>${currentPuzzle.description}</p><div class='example'>Example: ${currentPuzzle.example}</div>`;
+}
+function renderCode(){
+codeWrap.innerHTML='';
+const regex=/___(\\d+)___/g;
+currentPuzzle.lines.forEach(line=>{
+const div=document.createElement('div');
+div.className='code-line';
+let last=0;let match;
+while((match=regex.exec(line))!==null){
+div.appendChild(document.createTextNode(line.slice(last,match.index)));
+const bnum=+match[1];
+const btn=document.createElement('button');
+btn.type='button';
+btn.className='blank empty';
+btn.dataset.blank=bnum;
+btn.textContent=`___${bnum}___`;
+btn.onclick=()=>onBlankClick(bnum);
+div.appendChild(btn);
+last=regex.lastIndex;
+}
+div.appendChild(document.createTextNode(line.slice(last)));
+codeWrap.appendChild(div);
+});
+updateBlankDisplays();
+}
+function renderBank(){
+bankEl.innerHTML='';
+bankTokens.forEach((tok,i)=>{
+const t=document.createElement('div');
+t.className='token';
+t.dataset.index=i;
+t.textContent=tok;
+t.onclick=()=>onTokenClick(i);
+bankEl.appendChild(t);
+});
+refreshBankVisual();
+}
+function onTokenClick(i){
+selectedTokenIndex=selectedTokenIndex===i?null:i;
+refreshBankVisual();
+}
+function onBlankClick(bnum){
+if(selectedTokenIndex!=null){blankState[bnum]=bankTokens[selectedTokenIndex];clearSelection();updateBlankDisplays();return;}
+if(blankState[bnum]){blankState[bnum]=null;updateBlankDisplays();}
+}
+function updateBlankDisplays(){
+codeWrap.querySelectorAll('.blank').forEach(btn=>{
+const n=+btn.dataset.blank;
+const val=blankState[n];
+btn.textContent=val||`___${n}___`;
+btn.classList.toggle('empty',!val);
+});
+refreshBankVisual();
+}
+function refreshBankVisual(){
+bankEl.querySelectorAll('.token').forEach((t,i)=>t.classList.toggle('selected',i===selectedTokenIndex));
+}
 function clearSelection(){selectedTokenIndex=null;refreshBankVisual();}
-function onSubmit(){const sol=currentPuzzle.solution;let all=true;for(const n in blankState){const val=blankState[n],exp=sol[n];const b=codeWrap.querySelector(`[data-blank='${n}']`);b.classList.remove('correct','incorrect');if(val===exp)b.classList.add('correct');else{b.classList.add('incorrect');all=false;}}
-feedbackEl.textContent=all?'All correct! 🎉':'Some blanks incorrect.';}
-function onReset(){for(const k in blankState)blankState[k]=null;bankTokens=shuffle(currentPuzzle.bank);renderBank();updateBlankDisplays();feedbackEl.textContent='Reset.';selectedTokenIndex=null;updateRevealHintBtn();}
+function onSubmit(){
+const sol=currentPuzzle.solution;let all=true;
+for(const n in blankState){
+const placed=blankState[n];const exp=sol[n];
+const b=codeWrap.querySelector(`[data-blank='${n}']`);
+b.classList.remove('correct','incorrect');
+if(placed===exp)b.classList.add('correct');else{b.classList.add('incorrect');all=false;}
+}
+feedbackEl.textContent=all?'All correct! 🎉':'Some blanks incorrect.';
+}
+function onReset(){
+for(const k in blankState)blankState[k]=null;
+bankTokens=shuffle(currentPuzzle.bank);
+renderBank();updateBlankDisplays();feedbackEl.textContent='Reset.';
+selectedTokenIndex=null;updateRevealHintBtn();
+}
 function onNext(){loadPuzzle((puzzleIndex+1)%puzzles.length);}
-function onRevealHint(){const used=usedHintsCount[puzzleIndex];if(used>=3){feedbackEl.textContent='No hints left.';return;}const sol=currentPuzzle.solution,els=[];for(const n in blankState){if(sol[n]&&blankState[n]!==sol[n])els.push(+n);}if(!els.length){feedbackEl.textContent='Nothing to hint.';return;}const pick=els[Math.floor(Math.random()*els.length)];blankState[pick]=sol[pick];usedHintsCount[puzzleIndex]++;updateBlankDisplays();feedbackEl.textContent=`Hint used (${usedHintsCount[puzzleIndex]}/3).`;updateRevealHintBtn();}
-function updateRevealHintBtn(){const left=3-(usedHintsCount[puzzleIndex]||0);revealHintBtn.textContent=`Reveal hint (${left} left)`;revealHintBtn.disabled=left<=0;}
+function onRevealHint(){
+const used=usedHintsCount[puzzleIndex];
+if(used>=3){feedbackEl.textContent='No hints left.';return;}
+const sol=currentPuzzle.solution;
+const targets=Object.keys(blankState).filter(k=>sol[k]&&blankState[k]!==sol[k]);
+if(!targets.length){feedbackEl.textContent='Nothing to hint.';return;}
+const pick=targets[Math.floor(Math.random()*targets.length)];
+blankState[pick]=sol[pick];
+usedHintsCount[puzzleIndex]++;
+updateBlankDisplays();
+feedbackEl.textContent=`Hint used (${usedHintsCount[puzzleIndex]}/3).`;
+updateRevealHintBtn();
+}
+function updateRevealHintBtn(){
+const used=usedHintsCount[puzzleIndex];
+const left=3-used;
+revealHintBtn.textContent=`Reveal hint (${left} left)`;
+revealHintBtn.disabled=left<=0;
+}
 init();
 })();
 </script>

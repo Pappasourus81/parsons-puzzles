@@ -136,7 +136,7 @@
           "UNTIL count ___4___ ___5___"
         ],
         answers: ["1","REPEAT","1",">","10"],
-        bank: ["REPEAT","UNTIL","count","1","10","+","OUTPUT"]
+        bank: ["REPEAT","UNTIL","count","1","10","+","OUTPUT",">"]
       },
 
       // 3 REPEAT UNTIL with Input (stop when user enters 0)

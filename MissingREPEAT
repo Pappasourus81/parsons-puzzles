@@ -288,7 +288,8 @@
         example: "Input 3 → prints ***. Input 0 → stops.",
         lines: [
           "___1___",
-          "INPUT \"Enter number of stars: \" ___2___",
+          "OUTPUT \"Enter number of stars\",
+          "INPUT ___2___",
           "___3___ i = ___4___ TO ___5___ DO",
           "OUTPUT \"*\"",
           "NEXT i",

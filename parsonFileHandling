@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Parsons — File Handling (Reorder mode)</title>
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#fff; --accent:#0568d6; --ok:#e6fbec; --bad:#ffecec;
+    --border:#dfe7f2; --muted:#556;
+  }
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); margin:20px; color:#122;}
+  .container{max-width:960px;margin:0 auto;}
+  header{display:flex;align-items:center;gap:16px;}
+  h1{margin:0;font-size:20px;}
+  .panel{background:var(--card);border:1px solid var(--border);padding:12px;border-radius:10px;margin-top:12px;}
+  .desc-box{border-radius:8px;padding:10px;border:1px solid #e2e8f0;background:#fff;margin-bottom:12px;}
+  .desc-title{font-weight:700;margin-bottom:6px;}
+  .desc-list{margin:6px 0 0 18px;color:#123;}
+  .example{font-family:monospace;background:#f3f9ff;padding:8px;border-radius:6px;border:1px solid #dbeeff;margin-top:8px;white-space:pre-wrap;}
+  .code-box{min-height:160px;border:2px dashed var(--border);background:#fff;padding:12px;border-radius:8px;display:flex;flex-direction:column;gap:8px;position:relative}
+  .block{user-select:none;padding:10px 12px;border-radius:8px;background:#f9fbff;border:1px solid #d0d9ef;cursor:grab;min-width:220px;box-shadow:0 1px 0 rgba(0,0,0,0.02);transition:transform .12s ease, background .18s;}
+  .block.dragging{opacity:0.6;transform:scale(0.98);}
+  .block.correct{background:var(--ok);border-color:#80d08a;}
+  .block.incorrect{background:var(--bad);border-color:#f3a3a3;}
+  .placeholder{height:36px;border-radius:6px;border:2px dashed #cbd5e1;background:linear-gradient(90deg,#ffffff,#f7fbff);display:block;margin:4px 0}
+  .controls{display:flex;gap:8px;align-items:center;margin-top:12px;}
+  button{padding:8px 12px;border-radius:8px;border:0;font-weight:700;cursor:pointer;}
+  .btn-primary{background:var(--accent);color:white;}
+  .btn-secondary{background:#657; color:#fff; opacity:0.95}
+  .btn-ghost{background:#eef2f7;color:#223;border:1px solid #d6e0f4;}
+  select{padding:6px;border-radius:8px;border:1px solid #d7e0f5;}
+  #message{margin-top:10px;font-weight:700;color:#444;}
+  @media (max-width:700px){
+    .block{min-width:150px;}
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Parsons — File Handling (Reorder mode)</h1>
+    </header>
+
+    <div class="panel" id="puzzlePanel">
+      <div class="desc-box" id="descriptionBox">
+        <div class="desc-title" id="descTitle">Select a puzzle</div>
+        <ul class="desc-list" id="descBullets"></ul>
+        <div id="exampleBox" class="example" style="display:none;"></div>
+      </div>
+
+      <div id="codeBox" class="code-box" aria-label="Scrambled code lines" tabindex="0"></div>
+
+      <div class="controls" style="justify-content:flex-start;">
+        <button id="submitBtn" class="btn-primary">Submit</button>
+        <button id="revealHintBtn" class="btn-ghost">Reveal hint (3 left)</button>
+        <button id="resetBtn" class="btn-secondary">Reset (Reshuffle)</button>
+        <button id="nextBtn" class="btn-ghost">Next Puzzle</button>
+        <div style="margin-left:auto;">
+          <label> Puzzle:
+            <select id="puzzleSelect"></select>
+          </label>
+        </div>
+      </div>
+
+      <div id="message"></div>
+    </div>
+  </div>
+
+<script>
+const MAX_HINTS_PER_PUZZLE = 3;
+
+const puzzles = [
+  {
+    title: "Read and display a single line from a file",
+    bullets: ["Open a file for reading, read a line, display it, and close the file."],
+    lines: [
+      "DECLARE LineOfText : STRING",
+      "OPENFILE \"Message.txt\" FOR READ",
+      "READFILE \"Message.txt\", LineOfText",
+      "OUTPUT \"The line read is: \", LineOfText",
+      "CLOSEFILE \"Message.txt\""
+    ]
+  },
+  {
+    title: "Write three names to a file",
+    bullets: ["Open a file for writing and use a FOR loop to input and write three names."],
+    lines: [
+      "DECLARE Name : STRING",
+      "OPENFILE \"Names.txt\" FOR WRITE",
+      "FOR i ← 1 TO 3",
+      "INPUT Name",
+      "WRITEFILE \"Names.txt\", Name",
+      "NEXT i",
+      "CLOSEFILE \"Names.txt\""
+    ]
+  },
+  {
+    title: "Copy one line from one file to another",
+    bullets: ["Read one line from FileA and write it to FileB, then close both files."],
+    lines: [
+      "DECLARE LineOfText : STRING",
+      "OPENFILE \"FileA.txt\" FOR READ",
+      "OPENFILE \"FileB.txt\" FOR WRITE",
+      "READFILE \"FileA.txt\", LineOfText",
+      "WRITEFILE \"FileB.txt\", LineOfText",
+      "CLOSEFILE \"FileA.txt\"",
+      "CLOSEFILE \"FileB.txt\""
+    ]
+  },
+  {
+    title: "Read all lines in a file until end of file",
+    bullets: ["Read and display lines until an empty line indicates end of file."],
+    lines: [
+      "DECLARE Line : STRING",
+      "DECLARE EndOfFile : BOOLEAN",
+      "OPENFILE \"Data.txt\" FOR READ",
+      "EndOfFile ← FALSE",
+      "WHILE EndOfFile = FALSE DO",
+      "READFILE \"Data.txt\", Line",
+      "IF Line = \"\" THEN",
+      "EndOfFile ← TRUE",
+      "ELSE",
+      "OUTPUT Line",
+      "ENDIF",
+      "ENDWHILE",
+      "CLOSEFILE \"Data.txt\""
+    ]
+  },
+  {
+    title: "Read numbers, multiply by 10, and write results",
+    bullets: ["Read numbers from one file, multiply each by 10, and write to another file until 0 is found."],
+    lines: [
+      "DECLARE Number : INTEGER",
+      "DECLARE Result : INTEGER",
+      "DECLARE EndOfFile : BOOLEAN",
+      "OPENFILE \"NumbersIn.txt\" FOR READ",
+      "OPENFILE \"NumbersOut.txt\" FOR WRITE",
+      "EndOfFile ← FALSE",
+      "WHILE EndOfFile = FALSE DO",
+      "READFILE \"NumbersIn.txt\", Number",
+      "IF Number = 0 THEN",
+      "EndOfFile ← TRUE",
+      "ELSE",
+      "Result ← Number * 10",
+      "WRITEFILE \"NumbersOut.txt\", Result",
+      "ENDIF",
+      "ENDWHILE",
+      "CLOSEFILE \"NumbersIn.txt\"",
+      "CLOSEFILE \"NumbersOut.txt\""
+    ]
+  }
+];
+
+const codeBox = document.getElementById('codeBox');
+const descTitle = document.getElementById('descTitle');
+const descBullets = document.getElementById('descBullets');
+const puzzleSelect = document.getElementById('puzzleSelect');
+const submitBtn = document.getElementById('submitBtn');
+const revealHintBtn = document.getElementById('revealHintBtn');
+const resetBtn = document.getElementById('resetBtn');
+const nextBtn = document.getElementById('nextBtn');
+const messageEl = document.getElementById('message');
+
+let current = 0;
+let pickedBlock = null;
+const usedHintsCount = {};
+let placeholder = null;
+
+function shuffleArray(arr){ for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} }
+
+function populatePuzzleSelect(){ puzzleSelect.innerHTML=''; puzzles.forEach((p,i)=>{const opt=document.createElement('option');opt.value=i;opt.textContent=`${i+1}. ${p.title}`;puzzleSelect.appendChild(opt);}); puzzleSelect.value=0; }
+
+function renderDescription(idx){ const p=puzzles[idx]; descTitle.textContent=p.title; descBullets.innerHTML=''; p.bullets.forEach(b=>{const li=document.createElement('li'); li.textContent=b; descBullets.appendChild(li);}); }
+
+function ensurePlaceholder(){ if(!placeholder){ placeholder=document.createElement('div'); placeholder.className='placeholder'; } }
+function removePlaceholder(){ if(placeholder && placeholder.parentElement) placeholder.parentElement.removeChild(placeholder); }
+
+function getDragAfterElement(container, y){ const draggableElements=[...container.querySelectorAll('.block:not(.dragging):not(.placeholder)')]; let closest=null; let closestOffset=Number.NEGATIVE_INFINITY; for(const el of draggableElements){ const box=el.getBoundingClientRect(); const offset=y-(box.top+box.height/2); if(offset<0 && offset>closestOffset){ closestOffset=offset; closest=el; } } return closest; }
+
+function buildCodeBox(idx){ codeBox.innerHTML=''; const p=puzzles[idx]; const items=p.lines.map((line,i)=>({line,idx:i})); const shuffled=items.slice(); shuffleArray(shuffled); shuffled.forEach(item=>{ const el=document.createElement('div'); el.className='block'; el.draggable=true; el.tabIndex=0; el.dataset.id=`line-${item.idx}-${Math.random().toString(36).slice(2,9)}`; el.dataset.origIndex=String(item.idx); el.textContent=item.line; el.addEventListener('dragstart',e=>{ el.classList.add('dragging'); e.dataTransfer.setData('text/plain',el.dataset.id); e.dataTransfer.effectAllowed='move';}); el.addEventListener('dragend',()=>{ el.classList.remove('dragging'); removePlaceholder();}); el.addEventListener('click',onBlockClick); codeBox.appendChild(el);}); messageEl.textContent=''; }
+
+function onBlockClick(e){ const el=e.currentTarget; if(!pickedBlock){ pickedBlock=el; el.style.outline='3px solid rgba(5,104,214,0.18)'; return;} if(pickedBlock===el){ pickedBlock.style.outline=''; pickedBlock=null; return;} codeBox.insertBefore(pickedBlock,el); pickedBlock.style.outline=''; pickedBlock=null; }
+
+function checkOrder(){ const p=puzzles[current]; const expected=p.lines.map(s=>s.trim()); const children=[...codeBox.children].filter(c=>!c.classList.contains('placeholder')); let allCorrect=true; children.forEach((c,i)=>{ const actual=c.textContent.trim(); if(actual===expected[i]){ c.classList.remove('incorrect'); c.classList.add('correct'); } else { c.classList.remove('correct'); c.classList.add('incorrect'); allCorrect=false; }}); if(allCorrect){ messageEl.textContent='All correct — great job!'; messageEl.style.color='#0b7'; } else { messageEl.textContent='Some lines are in the wrong order. Incorrect blocks are highlighted.'; messageEl.style.color='#b33'; } }
+
+function revealHint(){ const used=usedHintsCount[current]||0; if(used>=MAX_HINTS_PER_PUZZLE){ messageEl.textContent='No hints left.'; return;} const p=puzzles[current]; const expected=p.lines.map(s=>s.trim()); const children=[...codeBox.children].filter(c=>!c.classList.contains('placeholder')); const wrong=[]; children.forEach((c,i)=>{ if(c.textContent.trim()!==expected[i]) wrong.push(i);}); if(!wrong.length){ messageEl.textContent='All lines correct.'; return;} const pos=wrong[Math.floor(Math.random()*wrong.length)]; const text=expected[pos]; const candidate=children.find(c=>c.textContent.trim()===text); if(candidate){ const others=children.filter(n=>n!==candidate); if(pos>=others.length) codeBox.appendChild(candidate); else codeBox.insertBefore(candidate,others[pos]); candidate.classList.add('correct'); usedHintsCount[current]=used+1; messageEl.textContent='Hint used.'; } }
+
+function resetPuzzle(){ buildCodeBox(current); }
+function nextPuzzle(){ current=(current+1)%puzzles.length; puzzleSelect.value=current; loadPuzzle(current); }
+function loadPuzzle(idx){ current=idx; renderDescription(idx); buildCodeBox(idx); messageEl.textContent=''; }
+
+function init(){ populatePuzzleSelect(); renderDescription(0); buildCodeBox(0); submitBtn.addEventListener('click',checkOrder); revealHintBtn.addEventListener('click',revealHint); resetBtn.addEventListener('click',resetPuzzle); nextBtn.addEventListener('click',nextPuzzle); puzzleSelect.addEventListener('change',e=>loadPuzzle(Number(e.target.value))); ensurePlaceholder(); codeBox.addEventListener('dragover',e=>{ e.preventDefault(); const id=e.dataTransfer.getData('text/plain'); if(!id)return; const el=codeBox.querySelector(`[data-id="${id}"]`); if(!el)return; const afterEl=getDragAfterElement(codeBox,e.clientY); ensurePlaceholder(); removePlaceholder(); if(afterEl==null){ codeBox.appendChild(placeholder);} else { codeBox.insertBefore(placeholder,afterEl);} }); codeBox.addEventListener('drop',e=>{ e.preventDefault(); removePlaceholder(); }); }
+init();
+</script>
+</body>
+</html>

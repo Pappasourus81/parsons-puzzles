@@ -68,23 +68,27 @@
 
 <script>
 /*
- Updated Parsons reorder page:
- - assignment arrow uses actual left arrow '←'
- - enhanced drag & drop: you can drop between lines or on lines; drop inserts the dragged line at that place and pushes subsequent lines down.
+  Parsons shuffle-in-place page for REPEAT UNTIL puzzles.
+  - Shuffled lines are placed inside the code box on load.
+  - Drag a block onto another to INSERT before it; or click one then another to swap.
+  - Submit marks blocks correct/incorrect (green/red).
+  - Reveal hint places a random incorrect block into its correct position; up to 3 hints per puzzle (in-session).
+  - Reset reshuffles the current puzzle.
 */
 
 const MAX_HINTS_PER_PUZZLE = 3;
 
 const puzzles = [
+  // (You can edit/extend these)
   {
     title: "Count 1 to 5 with REPEAT UNTIL",
     bullets: ["No input — print numbers 1 to 5, each on its own line."],
     example: "1\n2\n3\n4\n5",
     lines: [
-      "i ← 1",
+      "i <- 1",
       "REPEAT",
       "OUTPUT i",
-      "i ← i + 1",
+      "i <- i + 1",
       "UNTIL i > 5"
     ]
   },
@@ -93,10 +97,10 @@ const puzzles = [
     bullets: ["No input — loop from 1 to 10 using a counter variable."],
     example: "1..10 (each on its own line)",
     lines: [
-      "count ← 1",
+      "count <- 1",
       "REPEAT",
       "OUTPUT count",
-      "count ← count + 1",
+      "count <- count + 1",
       "UNTIL count > 10"
     ]
   },
@@ -106,7 +110,7 @@ const puzzles = [
     example: "Input: 4, 2, 0 → loop stops when 0 is entered.",
     lines: [
       "REPEAT",
-      "OUTPUT \"Enter a number (0 to stop)\"",
+      "OUTPUT \"Enter a number (0 to stop):\"",
       "INPUT n",
       "UNTIL n = 0"
     ]
@@ -117,7 +121,7 @@ const puzzles = [
     example: "Input 3 → Output 6; Input -1 → stop",
     lines: [
       "REPEAT",
-      "OUTPUT \"Enter a number (-1 to stop)\"",
+      "OUTPUT \"Enter a number (-1 to stop):\"",
       "INPUT v",
       "IF v <> -1 THEN",
       "OUTPUT v * 2",
@@ -131,7 +135,7 @@ const puzzles = [
     example: "Input 3 → 'Positive'; input -1 → 'Negative'; 0 → stop",
     lines: [
       "REPEAT",
-      "OUTPUT \"Enter a number (0 to stop)\"",
+      "OUTPUT \"Enter a number (0 to stop):\"",
       "INPUT n",
       "IF n > 0 THEN",
       "OUTPUT \"Positive\"",
@@ -143,15 +147,11 @@ const puzzles = [
   },
   {
     title: "Age check (Adult/Child), stop with -1",
-    bullets: [
-      "Repeatedly ask for an age value.",
-      "For each entered age, output whether that person should be classified as an adult or a child.",
-      "A special sentinel value of -1 ends the loop."
-    ],
+    bullets: ["Ask for an age. If the age is 18 or older, print 'Adult', otherwise print 'Child'. The loop should stop when -1 is entered."],
     example: "Input 20 → 'Adult'; Input 12 → 'Child'; -1 → stop",
     lines: [
       "REPEAT",
-      "OUTPUT \"Enter age (-1 to stop)\"",
+      "OUTPUT \"Enter an age (-1 to stop):\"",
       "INPUT age",
       "IF age >= 18 THEN",
       "OUTPUT \"Adult\"",
@@ -162,16 +162,16 @@ const puzzles = [
     ]
   },
   {
-    title: "Count scores greater than 50",
+    title: "Count scores above 50",
     bullets: ["Keep a counter for scores greater than 50; stop on -1 and output the count."],
     example: "Inputs 55,40,60,-1 → Output: 2",
     lines: [
-      "count ← 0",
+      "count <- 0",
       "REPEAT",
-      "OUTPUT \"Enter score (-1 to stop)\"",
+      "OUTPUT \"Enter a score (-1 to stop):\"",
       "INPUT score",
       "IF score > 50 THEN",
-      "count ← count + 1",
+      "count <- count + 1",
       "ENDIF",
       "UNTIL score = -1",
       "OUTPUT count"
@@ -179,11 +179,11 @@ const puzzles = [
   },
   {
     title: "Password check until correct",
-    bullets: ["Ask for a password until user enters \"Secret\"; then print Access granted."],
+    bullets: ["Ask for password until user enters \"Secret\"; then print Access granted."],
     example: "Input 'Secret' → 'Access granted'",
     lines: [
       "REPEAT",
-      "OUTPUT \"Enter password\"",
+      "OUTPUT \"Enter password:\"",
       "INPUT pw",
       "UNTIL pw = \"Secret\"",
       "OUTPUT \"Access granted\""
@@ -191,11 +191,11 @@ const puzzles = [
   },
   {
     title: "Print stars per request (nested FOR)",
-    bullets: ["Ask how many stars to print; use an inner loop to print that many stars. Stop when user enters 0."],
+    bullets: ["Ask how many stars to print, use FOR to print that many. Stop when user enters 0."],
     example: "Input 3 → prints *** ; Input 0 → stop",
     lines: [
       "REPEAT",
-      "OUTPUT \"How many stars (0 to stop)\"",
+      "OUTPUT \"How many stars? (0 to stop):\"",
       "INPUT n",
       "FOR i = 1 TO n DO",
       "OUTPUT \"*\"",
@@ -204,16 +204,12 @@ const puzzles = [
     ]
   },
   {
-    title: "Print even numbers 1..N (REPEAT + inner loop)",
-    bullets: [
-      "Repeatedly ask the user for a number N.",
-      "Loop through the integers from 1 to N and output only those that are even.",
-      "A sentinel value of 0 ends the whole process."
-    ],
+    title: "Print even numbers 1..N (REPEAT + FOR + IF)",
+    bullets: ["Ask for a number N. Loop from 1 up to N and output only the values that are even. Stop when N = 0."],
     example: "Input 5 → outputs 2 and 4 ; Input 0 → stop",
     lines: [
       "REPEAT",
-      "OUTPUT \"Enter N (0 to stop)\"",
+      "OUTPUT \"Enter N (0 to stop):\"",
       "INPUT N",
       "FOR i = 1 TO N DO",
       "IF i MOD 2 = 0 THEN",
@@ -241,6 +237,7 @@ let current = 0;
 let pickedBlock = null;
 const usedHintsCount = {}; // in-memory per puzzle
 
+// shuffle helper
 function shuffleArray(arr){
   for(let i=arr.length-1;i>0;i--){
     const j = Math.floor(Math.random()*(i+1));
@@ -259,6 +256,7 @@ function populatePuzzleSelect(){
   puzzleSelect.value = 0;
 }
 
+// render description
 function renderDescription(idx){
   const p = puzzles[idx];
   descTitle.textContent = p.title;
@@ -270,119 +268,68 @@ function renderDescription(idx){
   });
   if(p.example && p.example.trim() !== ''){
     exampleBox.style.display = 'block';
-    exampleBox.innerHTML = '';
-    const head = document.createElement('div');
-    head.style.fontWeight = '700';
-    head.textContent = 'Expected Output';
-    const pre = document.createElement('pre');
-    pre.style.marginTop = '8px';
-    pre.style.whiteSpace = 'pre-wrap';
-    pre.textContent = p.example;
-    exampleBox.appendChild(head);
-    exampleBox.appendChild(pre);
+    // **MODIFICATION 1: Add "Expected Output" heading**
+    exampleBox.innerHTML = `<div style="font-weight:600; margin-bottom:4px;">Expected Output</div>${p.example}`;
   } else {
     exampleBox.style.display = 'none';
-    exampleBox.innerHTML = '';
+    exampleBox.innerHTML = ''; // clear it
   }
   updateRevealHintBtn();
 }
 
-// build code box and wire DnD: container drop computes insertion point by mouse Y
+// build code box with shuffled lines already inside
 function buildCodeBox(idx){
   codeBox.innerHTML = '';
   const p = puzzles[idx];
+  // create list of items with original index
   const items = p.lines.map((line, i) => ({line, idx:i}));
+  // shuffle items (so page loads with them scrambled)
   const shuffled = items.slice();
   shuffleArray(shuffled);
-
+  // create block elements in the codeBox (vertical stack)
   shuffled.forEach(item => {
     const el = document.createElement('div');
     el.className = 'block';
     el.draggable = true;
     el.tabIndex = 0;
-    el.dataset.origIndex = String(item.idx);
+    el.dataset.origIndex = String(item.idx); // correct position index
     el.textContent = item.line;
-
+    // drag events
     el.addEventListener('dragstart', e => {
       el.classList.add('dragging');
       e.dataTransfer.setData('text/plain', el.dataset.origIndex);
       e.dataTransfer.effectAllowed = 'move';
     });
     el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
-
-    // keep per-block dragover/drop to provide drop visual on the block itself
     el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    
+    // **MODIFICATION 2: Change drop logic from SWAP to INSERT-BEFORE**
     el.addEventListener('drop', e => {
       e.preventDefault();
-      // delegate to container drop logic for consistent behavior
-      handleContainerDrop(e);
+      const draggedOrig = e.dataTransfer.getData('text/plain');
+      // find the dragged element
+      const draggedEl = Array.from(codeBox.children).find(c => c.dataset.origIndex === String(draggedOrig) && c !== el);
+      
+      if(!draggedEl) return;
+      
+      // 'el' is the drop target. Insert 'draggedEl' *before* 'el'.
+      codeBox.insertBefore(draggedEl, el);
+      
+      // small animation nudge on the target
+      el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:140});
     });
 
+    // click-to-swap support (click one block, then another to swap)
     el.addEventListener('click', onBlockClick);
     codeBox.appendChild(el);
   });
-
-  // container-level dragover & drop allow dropping between elements based on mouse Y
-  codeBox.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
-  codeBox.addEventListener('drop', handleContainerDrop);
-
+  // clear message and coloring
   messageEl.textContent = '';
   Array.from(codeBox.children).forEach(c => c.classList.remove('correct','incorrect'));
-  if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
   updateRevealHintBtn();
 }
 
-// compute insertion and move dragged element there
-function handleContainerDrop(e){
-  e.preventDefault();
-  const draggedOrig = e.dataTransfer.getData('text/plain');
-  if(!draggedOrig) return;
-
-  // find the dragged element among current children
-  const children = Array.from(codeBox.children);
-  const draggedEl = children.find(c => c.dataset.origIndex === String(draggedOrig) && c.classList.contains('dragging'));
-  // If dragging class isn't present (different browsers), also accept by dataset match even if not dragging
-  const draggedElFallback = children.find(c => c.dataset.origIndex === String(draggedOrig));
-  const dragged = draggedEl || draggedElFallback;
-  if(!dragged) return;
-
-  // determine insertion index by mouse position relative to children
-  const rect = codeBox.getBoundingClientRect();
-  const y = (e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY)) || 0;
-
-  // build list of children excluding the dragged element (we'll reinsert)
-  const remaining = children.filter(c => c !== dragged);
-
-  let insertBeforeNode = null;
-  for(let i=0;i<remaining.length;i++){
-    const node = remaining[i];
-    const r = node.getBoundingClientRect();
-    const mid = r.top + r.height/2;
-    if(y < mid){
-      insertBeforeNode = node;
-      break;
-    }
-  }
-
-  // remove dragged from DOM if present
-  if(dragged.parentNode === codeBox) {
-    codeBox.removeChild(dragged);
-  }
-
-  // insert at computed position (before insertBeforeNode or at end)
-  if(insertBeforeNode){
-    codeBox.insertBefore(dragged, insertBeforeNode);
-  } else {
-    codeBox.appendChild(dragged);
-  }
-
-  // small visual nudge on nearby node
-  if(insertBeforeNode) insertBeforeNode.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:140});
-
-  // clear dragging class
-  dragged.classList.remove('dragging');
-}
-
+// click-to-swap handler
 function onBlockClick(e){
   const el = e.currentTarget;
   if(!pickedBlock){
@@ -395,6 +342,7 @@ function onBlockClick(e){
     pickedBlock = null;
     return;
   }
+  // Swap logic for click
   const children = Array.from(codeBox.children);
   const aIndex = children.indexOf(pickedBlock);
   const bIndex = children.indexOf(el);
@@ -406,12 +354,15 @@ function onBlockClick(e){
   } else {
     codeBox.insertBefore(pickedBlock, el);
   }
+  // visual
+  el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:120});
   pickedBlock.style.outline = '';
   pickedBlock = null;
-  el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:120});
 }
 
+// check order (mark correct/incorrect)
 function checkOrder(){
+  const p = puzzles[current];
   const children = Array.from(codeBox.children);
   let allCorrect = true;
   children.forEach((c, i) => {
@@ -432,17 +383,20 @@ function checkOrder(){
   }
 }
 
+// Reset = reshuffle current puzzle (keep hint counts)
 function resetPuzzle(){
   buildCodeBox(current);
   messageEl.textContent = '';
 }
 
+// Next puzzle
 function nextPuzzle(){
   current = (current + 1) % puzzles.length;
   puzzleSelect.value = current;
   loadPuzzle(current);
 }
 
+// Reveal hint: place one random incorrect block into its correct position
 function revealHint(){
   const used = usedHintsCount[current] || 0;
   if(used >= MAX_HINTS_PER_PUZZLE){
@@ -452,6 +406,7 @@ function revealHint(){
     return;
   }
   const children = Array.from(codeBox.children);
+  // find eligible: blocks whose origIndex !== current DOM index
   const eligible = [];
   children.forEach((c, idx) => {
     const orig = Number(c.dataset.origIndex);
@@ -462,17 +417,19 @@ function revealHint(){
     messageEl.style.color = '#444';
     return;
   }
+  // pick random eligible block
   const choice = eligible[Math.floor(Math.random()*eligible.length)];
   const block = choice.el;
   const targetPos = choice.orig;
-
+  // remove block from current DOM
   const remaining = Array.from(codeBox.children).filter(n => n !== block);
+  // insert at target position among remaining children
   if(targetPos >= remaining.length){
     codeBox.appendChild(block);
   } else {
     codeBox.insertBefore(block, remaining[targetPos]);
   }
-
+  // mark it correct visually
   block.classList.remove('incorrect'); block.classList.add('correct');
   usedHintsCount[current] = used + 1;
   messageEl.textContent = `Hint used: one line placed correctly (${usedHintsCount[current]} of ${MAX_HINTS_PER_PUZZLE}).`;
@@ -480,6 +437,7 @@ function revealHint(){
   updateRevealHintBtn();
 }
 
+// update hint button label and disabled state
 function updateRevealHintBtn(){
   const used = usedHintsCount[current] || 0;
   const left = Math.max(0, MAX_HINTS_PER_PUZZLE - used);
@@ -494,24 +452,29 @@ function updateRevealHintBtn(){
   }
 }
 
+// load puzzle by index
 function loadPuzzle(idx){
   current = idx;
   puzzleSelect.value = idx;
   renderDescription(idx);
   buildCodeBox(idx);
   messageEl.textContent = '';
+  // clear any picked block state
   if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
 }
 
+// init
 function init(){
   populatePuzzleSelect();
   renderDescription(0);
   buildCodeBox(0);
+  // wire events
   submitBtn.addEventListener('click', checkOrder);
   revealHintBtn.addEventListener('click', revealHint);
   resetBtn.addEventListener('click', resetPuzzle);
   nextBtn.addEventListener('click', nextPuzzle);
   puzzleSelect.addEventListener('change', e => loadPuzzle(Number(e.target.value)));
+  // accessibility: focus handling
   codeBox.addEventListener('keydown', (e) => {
     if(e.key === 'Enter' || e.key === ' '){
       e.preventDefault();

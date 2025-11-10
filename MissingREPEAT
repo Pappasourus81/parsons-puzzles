@@ -190,7 +190,7 @@
         lines: [
           "___1___",
           "INPUT ___2___",
-          "IF ___3___ ___4___ ___5___" THEN,
+          "IF ___3___ ___4___ ___5___ THEN",
           "OUTPUT \"Positive\"",
           "ELSE",
           "OUTPUT \"Negative\"",

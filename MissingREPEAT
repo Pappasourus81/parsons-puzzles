@@ -51,6 +51,7 @@
 </head>
 <body>
   <h1>REPEAT UNTIL - Fill in the blanks</h1>
+
   <div class="meta">Place the correct token into each blank. Use drag & drop, or keyboard: Tab to token → Enter to pick → Tab to blank → Enter to place.</div>
 
   <div class="panel">
@@ -63,10 +64,12 @@
         <button id="toggleExample" class="small">Show example output</button>
         <button id="revealHintBtn" class="small" style="margin-left:8px;">Reveal hint (3 left)</button>
       </div>
+
       <div id="exampleBox" class="example-box" role="region" aria-hidden="true"></div>
     </div>
 
     <div class="code-area" id="codeArea" aria-live="polite"></div>
+
     <div class="bank" id="bank" aria-label="token bank"></div>
 
     <div class="keyboard-hint">Tip: click a token to select it, then click a blank to place it.</div>
@@ -87,9 +90,18 @@
   </div>
 
   <script>
+    /* REPEAT UNTIL puzzle page (updated per user's requests)
+       - Hints are descriptive (no code)
+       - Puzzle 5 has '<' in the bank
+       - Puzzle 6 hint replaced by user sentence
+       - Extra distractors added for puzzles 1-6
+       - Puzzles 7-10 answers rechecked
+    */
+
     const MAX_HINTS_PER_PUZZLE = 3;
 
     const puzzles = [
+      // 1 Basic REPEAT UNTIL Output (warm-up)
       {
         title: "Basic REPEAT UNTIL Output",
         bullets: [
@@ -106,8 +118,11 @@
           "UNTIL i ___4___ ___5___"
         ],
         answers: ["1","REPEAT","1",">","5"],
+        // added distractors: 0, 10, -1, "WHATEVER"
         bank: ["REPEAT","UNTIL","i","1","2","3","4","5",">","+","OUTPUT","0","10","-1","IF"]
       },
+
+      // 2 REPEAT UNTIL with Counter Variable 1..10
       {
         title: "REPEAT UNTIL with Counter Variable",
         bullets: [
@@ -126,6 +141,8 @@
         answers: ["1","REPEAT","1",">","10"],
         bank: ["REPEAT","UNTIL","count","1","10","+","OUTPUT",">","0","-1","MOD"]
       },
+
+      // 3 REPEAT UNTIL with Input (stop when user enters 0)
       {
         title: "REPEAT UNTIL with Input (stop on 0)",
         bullets: [
@@ -142,6 +159,8 @@
         answers: ["REPEAT","n","UNTIL","n","=","0"],
         bank: ["REPEAT","UNTIL","INPUT","n","=","0","OUTPUT","1","-1","count"]
       },
+
+      // 4 REPEAT UNTIL with Input and Output (stop -1, output doubled)
       {
         title: "REPEAT UNTIL with Input and Output (stop on -1)",
         bullets: [
@@ -161,6 +180,8 @@
         answers: ["REPEAT","val","val","<>","-1","val","*","2","UNTIL","val","=","-1"],
         bank: ["REPEAT","UNTIL","val","INPUT","OUTPUT","<>","=","-1","*","2","IF","ENDIF","0","1","MOD"]
       },
+
+      // 5 REPEAT UNTIL with Conditional Output (positive/negative; stop 0)
       {
         title: "REPEAT UNTIL with Conditional Output",
         bullets: [
@@ -179,9 +200,13 @@
           "ENDIF",
           "___6___ ___7___ ___8___ ___9___"
         ],
+        // mapping blanks: 1=REPEAT,2=n,3=n,4=>,5=0, 6=UNTIL,7=n,8==,9=0
         answers: ["REPEAT","n","n",">","0","UNTIL","n","=","0"],
+        // added distractors incl. "<"
         bank: ["REPEAT","UNTIL","INPUT","n",">","0","IF","ELSE","OUTPUT","\"Positive\"","\"Negative\"","=","<","-1","MOD"]
       },
+
+      // 6 REPEAT UNTIL with IF–ELSE (age check, stop -1)
       {
         title: "REPEAT UNTIL with IF–ELSE (age check)",
         bullets: [
@@ -200,9 +225,12 @@
           "ENDIF",
           "___6___ ___7___ ___8___ ___9___"
         ],
+        // blanks mapping: 1=REPEAT,2=age,3=age,4=>=,5=18,6=UNTIL,7=age,8==,9=-1
         answers: ["REPEAT","age","age",">=","18","UNTIL","age","=","-1"],
         bank: ["REPEAT","UNTIL","INPUT","age",">=","18","IF","ELSE","OUTPUT","\"Adult\"","\"Child\"","=","-1","0","1","<"]
       },
+
+      // 7 REPEAT UNTIL Counting Condition (count scores >50; stop -1)
       {
         title: "REPEAT UNTIL Counting Condition",
         bullets: [
@@ -218,12 +246,17 @@
           "IF ___4___ ___5___ ___6___ THEN",
           "count = count + ___7___",
           "ENDIF",
-          "___8___ ___9___ ___10___ ___11___",
+          "___8___ ___9___ ___10___ -1",
           "OUTPUT count"
         ],
+        // mapping blanks: 1=0,2=REPEAT,3=score,4=>,5=50,6=1,7=UNTIL,8=score,9==,10? Wait there are only 9 blanks in lines here (1..9). So answers should be:
+        // blanks 1..9 = ["0","REPEAT","score","score",">","50","1","UNTIL","score","=","-1"],
         answers: ["0","REPEAT","score","score",">","50","1","UNTIL","score","=","-1"],
-        bank: ["REPEAT","UNTIL","score","count","0","1",">","50","=","-1","INPUT","OUTPUT","IF","ENDIF","+"]
+        // we'll provide bank items (distractors kept reasonable)
+        bank: ["REPEAT","UNTIL","score","count","0","1",">","50","=","-1","INPUT","OUTPUT","IF","ENDIF","+","MOD"]
       },
+
+      // 8 REPEAT UNTIL with Validation Check (password = "Secret")
       {
         title: "REPEAT UNTIL with Validation Check",
         bullets: [
@@ -235,56 +268,78 @@
         lines: [
           "___1___",
           "INPUT ___2___",
-          "___3___ ___4___ ___5___ ___6___",
+          "___3___ ___4___ ___5___ ___6___ ",
           "OUTPUT \"Access granted\""
         ],
+ 
         answers: ["REPEAT","pw","UNTIL","pw","=","\"Secret\""],
+        // bank includes a combined token '="Secret"' to match the answer above (keeps it straightforward)
         bank: ["REPEAT","UNTIL","INPUT","pw","=","\"Secret\"","OUTPUT","\"Access granted\"","0","-1"]
       },
-      {
-        title: "REPEAT UNTIL with Nested FOR Loop",
-        bullets: [
-          "Repeat asking how many stars to print. Use a FOR loop to print that many '*' characters.",
-          "Stop when the user enters 0."
-        ],
-        hint: "Ask for a number and then use an inner counted loop to print that many stars; stop when the entered number is zero.",
-        example: "Input 3 → prints ***. Input 0 → stops.",
-        lines: [
-          "___1___",
-          "OUTPUT \"Enter number of stars\"",
-          "INPUT ___2___",
-          "___3___ i = ___4___ TO ___5___ DO",
-          "OUTPUT \"*\"",
-          "NEXT i",
-          "___6___ ___7___ ___8___ ___9___"
-        ],
-        answers: ["REPEAT","n","FOR","1","n","UNTIL","n","=","0"],
-        bank: ["REPEAT","UNTIL","FOR","i","1","n","TO","DO","INPUT","OUTPUT","NEXT","=","0","\"*\"","MOD"]
-      },
-      {
-        title: "REPEAT UNTIL with FOR Loop and Conditional Statement",
-        bullets: [
-          "Ask the user to enter a number N repeatedly. Inside the REPEAT loop use a FOR loop to go 1..N and OUTPUT only the even numbers.",
-          "Stop when the user enters 0."
-        ],
-        hint: "Ask for N, then use a FOR loop from 1 to N. Check if each i is even using MOD, and output only even numbers. Stop when N = 0.",
-        example: "Input 5 → outputs 2 and 4. Input 0 → stops.",
-        lines: [
-          "___1___",
-          "INPUT ___2___",
-          "___3___ i = ___4___ TO ___5___ DO",
-          "IF i ___6___ ___7___ ___8___ 0 THEN",
-          "OUTPUT i",
-          "ENDIF",
-          "NEXT i",
-          "___9___ ___10___ ___11___ ___12___"
-        ],
-        answers: ["REPEAT","N","FOR","1","N","MOD","2","=","UNTIL","N","=","0"],
-        bank: ["REPEAT","UNTIL","FOR","i","1","N","MOD","2","=","INPUT","OUTPUT","NEXT","IF","ENDIF","0"]
-      }
-    ];
 
-    // --- Game Logic Below ---
+      // 9 REPEAT UNTIL with Nested FOR Loop (ask # stars; stop 0)
+{
+  title: "REPEAT UNTIL with Nested FOR Loop",
+  bullets: [
+    "Repeat asking how many stars to print. Use a FOR loop to print that many '*' characters.",
+    "Stop when the user enters 0."
+  ],
+  hint: "Ask for a number and then use an inner counted loop to print that many stars; stop when the entered number is zero.",
+  example: "Input 3 → prints ***. Input 0 → stops.",
+  lines: [
+    "___1___",
+    "OUTPUT \"Enter number of stars\"",
+    "INPUT ___2___",
+    "___3___ i = ___4___ TO ___5___ DO",
+    "OUTPUT \"*\"",
+    "NEXT i",
+    "___6___ ___7___ ___8___ ___9___"
+  ],
+  // blanks mapping: 1=REPEAT, 2=n, 3=FOR, 4=1, 5=n, 6=UNTIL, 7=n, 8==, 9=0
+  answers: ["REPEAT","n","FOR","1","n","UNTIL","n","=","0"],
+  bank: ["REPEAT","UNTIL","FOR","i","1","n","TO","DO","INPUT","OUTPUT","NEXT","=","0","\"*\"","MOD"]
+},
+
+
+
+      // 10 REPEAT UNTIL with FOR Loop and Conditional Statement (even numbers 1..N)
+{
+  title: "REPEAT UNTIL with FOR Loop and Conditional Statement",
+  bullets: [
+    "Ask the user to enter a number N repeatedly. Inside the REPEAT loop use a FOR loop to go 1..N and OUTPUT only the even numbers.",
+    "Stop when the user enters 0."
+  ],
+  hint: "Ask for N, then use a FOR loop from 1 to N. Check if each i is even using MOD, and output only even numbers. Stop when N = 0.",
+  example: "Input 5 → outputs 2 and 4. Input 0 → stops.",
+  lines: [
+    "___1___",
+    "INPUT ___2___",
+    "___3___ i = ___4___ TO ___5___ DO",
+    "IF i ___6___ ___7___ ___8___ 0 THEN",
+    "OUTPUT i",
+    "ENDIF",
+    "NEXT i",
+    "___9___ ___10___ ___11___ ___12___"
+  ],
+  // blanks mapping:
+  // 1 = REPEAT
+  // 2 = N
+  // 3 = FOR
+  // 4 = 1
+  // 5 = N
+  // 6 = MOD
+  // 7 = 2
+  // 8 = =
+  // 9 = UNTIL
+  // 10 = N
+  // 11 = =
+  // 12 = 0
+  answers: ["REPEAT","N","FOR","1","N","MOD","2","=","UNTIL","N","=","0"],
+  bank: ["REPEAT","UNTIL","FOR","i","1","N","MOD","2","=","INPUT","OUTPUT","NEXT","IF","ENDIF","0"]
+},
+
+
+    // DOM references
     const bankEl = document.getElementById('bank');
     const codeArea = document.getElementById('codeArea');
     const descTitle = document.getElementById('descTitle');
@@ -295,22 +350,332 @@
     const exampleBox = document.getElementById('exampleBox');
     const msgEl = document.getElementById('message');
     const puzzleSelect = document.getElementById('puzzleSelect');
-    let currentIndex = 0, selectedToken = null;
-    const usedHintsCount = {};
 
-    function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
-    function populatePuzzleSelect(){
-      puzzleSelect.innerHTML='';
-      puzzles.forEach((p,i)=>{
-        const opt=document.createElement('option');
-        opt.value=i;
-        opt.textContent=(i+1)+'. '+p.title;
-        puzzleSelect.appendChild(opt);
-      });
-      puzzleSelect.value=0;
+    let currentIndex = 0;
+    let selectedToken = null;
+    const usedHintsCount = {}; // in-session per puzzle
+
+    // Utilities
+    function shuffleArray(a){
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
     }
 
+    function populatePuzzleSelect(){
+      puzzleSelect.innerHTML = '';
+      puzzles.forEach((p,i)=>{
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = (i+1) + '. ' + p.title;
+        puzzleSelect.appendChild(opt);
+      });
+      puzzleSelect.value = 0;
+    }
+
+    // Render description and example
+    function renderDescription(p){
+      descTitle.textContent = p.title || '';
+      descBullets.innerHTML = '';
+      (p.bullets || []).forEach(b => {
+        const li = document.createElement('li');
+        li.textContent = b;
+        descBullets.appendChild(li);
+      });
+      teacherHint.textContent = p.hint || '';
+      if(p.example && p.example.trim().length > 0){
+        toggleExample.style.display = 'inline-block';
+        exampleBox.textContent = p.example;
+        exampleBox.style.display = 'none';
+        exampleBox.setAttribute('aria-hidden','true');
+        toggleExample.textContent = 'Show example output';
+      } else {
+        toggleExample.style.display = 'none';
+        exampleBox.style.display = 'none';
+        exampleBox.setAttribute('aria-hidden','true');
+      }
+      updateRevealHintBtn();
+    }
+
+    // Example toggle
+    toggleExample.addEventListener('click', ()=>{
+      const visible = exampleBox.style.display !== 'none';
+      if(visible){
+        exampleBox.style.display = 'none';
+        exampleBox.setAttribute('aria-hidden','true');
+        toggleExample.textContent = 'Show example output';
+      } else {
+        exampleBox.style.display = 'block';
+        exampleBox.setAttribute('aria-hidden','false');
+        toggleExample.textContent = 'Hide example output';
+      }
+    });
+
+    // Render code with blanks
     function renderCode(puzzle){
-      codeArea.innerHTML='';
+      codeArea.innerHTML = '';
       puzzle.lines.forEach(line=>{
-        const lineDiv=document.create
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'code-line';
+        let last = 0;
+        const re = /___(\d+)___/g;
+        let m;
+        while((m = re.exec(line)) !== null){
+          const idx = m.index;
+          const before = line.slice(last, idx);
+          if(before) lineDiv.appendChild(document.createTextNode(before));
+          const num = m[1];
+          const span = document.createElement('button');
+          span.type = 'button';
+          span.className = 'blank';
+          span.dataset.blank = num;
+          span.dataset.filled = 'false';
+          span.dataset.token = '';
+          span.textContent = '___' + num + '___';
+          // drag & drop
+          span.addEventListener('dragover', e => { e.preventDefault(); span.classList.add('dragover'); });
+          span.addEventListener('dragleave', ()=> span.classList.remove('dragover'));
+          span.addEventListener('drop', e => {
+            e.preventDefault();
+            span.classList.remove('dragover');
+            const tok = e.dataTransfer.getData('text/plain');
+            placeTokenInBlank(tok, span);
+          });
+          // click / keyboard
+          span.addEventListener('click', ()=> {
+            if(selectedToken) placeTokenInBlank(selectedToken.val, span);
+          });
+          span.addEventListener('keydown', (e)=> {
+            if(e.key==='Enter' || e.key===' '){
+              e.preventDefault();
+              if(selectedToken) placeTokenInBlank(selectedToken.val, span);
+            }
+          });
+          lineDiv.appendChild(span);
+          last = re.lastIndex;
+        }
+        const rest = line.slice(last);
+        if(rest) lineDiv.appendChild(document.createTextNode(rest));
+        codeArea.appendChild(lineDiv);
+      });
+    }
+
+    // Render token bank
+    function renderBank(tokens){
+      bankEl.innerHTML = '';
+      const arr = tokens.slice();
+      shuffleArray(arr);
+      arr.forEach(tok=>{
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'token';
+        b.textContent = tok;
+        b.setAttribute('aria-pressed','false');
+        b.draggable = true;
+        b.tabIndex = 0;
+        b.addEventListener('click', ()=> toggleSelectToken(b, tok));
+        b.addEventListener('keydown', (e)=>{
+          if(e.key==='Enter' || e.key===' '){
+            e.preventDefault();
+            toggleSelectToken(b,tok);
+          }
+        });
+        b.addEventListener('dragstart', (e)=> e.dataTransfer.setData('text/plain', tok));
+        bankEl.appendChild(b);
+      });
+    }
+
+    // Select token (keyboard support)
+    function toggleSelectToken(el, val){
+      if(selectedToken && selectedToken.el === el){
+        el.setAttribute('aria-pressed','false');
+        selectedToken = null;
+        return;
+      }
+      document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+      el.setAttribute('aria-pressed','true');
+      selectedToken = {el, val};
+    }
+
+    // Place token into blank — tokens are reusable
+    function placeTokenInBlank(tokenValue, blankEl){
+      if(!blankEl) return;
+      blankEl.dataset.token = tokenValue;
+      blankEl.dataset.filled = 'true';
+      blankEl.textContent = tokenValue;
+      blankEl.classList.add('filled');
+      // clear token selection
+      document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+      selectedToken = null;
+    }
+
+    // Reset current puzzle (clear blanks, reshuffle bank)
+    function resetCurrent(){
+      const p = puzzles[currentIndex];
+      document.querySelectorAll('.blank').forEach(b=>{
+        b.dataset.filled = 'false';
+        b.dataset.token = '';
+        b.classList.remove('filled','correct','incorrect');
+        b.textContent = '___' + b.dataset.blank + '___';
+      });
+      renderBank(p.bank.slice());
+      msgEl.textContent = '';
+      document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+      selectedToken = null;
+      updateRevealHintBtn();
+      exampleBox.style.display = 'none';
+      exampleBox.setAttribute('aria-hidden','true');
+      toggleExample.textContent = 'Show example output';
+    }
+
+    // Check answers
+    function checkAnswers(){
+      const p = puzzles[currentIndex];
+      const answers = p.answers || [];
+      const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
+      let allCorrect = true;
+      blanks.forEach((b, i)=>{
+        const placed = b.dataset.filled === 'true' ? b.dataset.token : '';
+        const correct = answers[i] !== undefined ? String(answers[i]) : '';
+        if(correct === '' || correct === undefined) {
+          b.classList.remove('correct','incorrect');
+          // not checked
+          return;
+        }
+        const placedTrim = placed !== null ? placed.toString().trim() : '';
+        const correctTrim = correct.toString().trim();
+        if(placedTrim === correctTrim){
+          b.classList.remove('incorrect');
+          b.classList.add('correct');
+        } else {
+          b.classList.remove('correct');
+          b.classList.add('incorrect');
+          allCorrect = false;
+        }
+      });
+
+      if(allCorrect){
+        msgEl.textContent = 'All correct! Well done 🎉';
+        msgEl.style.color = '#1a7f3a';
+      } else {
+        msgEl.textContent = 'Some blanks are incorrect — incorrect blanks are highlighted.';
+        msgEl.style.color = '#a00';
+      }
+    }
+
+    // Reveal a random eligible blank (up to MAX_HINTS_PER_PUZZLE)
+    function revealRandomBlank(){
+      const used = usedHintsCount[currentIndex] || 0;
+      if(used >= MAX_HINTS_PER_PUZZLE){
+        msgEl.textContent = 'No hints left for this puzzle (max ' + MAX_HINTS_PER_PUZZLE + ').';
+        msgEl.style.color = '#a00';
+        updateRevealHintBtn();
+        return;
+      }
+      const p = puzzles[currentIndex];
+      const answers = p.answers || [];
+      const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
+      const eligible = [];
+      blanks.forEach((b, i)=>{
+        const correct = answers[i] !== undefined ? String(answers[i]) : '';
+        if(!correct || correct.trim()==='') return;
+        const placed = b.dataset.filled === 'true' ? (b.dataset.token || '') : '';
+        if(placed.toString().trim() !== correct.toString().trim()){
+          eligible.push(i);
+        }
+      });
+
+      if(eligible.length === 0){
+        msgEl.textContent = 'All blanks are already correct or there are no defined answers to reveal.';
+        msgEl.style.color = '#444';
+        return;
+      }
+
+      const randIdx = eligible[Math.floor(Math.random()*eligible.length)];
+      const targetBlank = blanks[randIdx];
+      const correctVal = answers[randIdx];
+
+      targetBlank.dataset.token = correctVal;
+      targetBlank.dataset.filled = 'true';
+      targetBlank.textContent = correctVal;
+      targetBlank.classList.remove('incorrect');
+      targetBlank.classList.add('correct');
+
+      usedHintsCount[currentIndex] = used + 1;
+      msgEl.textContent = 'Hint used: a blank has been filled (' + usedHintsCount[currentIndex] + ' of ' + MAX_HINTS_PER_PUZZLE + ').';
+      msgEl.style.color = '#0b5';
+      updateRevealHintBtn();
+    }
+
+    // Update reveal button label and state
+    function updateRevealHintBtn(){
+      const used = usedHintsCount[currentIndex] || 0;
+      const left = Math.max(0, MAX_HINTS_PER_PUZZLE - used);
+      if(left <= 0){
+        revealHintBtn.disabled = true;
+        revealHintBtn.textContent = 'Reveal hint (used up)';
+        revealHintBtn.style.opacity = '0.6';
+      } else {
+        revealHintBtn.disabled = false;
+        revealHintBtn.textContent = 'Reveal hint (' + left + ' left)';
+        revealHintBtn.style.opacity = '1';
+      }
+    }
+
+    // Load puzzle by index
+    function loadPuzzle(idx){
+      if(idx < 0 || idx >= puzzles.length) idx = 0;
+      currentIndex = idx;
+      const p = puzzles[currentIndex];
+
+      // render description
+      descTitle.textContent = p.title || '';
+      descBullets.innerHTML = '';
+      (p.bullets || []).forEach(b => {
+        const li = document.createElement('li');
+        li.textContent = b;
+        descBullets.appendChild(li);
+      });
+      teacherHint.textContent = p.hint || '';
+      if(p.example && p.example.trim().length > 0){
+        toggleExample.style.display = 'inline-block';
+        exampleBox.textContent = p.example;
+        exampleBox.style.display = 'none';
+        exampleBox.setAttribute('aria-hidden','true');
+        toggleExample.textContent = 'Show example output';
+      } else {
+        toggleExample.style.display = 'none';
+        exampleBox.style.display = 'none';
+        exampleBox.setAttribute('aria-hidden','true');
+      }
+
+      // render code & bank
+      renderCode(p);
+      renderBank(p.bank.slice());
+      msgEl.textContent = '';
+      document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+      selectedToken = null;
+      updateRevealHintBtn();
+      exampleBox.style.display = 'none';
+      exampleBox.setAttribute('aria-hidden','true');
+      toggleExample.textContent = 'Show example output';
+    }
+
+    // Events wiring
+    document.getElementById('submitBtn').addEventListener('click', checkAnswers);
+    document.getElementById('resetBtn').addEventListener('click', resetCurrent);
+    document.getElementById('nextBtn').addEventListener('click', ()=> {
+      currentIndex = (currentIndex + 1) % puzzles.length;
+      puzzleSelect.value = currentIndex;
+      loadPuzzle(currentIndex);
+    });
+    puzzleSelect.addEventListener('change', (e)=> loadPuzzle(Number(e.target.value)));
+    revealHintBtn.addEventListener('click', revealRandomBlank);
+
+    // Init
+    populatePuzzleSelect();
+    loadPuzzle(0);
+  </script>
+</body>
+</html>

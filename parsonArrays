@@ -18,11 +18,12 @@
   .desc-title{font-weight:700;margin-bottom:6px;}
   .desc-list{margin:6px 0 0 18px;color:#123;}
   .example{font-family:monospace;background:#f3f9ff;padding:8px;border-radius:6px;border:1px solid #dbeeff;margin-top:8px;white-space:pre-wrap;}
-  .code-box{min-height:160px;border:2px dashed var(--border);background:#fff;padding:12px;border-radius:8px;display:flex;flex-direction:column;gap:8px;}
+  .code-box{min-height:160px;border:2px dashed var(--border);background:#fff;padding:12px;border-radius:8px;display:flex;flex-direction:column;gap:8px;position:relative}
   .block{user-select:none;padding:10px 12px;border-radius:8px;background:#f9fbff;border:1px solid #d0d9ef;cursor:grab;min-width:220px;box-shadow:0 1px 0 rgba(0,0,0,0.02);transition:transform .12s ease, background .18s;}
   .block.dragging{opacity:0.6;transform:scale(0.98);}
   .block.correct{background:var(--ok);border-color:#80d08a;}
   .block.incorrect{background:var(--bad);border-color:#f3a3a3;}
+  .placeholder{height:36px;border-radius:6px;border:2px dashed #cbd5e1;background:linear-gradient(90deg,#ffffff,#f7fbff);display:block;margin:4px 0}
   .controls{display:flex;gap:8px;align-items:center;margin-top:12px;}
   button{padding:8px 12px;border-radius:8px;border:0;font-weight:700;cursor:pointer;}
   .btn-primary{background:var(--accent);color:white;}
@@ -67,10 +68,10 @@
   </div>
 
 <script>
-/* Parsons Arrays — same interaction as other files.
-   - Text-based checker that accepts duplicate lines when the visible text matches the expected slot.
-   - Container-level dragover for accurate insert-before behavior.
-   - Reveal hint prefers matching-text blocks for duplicate lines.
+/* Parsons Arrays — enhancements requested:
+   1) require every NEXT to include the loop variable (e.g. NEXT i)
+   2) add a placeholder bar while dragging for extra clarity
+   3) remove all blank lines from puzzle data
 */
 
 const MAX_HINTS_PER_PUZZLE = 3;
@@ -85,7 +86,6 @@ const fullPuzzles = [
       "Names[1] ← \"Ali\"",
       "Names[2] ← \"Beth\"",
       "Names[3] ← \"Chen\"",
-      "",
       "OUTPUT Names[1], \", \", Names[2], \", \", Names[3]"
     ]
   },
@@ -96,8 +96,8 @@ const fullPuzzles = [
     lines: [
       "DECLARE Numbers : ARRAY[1:5] OF INTEGER",
       "FOR i ← 1 TO 5",
-      "    Numbers[i] ← i",
-      "NEXT"
+      "Numbers[i] ← i",
+      "NEXT i"
     ]
   },
   {
@@ -107,12 +107,11 @@ const fullPuzzles = [
     lines: [
       "DECLARE Numbers : ARRAY[1:5] OF INTEGER",
       "FOR i ← 1 TO 5",
-      "    Numbers[i] ← i * 2",
-      "NEXT",
-      "",
+      "Numbers[i] ← i * 2",
+      "NEXT i",
       "FOR i ← 1 TO 5",
-      "    OUTPUT Numbers[i]",
-      "NEXT"
+      "OUTPUT Numbers[i]",
+      "NEXT i"
     ]
   },
   {
@@ -122,13 +121,12 @@ const fullPuzzles = [
     lines: [
       "DECLARE Ages : ARRAY[1:3] OF INTEGER",
       "FOR i ← 1 TO 3",
-      "    INPUT Ages[i]",
-      "NEXT",
-      "",
+      "INPUT Ages[i]",
+      "NEXT i",
       "OUTPUT \"The ages entered are:\"",
       "FOR i ← 1 TO 3",
-      "    OUTPUT Ages[i]",
-      "NEXT"
+      "OUTPUT Ages[i]",
+      "NEXT i"
     ]
   },
   {
@@ -138,12 +136,10 @@ const fullPuzzles = [
     lines: [
       "DECLARE Marks : ARRAY[1:5] OF INTEGER",
       "Total ← 0",
-      "",
       "FOR i ← 1 TO 5",
-      "    INPUT Marks[i]",
-      "    Total ← Total + Marks[i]",
-      "NEXT",
-      "",
+      "INPUT Marks[i]",
+      "Total ← Total + Marks[i]",
+      "NEXT i",
       "OUTPUT \"Total marks = \", Total"
     ]
   },
@@ -154,12 +150,10 @@ const fullPuzzles = [
     lines: [
       "DECLARE Scores : ARRAY[1:4] OF REAL",
       "Total ← 0",
-      "",
       "FOR i ← 1 TO 4",
-      "    INPUT Scores[i]",
-      "    Total ← Total + Scores[i]",
-      "NEXT",
-      "",
+      "INPUT Scores[i]",
+      "Total ← Total + Scores[i]",
+      "NEXT i",
       "Average ← Total / 4",
       "OUTPUT \"Average score = \", Average"
     ]
@@ -171,16 +165,14 @@ const fullPuzzles = [
     lines: [
       "DECLARE Numbers : ARRAY[1:5] OF INTEGER",
       "FOR i ← 1 TO 5",
-      "    INPUT Numbers[i]",
-      "NEXT",
-      "",
+      "INPUT Numbers[i]",
+      "NEXT i",
       "Largest ← Numbers[1]",
       "FOR i ← 2 TO 5",
-      "    IF Numbers[i] > Largest THEN",
-      "        Largest ← Numbers[i]",
-      "    ENDIF",
-      "NEXT",
-      "",
+      "IF Numbers[i] > Largest THEN",
+      "Largest ← Numbers[i]",
+      "ENDIF",
+      "NEXT i",
       "OUTPUT \"The largest number is \", Largest"
     ]
   },
@@ -191,22 +183,19 @@ const fullPuzzles = [
     lines: [
       "DECLARE Names : ARRAY[1:4] OF STRING",
       "FOR i ← 1 TO 4",
-      "    INPUT Names[i]",
-      "NEXT",
-      "",
+      "INPUT Names[i]",
+      "NEXT i",
       "INPUT SearchName",
       "Found ← FALSE",
-      "",
       "FOR i ← 1 TO 4",
-      "    IF Names[i] = SearchName THEN",
-      "        Found ← TRUE",
-      "    ENDIF",
-      "NEXT",
-      "",
+      "IF Names[i] = SearchName THEN",
+      "Found ← TRUE",
+      "ENDIF",
+      "NEXT i",
       "IF Found = TRUE THEN",
-      "    OUTPUT \"Name found\"",
+      "OUTPUT \"Name found\"",
       "ELSE",
-      "    OUTPUT \"Name not found\"",
+      "OUTPUT \"Name not found\"",
       "ENDIF"
     ]
   },
@@ -217,15 +206,13 @@ const fullPuzzles = [
     lines: [
       "DECLARE Names : ARRAY[1:3] OF STRING",
       "DECLARE Ages : ARRAY[1:3] OF INTEGER",
-      "",
       "FOR i ← 1 TO 3",
-      "    INPUT Names[i]",
-      "    INPUT Ages[i]",
-      "NEXT",
-      "",
+      "INPUT Names[i]",
+      "INPUT Ages[i]",
+      "NEXT i",
       "FOR i ← 1 TO 3",
-      "    OUTPUT Names[i], \" is \", Ages[i], \" years old\"",
-      "NEXT"
+      "OUTPUT Names[i], \" is \", Ages[i], \" years old\"",
+      "NEXT i"
     ]
   },
   {
@@ -234,18 +221,16 @@ const fullPuzzles = [
     example: "Prints the 2x2 grid values in row-major order",
     lines: [
       "DECLARE Grid : ARRAY[1:2,1:2] OF INTEGER",
-      "",
       "FOR Row ← 1 TO 2",
-      "    FOR Column ← 1 TO 2",
-      "        INPUT Grid[Row,Column]",
-      "    NEXT Column",
+      "FOR Column ← 1 TO 2",
+      "INPUT Grid[Row,Column]",
+      "NEXT Column",
       "NEXT Row",
-      "",
       "OUTPUT \"The grid is:\"",
       "FOR Row ← 1 TO 2",
-      "    FOR Column ← 1 TO 2",
-      "        OUTPUT Grid[Row,Column]",
-      "    NEXT Column",
+      "FOR Column ← 1 TO 2",
+      "OUTPUT Grid[Row,Column]",
+      "NEXT Column",
       "NEXT Row"
     ]
   }
@@ -266,6 +251,7 @@ const messageEl = document.getElementById('message');
 let current = 0;
 let pickedBlock = null;
 const usedHintsCount = {}; // in-memory per puzzle
+let placeholder = null;
 
 function shuffleArray(arr){
   for(let i=arr.length-1;i>0;i--){
@@ -305,7 +291,7 @@ function renderDescription(idx){
 }
 
 function getDragAfterElement(container, y) {
-  const draggableElements = [...container.querySelectorAll('.block:not(.dragging)')];
+  const draggableElements = [...container.querySelectorAll('.block:not(.dragging):not(.placeholder)')];
   let closest = null;
   let closestOffset = Number.NEGATIVE_INFINITY;
   for (const el of draggableElements) {
@@ -327,6 +313,17 @@ function setNoSelect(on) {
     document.body.style.userSelect = '';
     document.body.style.webkitUserSelect = '';
   }
+}
+
+function ensurePlaceholder(){
+  if(!placeholder){
+    placeholder = document.createElement('div');
+    placeholder.className = 'placeholder';
+  }
+}
+
+function removePlaceholder(){
+  if(placeholder && placeholder.parentElement) placeholder.parentElement.removeChild(placeholder);
 }
 
 function buildCodeBox(idx){
@@ -354,6 +351,7 @@ function buildCodeBox(idx){
     el.addEventListener('dragend', () => {
       el.classList.remove('dragging');
       setNoSelect(false);
+      removePlaceholder();
     });
 
     el.addEventListener('click', onBlockClick);
@@ -386,7 +384,7 @@ function onBlockClick(e){
 function checkOrder(){
   const p = fullPuzzles[current];
   const expected = p.lines.map(s => s.trim());
-  const children = Array.from(codeBox.children);
+  const children = Array.from(codeBox.children).filter(c => !c.classList.contains('placeholder'));
   let allCorrect = true;
   children.forEach((c, i) => {
     const actual = c.textContent.trim();
@@ -416,7 +414,7 @@ function revealHint(){
   }
   const p = fullPuzzles[current];
   const expected = p.lines.map(s => s.trim());
-  const children = Array.from(codeBox.children);
+  const children = Array.from(codeBox.children).filter(c => !c.classList.contains('placeholder'));
 
   const wrongPositions = [];
   children.forEach((c, idx) => {
@@ -432,7 +430,7 @@ function revealHint(){
   const neededText = expected[targetPos];
   const candidate = children.find((c, idx) => idx !== targetPos && c.textContent.trim() === neededText);
   if(candidate){
-    const remaining = Array.from(codeBox.children).filter(n => n !== candidate);
+    const remaining = children.filter(n => n !== candidate);
     if(targetPos >= remaining.length) codeBox.appendChild(candidate);
     else codeBox.insertBefore(candidate, remaining[targetPos]);
     candidate.classList.remove('incorrect'); candidate.classList.add('correct');
@@ -456,7 +454,7 @@ function revealHint(){
   const choice = eligible[Math.floor(Math.random()*eligible.length)];
   const block = choice.el;
   const origPos = choice.orig;
-  const remaining = Array.from(codeBox.children).filter(n => n !== block);
+  const remaining = Array.from(codeBox.children).filter(n => n !== block && !n.classList.contains('placeholder'));
   if(origPos >= remaining.length) codeBox.appendChild(block);
   else codeBox.insertBefore(block, remaining[origPos]);
   block.classList.remove('incorrect'); block.classList.add('correct');
@@ -511,6 +509,8 @@ function init(){
   nextBtn.addEventListener('click', nextPuzzle);
   puzzleSelect.addEventListener('change', e => loadPuzzle(Number(e.target.value)));
 
+  ensurePlaceholder();
+
   codeBox.addEventListener('dragover', e => {
     e.preventDefault();
     const draggedId = e.dataTransfer.getData('text/plain');
@@ -518,13 +518,29 @@ function init(){
     const draggedEl = codeBox.querySelector(`[data-id="${draggedId}"]`);
     if (!draggedEl) return;
     const afterEl = getDragAfterElement(codeBox, e.clientY);
+    ensurePlaceholder();
+    removePlaceholder();
     if (afterEl == null) {
-      if (codeBox.lastElementChild !== draggedEl) codeBox.appendChild(draggedEl);
+      codeBox.appendChild(placeholder);
     } else {
-      if (afterEl !== draggedEl.previousElementSibling) codeBox.insertBefore(draggedEl, afterEl);
+      codeBox.insertBefore(placeholder, afterEl);
+    }
+
+    // physically move the dragged element to just before the placeholder for immediate visual feedback
+    if (placeholder.parentElement) {
+      const elems = Array.from(codeBox.children).filter(n => !n.classList.contains('placeholder'));
+      const idx = Array.from(codeBox.children).indexOf(placeholder);
+      if (idx >= 0) {
+        if (elems.indexOf(draggedEl) !== idx) {
+          const beforeNode = codeBox.children[idx + 1];
+          if (beforeNode && beforeNode !== draggedEl) codeBox.insertBefore(draggedEl, beforeNode);
+          else if (!beforeNode) codeBox.appendChild(draggedEl);
+        }
+      }
     }
   });
-  codeBox.addEventListener('drop', e => { e.preventDefault(); });
+
+  codeBox.addEventListener('drop', e => { e.preventDefault(); removePlaceholder(); });
 
   codeBox.addEventListener('keydown', (e) => {
     if(e.key === 'Enter' || e.key === ' '){

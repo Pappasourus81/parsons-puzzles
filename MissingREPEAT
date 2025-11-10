@@ -268,20 +268,10 @@
         lines: [
           "___1___",
           "INPUT ___2___",
-          "___3___ ___2___ ___4___ ___5___",
+          "___3___ ___4___ ___5___ ",
           "OUTPUT \"Access granted\""
         ],
-        // blanks order across the whole puzzle (numeric): 1=REPEAT,2=pw,3=UNTIL,4=pw,5==,6?"\"Secret\"" — but the line shows 4 placeholders after INPUT: ___3___ ___2___ ___4___ ___5___
-        // To match tokens in bank we will map blanks 1..5 as:
-        // 1 -> REPEAT
-        // 2 -> pw
-        // 3 -> UNTIL
-        // 4 -> pw
-        // 5 -> =
-        // 6 -> "Secret"
-        // But there are only 5 slots in answers; to avoid mismatch we'll provide answers as 1..5 = ["REPEAT","pw","UNTIL","pw","=","\"Secret\""]
-        // For compatibility with the checking code (which expects answers array length equal to highest blank index), we must make sure the array covers blanks 1..5 and include the final token as blank index 6 if present in lines.
-        // In our lines there are blanks numbered 1..5. The last blank (5) should be the string "\"Secret\"" — so we set answers accordingly:
+ 
         answers: ["REPEAT","pw","UNTIL","pw","=\"Secret\""],
         // bank includes a combined token '="Secret"' to match the answer above (keeps it straightforward)
         bank: ["REPEAT","UNTIL","INPUT","pw","=","\"Secret\"","OUTPUT","\"Access granted\"","0","-1"]

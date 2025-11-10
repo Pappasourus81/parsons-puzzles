@@ -288,16 +288,18 @@
   example: "Input 3 → prints ***. Input 0 → stops.",
   lines: [
     "___1___",
-    "INPUT \"Enter number of stars: \" ___2___",
+    "OUTPUT \"Enter number of stars\"",
+    "INPUT ___2___",
     "___3___ i = ___4___ TO ___5___ DO",
     "OUTPUT \"*\"",
     "NEXT i",
-    "___6___ ___2___ ___7___ ___8___ 0"
+    "___6___ ___2___ ___7___ ___8___ ___9___"
   ],
-  // blanks 1..8 mapping: 1=REPEAT,2=n,3=FOR,4=1,5=n,6=UNTIL,7=n,8==
-  answers: ["REPEAT","n","FOR","1","n","UNTIL","n","="],
+  // blanks mapping: 1=REPEAT, 2=n, 3=FOR, 4=1, 5=n, 6=UNTIL, 7=n, 8==, 9=0
+  answers: ["REPEAT","n","FOR","1","n","UNTIL","n","=","0"],
   bank: ["REPEAT","UNTIL","FOR","i","1","n","TO","DO","INPUT","OUTPUT","NEXT","=","0","\"*\"","MOD"]
 },
+
 
       // 10 REPEAT UNTIL with FOR Loop and Conditional Statement (even numbers 1..N)
       {

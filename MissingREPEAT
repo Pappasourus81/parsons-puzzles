@@ -337,6 +337,7 @@
   answers: ["REPEAT","N","FOR","1","N","MOD","2","=","UNTIL","N","=","0"],
   bank: ["REPEAT","UNTIL","FOR","i","1","N","MOD","2","=","INPUT","OUTPUT","NEXT","IF","ENDIF","0"]
 },
+];
 
 
     // DOM references

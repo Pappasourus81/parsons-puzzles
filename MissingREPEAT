@@ -250,7 +250,7 @@
           "OUTPUT count"
         ],
         // mapping blanks: 1=0,2=REPEAT,3=score,4=>,5=50,6=1,7=UNTIL,8=score,9==,10? Wait there are only 9 blanks in lines here (1..9). So answers should be:
-        // blanks 1..9 = ["0","REPEAT","score",">","50","1","UNTIL","score","=","-1"] — but we have 9 blanks; actually last element of original had 10 blanks. To match earlier working set, include answers 0..9 as:
+        // blanks 1..9 = ["0","REPEAT","score","score",">","50","1","UNTIL","score","=","-1"],
         answers: ["0","REPEAT","score","score",">","50","1","UNTIL","score","=","-1"],
         // we'll provide bank items (distractors kept reasonable)
         bank: ["REPEAT","UNTIL","score","count","0","1",">","50","=","-1","INPUT","OUTPUT","IF","ENDIF","+","MOD"]
@@ -272,7 +272,7 @@
           "OUTPUT \"Access granted\""
         ],
  
-        answers: ["REPEAT","pw","UNTIL","pw","=\"Secret\""],
+        answers: ["REPEAT","pw","UNTIL","pw","=","\"Secret\""],
         // bank includes a combined token '="Secret"' to match the answer above (keeps it straightforward)
         bank: ["REPEAT","UNTIL","INPUT","pw","=","\"Secret\"","OUTPUT","\"Access granted\"","0","-1"]
       },
@@ -288,7 +288,7 @@
         example: "Input 3 → prints ***. Input 0 → stops.",
         lines: [
           "___1___",
-          "INPUT ___2___",
+          "INPUT \"Enter number of stars: \" ___2___",
           "___3___ i = ___4___ TO ___5___ DO",
           "OUTPUT \"*\"",
           "NEXT i",

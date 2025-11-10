@@ -70,9 +70,10 @@
 /*
   Parsons shuffle-in-place page for REPEAT UNTIL puzzles.
   - Shuffled lines are placed inside the code box on load.
-  - Drag a block onto another to INSERT before it; or click one then another to swap.
+  - Drag a block onto another to INSERT before it.
+  - Click one block, then another, to INSERT the first before the second.
   - Submit marks blocks correct/incorrect (green/red).
-  - Reveal hint places a random incorrect block into its correct position; up to 3 hints per puzzle (in-session).
+  - Reveal hint places a random incorrect block into its correct position.
   - Reset reshuffles the current puzzle.
 */
 
@@ -303,7 +304,7 @@ function buildCodeBox(idx){
     el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
     el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
     
-    // Change drop logic from SWAP to INSERT-BEFORE
+    // Drop logic: INSERT-BEFORE
     el.addEventListener('drop', e => {
       e.preventDefault();
       const draggedOrig = e.dataTransfer.getData('text/plain');
@@ -319,7 +320,7 @@ function buildCodeBox(idx){
       el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:140});
     });
 
-    // click-to-swap support (click one block, then another to swap)
+    // click-to-move support
     el.addEventListener('click', onBlockClick);
     codeBox.appendChild(el);
   });
@@ -329,33 +330,31 @@ function buildCodeBox(idx){
   updateRevealHintBtn();
 }
 
-// click-to-swap handler
+// **MODIFICATION: Click logic is now INSERT-BEFORE, not SWAP**
 function onBlockClick(e){
-  const el = e.currentTarget;
+  const el = e.currentTarget; // This is the block that was clicked
+  
   if(!pickedBlock){
+    // FIRST CLICK: Select the block to move
     pickedBlock = el;
     el.style.outline = '3px solid rgba(5,104,214,0.18)';
     return;
   }
+  
   if(pickedBlock === el){
+    // CLICKED SAME BLOCK: Deselect
     pickedBlock.style.outline = '';
     pickedBlock = null;
     return;
   }
-  // Swap logic for click
-  const children = Array.from(codeBox.children);
-  const aIndex = children.indexOf(pickedBlock);
-  const bIndex = children.indexOf(el);
-  if(aIndex < 0 || bIndex < 0){
-    pickedBlock.style.outline = ''; pickedBlock = null; return;
-  }
-  if(aIndex < bIndex){
-    codeBox.insertBefore(pickedBlock, el.nextSibling);
-  } else {
-    codeBox.insertBefore(pickedBlock, el);
-  }
-  // visual
+
+  // SECOND CLICK: 'el' is the target. Insert 'pickedBlock' *before* 'el'.
+  codeBox.insertBefore(pickedBlock, el);
+  
+  // Animate the target block
   el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:120});
+  
+  // Reset state
   pickedBlock.style.outline = '';
   pickedBlock = null;
 }

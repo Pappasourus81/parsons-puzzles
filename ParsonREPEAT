@@ -1,326 +1,261 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>REPEAT UNTIL - Fill in the blanks</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Parsons — REPEAT UNTIL (Reorder mode)</title>
 <style>
   :root{
-    --bg:#ffffff; --accent:#0066cc; --ok:#d4f7d9; --bad:#ffd6d6;
-    --panel:#f8f9fb; --muted:#666; --token-border:#e0e6ef;
+    --bg:#f6f8fb; --card:#fff; --accent:#0568d6; --ok:#e6fbec; --bad:#ffecec;
+    --border:#dfe7f2; --muted:#556;
   }
-  body{ font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:18px; background:var(--bg); color:#111; }
-  h1{ margin:0 0 12px 0; font-size:20px; }
-  .meta{ color:#444; margin-bottom:12px; }
-  .panel{ background:var(--panel); padding:12px; border-radius:10px; margin-bottom:12px; }
-  .desc-box{ padding:10px; border-radius:8px; background:#fff; border:1px solid #d1d7df; margin-bottom:10px; white-space:normal; }
-  .desc-bullets{ margin:6px 0 8px 18px; color:#222; }
-  .hint{ margin-top:6px; font-style:italic; color:#374151; }
-  .example-box{ margin-top:8px; padding:8px; background:#f7fbff; border:1px solid #d9eefc; border-radius:6px; font-family: "Courier New", monospace; color:#0b3b66; display:none; white-space:pre-line; }
-  .code-area{ font-family: "Courier New", monospace; background:#fff; padding:10px; border-radius:8px; border:1px dashed #ccc; min-height:160px; }
-  .code-line{ padding:6px 4px; white-space:pre-wrap; border-radius:6px; }
-  .code-line.drag-over{ outline:2px dashed rgba(0,102,204,0.25); }
-  .code-line.dragging{ opacity:0.5; }
-  .blank{ display:inline-flex; align-items:center; justify-content:center; min-width:56px; padding:4px 8px; margin:0 4px; background:#f2f6fb; border-radius:4px; border:1px dashed #9fb8e6; cursor:pointer; outline:none; color:#111; font-weight:600; }
-  .blank.filled{ background:#fff; border-style:solid; border-color:var(--token-border); }
-  .blank.correct{ background:var(--ok); border-color:#2a9a4a; }
-  .blank.incorrect{ background:var(--bad); border-color:#c44; }
-  .bank{ display:flex; flex-wrap:wrap; gap:8px; padding:10px; margin-top:10px; background:transparent; }
-  .token{ background:#fff; border:1px solid var(--token-border); padding:6px 10px; border-radius:8px; cursor:grab; user-select:none; display:inline-flex; align-items:center; justify-content:center; min-width:40px; color:#111; font-weight:600; }
-  .token[aria-pressed="true"]{ outline:3px solid rgba(0,102,204,0.18); box-shadow:0 2px 6px rgba(0,0,0,0.06); }
-  .controls{ display:flex; gap:8px; margin-top:12px; align-items:center; }
-  button.action{ background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
-  button.secondary{ background:#666; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
-  .small{ padding:6px 10px; font-size:13px; border-radius:6px; }
-  #message{ margin-top:10px; font-weight:600; }
-  .keyboard-hint{ color:var(--muted); font-size:13px; margin-top:6px; }
-  @media (max-width:700px){ .bank{ gap:6px; } .blank{ min-width:44px; } .token{ min-width:32px; padding:6px 8px;} }
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); margin:20px; color:#122;}
+  .container{max-width:960px;margin:0 auto;}
+  header{display:flex;align-items:center;gap:16px;}
+  h1{margin:0;font-size:20px;}
+  .panel{background:var(--card);border:1px solid var(--border);padding:12px;border-radius:10px;margin-top:12px;}
+  .desc-box{border-radius:8px;padding:10px;border:1px solid #e2e8f0;background:#fff;margin-bottom:12px;}
+  .desc-title{font-weight:700;margin-bottom:6px;}
+  .desc-list{margin:6px 0 0 18px;color:#123;}
+  .example{font-family:monospace;background:#f3f9ff;padding:8px;border-radius:6px;border:1px solid #dbeeff;margin-top:8px;white-space:pre-wrap;}
+  .code-box{min-height:160px;border:2px dashed var(--border);background:#fff;padding:12px;border-radius:8px;display:flex;flex-direction:column;gap:8px;}
+  .block{user-select:none;padding:10px 12px;border-radius:8px;background:#f9fbff;border:1px solid #d0d9ef;cursor:grab;min-width:220px;box-shadow:0 1px 0 rgba(0,0,0,0.02);transition:transform .12s ease, background .18s;}
+  .block.dragging{opacity:0.6;transform:scale(0.98);}
+  .block.correct{background:var(--ok);border-color:#80d08a;}
+  .block.incorrect{background:var(--bad);border-color:#f3a3a3;}
+  .controls{display:flex;gap:8px;align-items:center;margin-top:12px;}
+  button{padding:8px 12px;border-radius:8px;border:0;font-weight:700;cursor:pointer;}
+  .btn-primary{background:var(--accent);color:white;}
+  .btn-secondary{background:#657; color:#fff; opacity:0.95}
+  .btn-ghost{background:#eef2f7;color:#223;border:1px solid #d6e0f4;}
+  select{padding:6px;border-radius:8px;border:1px solid #d7e0f5;}
+  #message{margin-top:10px;font-weight:700;color:#444;}
+  @media (max-width:700px){
+    .block{min-width:150px;}
+  }
 </style>
 </head>
 <body>
-  <h1>REPEAT UNTIL - Fill in the blanks</h1>
-  <div class="meta">Place the correct token into each blank. Use drag & drop, or keyboard: Tab to token → Enter to pick → Tab to blank → Enter to place. You can also drag whole lines to reorder them.</div>
+  <div class="container">
+    <header>
+      <h1>Parsons — REPEAT UNTIL (Reorder mode)</h1>
+    </header>
 
-  <div class="panel">
-    <div id="desc" class="desc-box">
-      <div id="descTitle" style="font-weight:700; margin-bottom:6px;">Select a puzzle to see its description</div>
-      <ul id="descBullets" class="desc-bullets"></ul>
-      <div id="teacherHint" class="hint"></div>
-      <div style="margin-top:8px;">
-        <button id="toggleExample" class="small">Show example output</button>
-        <button id="revealHintBtn" class="small" style="margin-left:8px;">Reveal hint (3 left)</button>
+    <div class="panel" id="puzzlePanel">
+      <div class="desc-box" id="descriptionBox">
+        <div class="desc-title" id="descTitle">Select a puzzle</div>
+        <ul class="desc-list" id="descBullets"></ul>
+        <div id="exampleBox" class="example" style="display:none;"></div>
       </div>
-      <div id="exampleBox" class="example-box" role="region" aria-hidden="true"></div>
-    </div>
 
-    <div class="code-area" id="codeArea" aria-live="polite"></div>
+      <div id="codeBox" class="code-box" aria-label="Scrambled code lines" tabindex="0"></div>
 
-    <div class="bank" id="bank" aria-label="token bank"></div>
-
-    <div class="keyboard-hint">Tip: click a token to select it, then click a blank to place it — or drag a token into a blank. You can also drag entire lines to reorder them.</div>
-
-    <div class="controls">
-      <button id="submitBtn" class="action">Submit</button>
-      <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
-      <button id="nextBtn" class="action">Next Puzzle</button>
-      <div style="margin-left:auto;">
-        <label style="font-size:13px;color:#333">Puzzle:
-          <select id="puzzleSelect" style="margin-left:8px; padding:6px; border-radius:6px;"></select>
-        </label>
+      <div class="controls" style="justify-content:flex-start;">
+        <button id="submitBtn" class="btn-primary">Submit</button>
+        <button id="revealHintBtn" class="btn-ghost">Reveal hint (3 left)</button>
+        <button id="resetBtn" class="btn-secondary">Reset (Reshuffle)</button>
+        <button id="nextBtn" class="btn-ghost">Next Puzzle</button>
+        <div style="margin-left:auto;">
+          <label> Puzzle:
+            <select id="puzzleSelect"></select>
+          </label>
+        </div>
       </div>
-    </div>
 
-    <div id="message" role="status"></div>
+      <div id="message"></div>
+    </div>
   </div>
 
 <script>
-/* Updated REPEAT UNTIL puzzle page - corrected syntax errors + safer example rendering */
+/*
+ Updated Parsons reorder page with requested changes:
+ 1) Example area now shows an "Expected Output" heading.
+ 2) Lines support dragging — drop inserts the dragged line at the drop position, pushing subsequent lines down.
+ 3) Assignment uses '<-' instead of '=' where the line is an assignment (not comparisons).
+ 4) Puzzle 6 (age) description rewritten to explain behaviour without showing code.
+ 5) Puzzle 7 wording uses "greater than 50" rather than the symbol.
+ 6) All puzzles that request input now include an OUTPUT prompt line before the INPUT.
+ 7) Puzzle 10 (the last puzzle) instructions no longer give code; they describe behaviour (use 'Loop through...').
+*/
 
 const MAX_HINTS_PER_PUZZLE = 3;
 
 const puzzles = [
-  // 1 Basic REPEAT UNTIL Output (warm-up)
   {
-    title: "Basic REPEAT UNTIL Output",
-    bullets: [
-      "No input — use REPEAT UNTIL to print numbers 1 to 5.",
-      "Each number should appear on its own line."
-    ],
-    hint: "Start i at 1; repeat output i and increment until the stop condition is met.",
+    title: "Count 1 to 5 with REPEAT UNTIL",
+    bullets: ["No input — print numbers 1 to 5, each on its own line."],
     example: "1\n2\n3\n4\n5",
     lines: [
-      "i <- ___1___",
-      "___2___",
+      "i <- 1",
+      "REPEAT",
       "OUTPUT i",
-      "i <- i + ___3___",
-      "UNTIL i ___4___ ___5___"
-    ],
-    answers: ["1","REPEAT","1",">","5"],
-    bank: ["REPEAT","UNTIL","i","1","2","3","4","5",">","+","OUTPUT"]
+      "i <- i + 1",
+      "UNTIL i > 5"
+    ]
   },
-
-  // 2 REPEAT UNTIL with Counter Variable 1..10
   {
-    title: "REPEAT UNTIL with Counter Variable",
-    bullets: [
-      "No input — count from 1 to 10 using a REPEAT UNTIL loop.",
-      "Use a counter variable that increases by 1 each time."
-    ],
-    hint: "Initialise counter to 1, increment by 1 each time, stop when counter exceeds 10.",
-    example: "1\n2\n3\n4\n5\n6\n7\n8\n9\n10",
+    title: "Count 1 to 10 with counter",
+    bullets: ["No input — loop from 1 to 10 using a counter variable."],
+    example: "1..10 (each on its own line)",
     lines: [
-      "count <- ___1___",
-      "___2___",
+      "count <- 1",
+      "REPEAT",
       "OUTPUT count",
-      "count <- count + ___3___",
-      "UNTIL count ___4___ ___5___"
-    ],
-    answers: ["1","REPEAT","1",">","10"],
-    bank: ["REPEAT","UNTIL","count","1","10","+","OUTPUT"]
+      "count <- count + 1",
+      "UNTIL count > 10"
+    ]
   },
-
-  // 3 REPEAT UNTIL with Input (stop when user enters 0)
   {
-    title: "REPEAT UNTIL with Input (stop on 0)",
-    bullets: [
-      "Prompt the user to enter numbers repeatedly.",
-      "Stop the loop only when the user enters 0."
-    ],
-    hint: "Use a variable (n). REPEAT: prompt and read n; stop when n equals 0.",
-    example: "If user enters 4,5,0 → loop stops when 0 entered.",
+    title: "Stop on zero (input)",
+    bullets: ["Ask the user for numbers repeatedly and stop when they enter 0."],
+    example: "Input: 4, 2, 0 → loop stops when 0 is entered.",
     lines: [
+      "REPEAT",
       "OUTPUT \"Enter a number (0 to stop)\"",
-      "___1___",
-      "INPUT ___2___",
-      "___3___ ___4___ ___5___ ___6___"
-    ],
-    answers: ["REPEAT","n","UNTIL","n","=","0"],
-    bank: ["REPEAT","UNTIL","INPUT","n","=","0","OUTPUT"]
+      "INPUT n",
+      "UNTIL n = 0"
+    ]
   },
-
-  // 4 REPEAT UNTIL with Input and Output (stop -1, output doubled)
   {
-    title: "REPEAT UNTIL with Input and Output (stop on -1)",
-    bullets: [
-      "Prompt the user to enter numbers and output each number doubled.",
-      "Stop when the user enters -1."
-    ],
-    hint: "Repeat asking for a value; if the value is not the sentinel, output twice that value; stop when sentinel entered.",
-    example: "Input 3 → Output 6. Input -1 → loop stops.",
+    title: "Double until -1 (input & output)",
+    bullets: ["Ask for numbers; output each doubled. Stop when the user enters -1."],
+    example: "Input 3 → Output 6; Input -1 → stop",
     lines: [
+      "REPEAT",
       "OUTPUT \"Enter a number (-1 to stop)\"",
-      "___1___",
-      "INPUT ___2___",
-      "IF ___2___ ___3___ ___4___",
-      "OUTPUT ___2___ ___5___ ___6___",
+      "INPUT v",
+      "IF v <> -1 THEN",
+      "OUTPUT v * 2",
       "ENDIF",
-      "___7___ ___2___ ___8___ ___9___"
-    ],
-    answers: ["REPEAT","val","<>","-1","*","2","UNTIL","val","=","-1"],
-    bank: ["REPEAT","UNTIL","val","INPUT","OUTPUT","<>","=","-1","*","2","IF","ENDIF"]
+      "UNTIL v = -1"
+    ]
   },
-
-  // 5 REPEAT UNTIL with Conditional Output (positive/negative; stop 0)
   {
-    title: "REPEAT UNTIL with Conditional Output",
-    bullets: [
-      "Ask for a number repeatedly and print whether it is positive or negative.",
-      "Stop when the user enters 0."
-    ],
-    hint: "After INPUT n, decide whether n is positive or negative and output the appropriate message; stop when the user enters 0.",
-    example: "Input 3 → Positive. Input -2 → Negative. Input 0 → stops.",
+    title: "Positive or negative (stop on 0)",
+    bullets: ["Ask for a number and print whether it's positive or negative; stop on 0."],
+    example: "Input 3 → 'Positive'; input -1 → 'Negative'; 0 → stop",
     lines: [
+      "REPEAT",
       "OUTPUT \"Enter a number (0 to stop)\"",
-      "___1___",
-      "INPUT ___2___",
-      "IF ___2___ ___3___ ___4___",
+      "INPUT n",
+      "IF n > 0 THEN",
       "OUTPUT \"Positive\"",
       "ELSE",
       "OUTPUT \"Negative\"",
       "ENDIF",
-      "___5___ ___2___ ___6___ ___7___"
-    ],
-    answers: ["REPEAT","n",">","0","UNTIL","n","=","0"],
-    bank: ["REPEAT","UNTIL","INPUT","n",">","0","IF","ELSE","OUTPUT","\"Positive\"","\"Negative\"","="]
+      "UNTIL n = 0"
+    ]
   },
-
-  // 6 REPEAT UNTIL with IF–ELSE (age check, stop -1)
   {
-    title: "REPEAT UNTIL with IF–ELSE (age check)",
+    title: "Age check (Adult/Child), stop with -1",
     bullets: [
-      "Prompt the user for age repeatedly.",
-      "Classify each entry as either 'Adult' or 'Child' and output the classification. Stop when the user enters -1."
+      // rewritten to avoid giving the implementation away
+      "Repeatedly ask for an age value.",
+      "For each entered age, output whether that person should be classified as an adult or a child.",
+      "A special sentinel value of -1 ends the loop."
     ],
-    hint: "Keep asking for an age; for each valid age output whether the person is an adult or a child; use -1 as the sentinel to finish.",
-    example: "Input 20 → Adult; input 12 → Child; -1 → stops.",
+    example: "Input 20 → 'Adult'; Input 12 → 'Child'; -1 → stop",
     lines: [
+      "REPEAT",
       "OUTPUT \"Enter age (-1 to stop)\"",
-      "___1___",
-      "INPUT ___2___",
-      "IF ___2___ ___3___ ___4___",
+      "INPUT age",
+      "IF age >= 18 THEN",
       "OUTPUT \"Adult\"",
       "ELSE",
       "OUTPUT \"Child\"",
       "ENDIF",
-      "___5___ ___2___ ___6___ ___7___"
-    ],
-    answers: ["REPEAT","age",">=","18","UNTIL","age","=","-1"],
-    bank: ["REPEAT","UNTIL","INPUT","age",">=","18","IF","ELSE","OUTPUT","\"Adult\"","\"Child\"","=","-1"]
+      "UNTIL age = -1"
+    ]
   },
-
-  // 7 REPEAT UNTIL Counting Condition (count scores greater than 50; stop -1)
   {
-    title: "REPEAT UNTIL Counting Condition",
-    bullets: [
-      "Ask the user to enter test scores repeatedly and count how many are greater than 50.",
-      "Stop when the user enters -1; then output the count."
-    ],
-    hint: "Initialise a counter to zero; for each entered score that is greater than 50 increment the counter; stop when the sentinel is entered.",
+    title: "Count scores greater than 50",
+    bullets: ["Keep a counter for scores greater than 50; stop on -1 and output the count."],
     example: "Inputs 55,40,60,-1 → Output: 2",
     lines: [
-      "count <- ___1___",
-      "___2___",
+      "count <- 0",
+      "REPEAT",
       "OUTPUT \"Enter score (-1 to stop)\"",
-      "INPUT ___3___",
-      "IF ___3___ ___4___ ___5___",
-      "count <- count + ___6___",
+      "INPUT score",
+      "IF score > 50 THEN",
+      "count <- count + 1",
       "ENDIF",
-      "___7___ ___3___ ___8___ ___9___",
+      "UNTIL score = -1",
       "OUTPUT count"
-    ],
-    answers: ["0","REPEAT","score",">","50","1","UNTIL","score","=","-1"],
-    bank: ["REPEAT","UNTIL","score","count","0","1",">","50","=","-1","INPUT","OUTPUT","IF","ENDIF","+"]
+    ]
   },
-
-  // 8 REPEAT UNTIL with Validation Check (password = "Secret")
   {
-    title: "REPEAT UNTIL with Validation Check",
-    bullets: [
-      "Ask the user for a password repeatedly until the correct password 'Secret' is entered.",
-      "When correct, output 'Access granted'."
-    ],
-    hint: "Keep asking for the password until the entered value matches the expected password; then indicate success.",
-    example: "Input 'x' → repeats; input 'Secret' → 'Access granted'.",
+    title: "Password check until correct",
+    bullets: ["Ask for a password until user enters \"Secret\"; then print Access granted."],
+    example: "Input 'Secret' → 'Access granted'",
     lines: [
+      "REPEAT",
       "OUTPUT \"Enter password\"",
-      "___1___",
-      "INPUT ___2___",
-      "___3___ ___2___ ___4___ ___5___",
+      "INPUT pw",
+      "UNTIL pw = \"Secret\"",
       "OUTPUT \"Access granted\""
-    ],
-    answers: ["REPEAT","pw","UNTIL","pw","=\"Secret\""],
-    bank: ["REPEAT","UNTIL","INPUT","pw","=","\"Secret\"","OUTPUT","\"Access granted\""]
+    ]
   },
-
-  // 9 REPEAT UNTIL with Nested FOR Loop (ask # stars; stop 0)
   {
-    title: "REPEAT UNTIL with Nested FOR Loop",
-    bullets: [
-      "Repeat asking how many stars to print. Use a FOR loop to print that many '*' characters.",
-      "Stop when the user enters 0."
-    ],
-    hint: "Repeat asking for a number n; inside the repeat use a FOR loop to output n stars; stop when n is 0.",
-    example: "Input 3 → prints ***. Input 0 → stops.",
+    title: "Print stars per request (nested FOR)",
+    bullets: ["Ask how many stars to print; use an inner loop to print that many stars. Stop when user enters 0."],
+    example: "Input 3 → prints *** ; Input 0 → stop",
     lines: [
-      "___1___",
+      "REPEAT",
       "OUTPUT \"How many stars (0 to stop)\"",
-      "INPUT ___2___",
-      "___3___ i = ___4___ TO ___5___ DO",
+      "INPUT n",
+      "FOR i = 1 TO n DO",
       "OUTPUT \"*\"",
       "NEXT i",
-      "___6___ ___2___ ___7___ ___8___"
-    ],
-    answers: ["REPEAT","n","FOR","1","n","UNTIL","n","=","0"],
-    bank: ["REPEAT","UNTIL","FOR","i","1","n","TO","DO","INPUT","OUTPUT","NEXT","=","0","\"*\""]
+      "UNTIL n = 0"
+    ]
   },
-
-  // 10 REPEAT UNTIL with FOR Loop and Conditional Statement (even numbers 1..N)
   {
-    title: "REPEAT UNTIL with FOR Loop and Conditional Statement",
+    title: "Print even numbers 1..N (REPEAT + inner loop)",
     bullets: [
-      "Ask the user to enter a number N repeatedly. Loop through 1..N and output only the even numbers.",
-      "Stop when the user enters 0."
+      // changed to avoid explicit code wording
+      "Repeatedly ask the user for a number N.",
+      "Loop through the integers from 1 to N and output only those that are even.",
+      "A sentinel value of 0 ends the whole process."
     ],
-    hint: "Repeat asking for N; inside the repeat iterate from 1 to N and output numbers that are even; stop when the sentinel 0 is entered.",
-    example: "Input 5 → outputs 2 and 4. Input 0 → stops.",
+    example: "Input 5 → outputs 2 and 4 ; Input 0 → stop",
     lines: [
-      "___1___",
+      "REPEAT",
       "OUTPUT \"Enter N (0 to stop)\"",
-      "INPUT ___2___",
-      "___3___ i = ___4___ TO ___5___ DO",
-      "IF i ___6___ ___7___ ___8___",
+      "INPUT N",
+      "FOR i = 1 TO N DO",
+      "IF i MOD 2 = 0 THEN",
       "OUTPUT i",
       "ENDIF",
       "NEXT i",
-      "___9___ ___2___ ___10___ ___11___"
-    ],
-    answers: ["REPEAT","N","FOR","1","N","MOD","2","=","UNTIL","N","=","0"],
-    bank: ["REPEAT","UNTIL","FOR","i","1","N","MOD","2","=","INPUT","OUTPUT","NEXT","IF","ENDIF","0"]
+      "UNTIL N = 0"
+    ]
   }
 ];
 
 // DOM refs
-const bankEl = document.getElementById('bank');
-const codeArea = document.getElementById('codeArea');
+const codeBox = document.getElementById('codeBox');
 const descTitle = document.getElementById('descTitle');
 const descBullets = document.getElementById('descBullets');
-const teacherHint = document.getElementById('teacherHint');
-const toggleExample = document.getElementById('toggleExample');
-const revealHintBtn = document.getElementById('revealHintBtn');
 const exampleBox = document.getElementById('exampleBox');
-const msgEl = document.getElementById('message');
 const puzzleSelect = document.getElementById('puzzleSelect');
+const submitBtn = document.getElementById('submitBtn');
+const revealHintBtn = document.getElementById('revealHintBtn');
+const resetBtn = document.getElementById('resetBtn');
+const nextBtn = document.getElementById('nextBtn');
+const messageEl = document.getElementById('message');
 
-let currentIndex = 0;
-let selectedToken = null;
-const usedHintsCount = {};
+let current = 0;
+let pickedBlock = null;
+const usedHintsCount = {}; // in-memory per puzzle
 
-function shuffleArray(a){
-  for(let i=a.length-1;i>0;i--){
+// shuffle helper
+function shuffleArray(arr){
+  for(let i=arr.length-1;i>0;i--){
     const j = Math.floor(Math.random()*(i+1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
 }
+
 function populatePuzzleSelect(){
   puzzleSelect.innerHTML = '';
   puzzles.forEach((p,i)=>{
@@ -332,261 +267,219 @@ function populatePuzzleSelect(){
   puzzleSelect.value = 0;
 }
 
-// Render safe example (heading + pre)
-function renderDescription(p){
-  descTitle.textContent = p.title || '';
+// render description (and Expected Output heading)
+function renderDescription(idx){
+  const p = puzzles[idx];
+  descTitle.textContent = p.title;
   descBullets.innerHTML = '';
-  (p.bullets || []).forEach(b => {
+  p.bullets.forEach(b=>{
     const li = document.createElement('li');
     li.textContent = b;
     descBullets.appendChild(li);
   });
-  teacherHint.textContent = p.hint || '';
-  if(p.example && p.example.trim().length > 0){
-    toggleExample.style.display = 'inline-block';
-    // safe render: create heading + pre and set textContent for example
-    exampleBox.innerHTML = ''; // clear
-    const h = document.createElement('div');
-    h.style.fontWeight = '700';
-    h.textContent = 'Expected Output';
+  if(p.example && p.example.trim() !== ''){
+    exampleBox.style.display = 'block';
+    // create heading + pre (safe)
+    exampleBox.innerHTML = '';
+    const head = document.createElement('div');
+    head.style.fontWeight = '700';
+    head.textContent = 'Expected Output';
     const pre = document.createElement('pre');
     pre.style.marginTop = '8px';
     pre.style.whiteSpace = 'pre-wrap';
     pre.textContent = p.example;
-    exampleBox.appendChild(h);
+    exampleBox.appendChild(head);
     exampleBox.appendChild(pre);
-    exampleBox.style.display = 'none';
-    exampleBox.setAttribute('aria-hidden','true');
-    toggleExample.textContent = 'Show example output';
   } else {
-    toggleExample.style.display = 'none';
     exampleBox.style.display = 'none';
-    exampleBox.setAttribute('aria-hidden','true');
+    exampleBox.innerHTML = '';
   }
   updateRevealHintBtn();
 }
 
-toggleExample.addEventListener('click', ()=>{
-  const visible = exampleBox.style.display !== 'none';
-  if(visible){
-    exampleBox.style.display = 'none';
-    exampleBox.setAttribute('aria-hidden','true');
-    toggleExample.textContent = 'Show example output';
-  } else {
-    exampleBox.style.display = 'block';
-    exampleBox.setAttribute('aria-hidden','false');
-    toggleExample.textContent = 'Hide example output';
-  }
-});
+// build code box with scrambled lines; drag inserts at drop position (pushes down)
+function buildCodeBox(idx){
+  codeBox.innerHTML = '';
+  const p = puzzles[idx];
+  const items = p.lines.map((line, i) => ({line, idx:i}));
+  const shuffled = items.slice();
+  shuffleArray(shuffled);
+  shuffled.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'block';
+    el.draggable = true;
+    el.tabIndex = 0;
+    el.dataset.origIndex = String(item.idx); // correct position index
+    el.textContent = item.line;
 
-// Render code with blanks and make lines draggable/reorderable
-function renderCode(puzzle){
-  codeArea.innerHTML = '';
-  puzzle.lines.forEach((line, lineIndex)=>{
-    const lineDiv = document.createElement('div');
-    lineDiv.className = 'code-line';
-    lineDiv.draggable = true;
-    lineDiv.dataset.lineIndex = lineIndex;
+    // dragstart
+    el.addEventListener('dragstart', e => {
+      el.classList.add('dragging');
+      // store id of dragged element (use a unique id: use current time + random if needed)
+      // we'll store a reference by using a data key (origIndex + a random stamp) to avoid collisions
+      // but origIndex is unique per puzzle lines so it's okay here.
+      e.dataTransfer.setData('text/plain', el.dataset.origIndex);
+      e.dataTransfer.effectAllowed = 'move';
+    });
 
-    // drag handlers for reordering lines
-    lineDiv.addEventListener('dragstart', (e)=>{
-      e.dataTransfer.setData('text/line', String(lineIndex));
-      lineDiv.classList.add('dragging');
-    });
-    lineDiv.addEventListener('dragend', ()=>{
-      lineDiv.classList.remove('dragging');
-      document.querySelectorAll('.code-line.drag-over').forEach(x=>x.classList.remove('drag-over'));
-    });
-    lineDiv.addEventListener('dragover', (e)=>{ e.preventDefault(); lineDiv.classList.add('drag-over'); });
-    lineDiv.addEventListener('dragleave', ()=> lineDiv.classList.remove('drag-over'));
-    lineDiv.addEventListener('drop', (e)=>{
+    el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
+
+    // allow dropping onto a block to insert dragged element at that spot
+    el.addEventListener('dragover', e => {
       e.preventDefault();
-      lineDiv.classList.remove('drag-over');
-      const dragged = e.dataTransfer.getData('text/line');
-      if(dragged){
-        const draggedIdx = Number(dragged);
-        const targetIdx = Number(lineDiv.dataset.lineIndex);
-        if(draggedIdx === targetIdx) return;
-        const draggedEl = codeArea.querySelector(`.code-line[data-line-index="${draggedIdx}"]`);
-        if(!draggedEl) return;
-        if(draggedIdx < targetIdx){
-          lineDiv.parentNode.insertBefore(draggedEl, lineDiv.nextSibling);
-        } else {
-          lineDiv.parentNode.insertBefore(draggedEl, lineDiv);
-        }
-        Array.from(codeArea.children).forEach((child, idx)=> child.dataset.lineIndex = idx);
+      e.dataTransfer.dropEffect = 'move';
+    });
+
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      const draggedOrig = e.dataTransfer.getData('text/plain');
+      // find the dragged element by dataset.origIndex among current children
+      const children = Array.from(codeBox.children);
+      const draggedEl = children.find(c => c.dataset.origIndex === String(draggedOrig) && c !== el);
+      if(!draggedEl) return;
+      // When dropping, insert the dragged element *before* the target element
+      // so the dragged element becomes the position of the target, pushing the target and subsequent lines down.
+      // To achieve intuitive behaviour, if the dragged element came from above the drop target we will insert after the target
+      // (so it appears to move 'down' onto the target). Otherwise insert before.
+      const currentChildren = Array.from(codeBox.children);
+      const a = currentChildren.indexOf(draggedEl);
+      const b = currentChildren.indexOf(el);
+      if(a < 0 || b < 0) return;
+
+      if(a < b){
+        // dragged from above -> insert after target so it lands below the target
+        codeBox.insertBefore(draggedEl, el.nextSibling);
+      } else {
+        // dragged from below -> insert before target
+        codeBox.insertBefore(draggedEl, el);
       }
+
+      // quick visual nudge
+      el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:140});
     });
 
-    // build line contents safely (text nodes + blanks)
-    let last = 0;
-    const re = /___(\d+)___/g;
-    let m;
-    while((m = re.exec(line)) !== null){
-      const idx = m.index;
-      const before = line.slice(last, idx);
-      if(before) lineDiv.appendChild(document.createTextNode(before));
-      const num = m[1];
-      const span = document.createElement('button');
-      span.type = 'button';
-      span.className = 'blank';
-      span.dataset.blank = num;
-      span.dataset.filled = 'false';
-      span.dataset.token = '';
-      span.textContent = `___${num}___`;
-      // drag & drop tokens into blanks
-      span.addEventListener('dragover', e => { e.preventDefault(); span.classList.add('dragover'); });
-      span.addEventListener('dragleave', ()=> span.classList.remove('dragover'));
-      span.addEventListener('drop', e => {
-        e.preventDefault();
-        span.classList.remove('dragover');
-        const tok = e.dataTransfer.getData('text/plain');
-        if(tok) placeTokenInBlank(tok, span);
-      });
-      // click / keyboard
-      span.addEventListener('click', ()=> { if(selectedToken) placeTokenInBlank(selectedToken.val, span); });
-      span.addEventListener('keydown', (e)=> { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); if(selectedToken) placeTokenInBlank(selectedToken.val, span); }});
-      lineDiv.appendChild(span);
-      last = re.lastIndex;
-    }
-    const rest = line.slice(last);
-    if(rest) lineDiv.appendChild(document.createTextNode(rest));
-    codeArea.appendChild(lineDiv);
+    // click-to-swap support (click one block, then another to move the picked block to that place)
+    el.addEventListener('click', onBlockClick);
+
+    codeBox.appendChild(el);
   });
-}
 
-// Render token bank
-function renderBank(tokens){
-  bankEl.innerHTML = '';
-  const arr = tokens.slice();
-  shuffleArray(arr);
-  arr.forEach(tok=>{
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'token';
-    b.textContent = tok;
-    b.setAttribute('aria-pressed','false');
-    b.draggable = true;
-    b.tabIndex = 0;
-    b.addEventListener('click', ()=> toggleSelectToken(b, tok));
-    b.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggleSelectToken(b,tok); }});
-    b.addEventListener('dragstart', (e)=>{
-      e.dataTransfer.setData('text/plain', tok);
-    });
-    bankEl.appendChild(b);
-  });
-}
-
-// Select token (keyboard support)
-function toggleSelectToken(el, val){
-  if(selectedToken && selectedToken.el === el){
-    el.setAttribute('aria-pressed','false'); selectedToken = null; return;
-  }
-  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
-  el.setAttribute('aria-pressed','true');
-  selectedToken = {el, val};
-}
-
-// Place token into blank — tokens are reusable
-function placeTokenInBlank(tokenValue, blankEl){
-  if(!blankEl) return;
-  blankEl.dataset.token = tokenValue;
-  blankEl.dataset.filled = 'true';
-  blankEl.textContent = tokenValue;
-  blankEl.classList.add('filled');
-  // clear token selection
-  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
-  selectedToken = null;
-}
-
-// Reset current puzzle (clear blanks, reshuffle bank)
-function resetCurrent(){
-  const p = puzzles[currentIndex];
-  document.querySelectorAll('.blank').forEach(b=>{
-    b.dataset.filled = 'false';
-    b.dataset.token = '';
-    b.classList.remove('filled','correct','incorrect');
-    b.textContent = `___${b.dataset.blank}___`;
-  });
-  renderBank(p.bank.slice());
-  msgEl.textContent = '';
-  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
-  selectedToken = null;
+  // clear message and styling
+  messageEl.textContent = '';
+  Array.from(codeBox.children).forEach(c => c.classList.remove('correct','incorrect'));
+  if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
   updateRevealHintBtn();
-  exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
 }
 
-// Check answers
-function checkAnswers(){
-  const p = puzzles[currentIndex];
-  const answers = p.answers || [];
-  const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
+// click-to-swap handler: click one block (picked), click another to move the picked block to that position
+function onBlockClick(e){
+  const el = e.currentTarget;
+  if(!pickedBlock){
+    pickedBlock = el;
+    el.style.outline = '3px solid rgba(5,104,214,0.18)';
+    return;
+  }
+  if(pickedBlock === el){
+    pickedBlock.style.outline = '';
+    pickedBlock = null;
+    return;
+  }
+  const children = Array.from(codeBox.children);
+  const aIndex = children.indexOf(pickedBlock);
+  const bIndex = children.indexOf(el);
+  if(aIndex < 0 || bIndex < 0){
+    pickedBlock.style.outline = ''; pickedBlock = null; return;
+  }
+  // Move pickedBlock to just before the clicked block (so it pushes it down)
+  if(aIndex < bIndex){
+    // if picked is above target, insert after target to make the movement feel like replacement
+    codeBox.insertBefore(pickedBlock, el.nextSibling);
+  } else {
+    codeBox.insertBefore(pickedBlock, el);
+  }
+  pickedBlock.style.outline = '';
+  pickedBlock = null;
+  el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:120});
+}
+
+// check order (mark correct/incorrect). A block is correct if its original index equals its current index.
+function checkOrder(){
+  const p = puzzles[current];
+  const children = Array.from(codeBox.children);
   let allCorrect = true;
-  blanks.forEach((b, i)=>{
-    const placed = b.dataset.filled === 'true' ? b.dataset.token : '';
-    const correct = answers[i] !== undefined ? String(answers[i]) : '';
-    if(correct === '' || correct === undefined) {
-      b.classList.remove('correct','incorrect'); // not checked
-      return;
-    }
-    const placedTrim = placed !== null ? placed.toString().trim() : '';
-    const correctTrim = correct.toString().trim();
-    if(placedTrim === correctTrim){
-      b.classList.remove('incorrect'); b.classList.add('correct');
+  children.forEach((c, i) => {
+    const correctIdx = Number(c.dataset.origIndex);
+    if(correctIdx === i){
+      c.classList.remove('incorrect'); c.classList.add('correct');
     } else {
-      b.classList.remove('correct'); b.classList.add('incorrect');
+      c.classList.remove('correct'); c.classList.add('incorrect');
       allCorrect = false;
     }
   });
   if(allCorrect){
-    msgEl.textContent = 'All correct! Well done 🎉'; msgEl.style.color = '#1a7f3a';
+    messageEl.textContent = 'All correct — great job!';
+    messageEl.style.color = '#0b7';
   } else {
-    msgEl.textContent = 'Some blanks are incorrect — incorrect blanks are highlighted.'; msgEl.style.color = '#a00';
+    messageEl.textContent = 'Some lines are in the wrong order. Incorrect blocks are highlighted.';
+    messageEl.style.color = '#b33';
   }
 }
 
-// Reveal a random eligible blank (up to MAX_HINTS_PER_PUZZLE)
-function revealRandomBlank(){
-  const used = usedHintsCount[currentIndex] || 0;
+// Reset = reshuffle current puzzle (keep hint counts)
+function resetPuzzle(){
+  buildCodeBox(current);
+  messageEl.textContent = '';
+}
+
+// Next puzzle
+function nextPuzzle(){
+  current = (current + 1) % puzzles.length;
+  puzzleSelect.value = current;
+  loadPuzzle(current);
+}
+
+// Reveal hint: place one random incorrect block into its correct position
+function revealHint(){
+  const used = usedHintsCount[current] || 0;
   if(used >= MAX_HINTS_PER_PUZZLE){
-    msgEl.textContent = `No hints left for this puzzle (max ${MAX_HINTS_PER_PUZZLE}).`;
-    msgEl.style.color = '#a00';
+    messageEl.textContent = `No hints left for this puzzle (max ${MAX_HINTS_PER_PUZZLE}).`;
+    messageEl.style.color = '#a00';
     updateRevealHintBtn();
     return;
   }
-  const p = puzzles[currentIndex];
-  const answers = p.answers || [];
-  const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
+  const children = Array.from(codeBox.children);
   const eligible = [];
-  blanks.forEach((b, i)=>{
-    const correct = answers[i] !== undefined ? String(answers[i]) : '';
-    if(!correct || correct.trim()==='') return;
-    const placed = b.dataset.filled === 'true' ? (b.dataset.token || '') : '';
-    if(placed.toString().trim() !== correct.toString().trim()){
-      eligible.push(i);
-    }
+  children.forEach((c, idx) => {
+    const orig = Number(c.dataset.origIndex);
+    if(orig !== idx) eligible.push({el:c, orig});
   });
   if(eligible.length === 0){
-    msgEl.textContent = 'All blanks are already correct or there are no defined answers to reveal.';
-    msgEl.style.color = '#444';
+    messageEl.textContent = 'All lines are already correct.';
+    messageEl.style.color = '#444';
     return;
   }
-  const randIdx = eligible[Math.floor(Math.random()*eligible.length)];
-  const targetBlank = blanks[randIdx];
-  const correctVal = answers[randIdx];
-  targetBlank.dataset.token = correctVal;
-  targetBlank.dataset.filled = 'true';
-  targetBlank.textContent = correctVal;
-  targetBlank.classList.remove('incorrect'); targetBlank.classList.add('correct');
-  usedHintsCount[currentIndex] = used + 1;
-  msgEl.textContent = `Hint used: a blank has been filled (${usedHintsCount[currentIndex]} of ${MAX_HINTS_PER_PUZZLE}).`;
-  msgEl.style.color = '#0b5';
+  const choice = eligible[Math.floor(Math.random()*eligible.length)];
+  const block = choice.el;
+  const targetPos = choice.orig;
+
+  // remove block from DOM and insert at the correct position
+  const remaining = Array.from(codeBox.children).filter(n => n !== block);
+  if(targetPos >= remaining.length){
+    codeBox.appendChild(block);
+  } else {
+    codeBox.insertBefore(block, remaining[targetPos]);
+  }
+
+  block.classList.remove('incorrect'); block.classList.add('correct');
+  usedHintsCount[current] = used + 1;
+  messageEl.textContent = `Hint used: one line placed correctly (${usedHintsCount[current]} of ${MAX_HINTS_PER_PUZZLE}).`;
+  messageEl.style.color = '#0b5';
   updateRevealHintBtn();
 }
 
-// Update reveal button label and state
+// update hint button label and disabled state
 function updateRevealHintBtn(){
-  const used = usedHintsCount[currentIndex] || 0;
+  const used = usedHintsCount[current] || 0;
   const left = Math.max(0, MAX_HINTS_PER_PUZZLE - used);
   if(left <= 0){
     revealHintBtn.disabled = true;
@@ -599,64 +492,39 @@ function updateRevealHintBtn(){
   }
 }
 
-// Load puzzle by index
+// load puzzle by index
 function loadPuzzle(idx){
-  if(idx < 0 || idx >= puzzles.length) idx = 0;
-  currentIndex = idx;
-  const p = puzzles[currentIndex];
-  // render description
-  descTitle.textContent = p.title || '';
-  descBullets.innerHTML = '';
-  (p.bullets || []).forEach(b => {
-    const li = document.createElement('li');
-    li.textContent = b;
-    descBullets.appendChild(li);
-  });
-  teacherHint.textContent = p.hint || '';
-  if(p.example && p.example.trim().length > 0){
-    toggleExample.style.display = 'inline-block';
-    exampleBox.innerHTML = '';
-    const h = document.createElement('div');
-    h.style.fontWeight = '700';
-    h.textContent = 'Expected Output';
-    const pre = document.createElement('pre');
-    pre.style.marginTop = '8px';
-    pre.style.whiteSpace = 'pre-wrap';
-    pre.textContent = p.example;
-    exampleBox.appendChild(h);
-    exampleBox.appendChild(pre);
-    exampleBox.style.display = 'none';
-    exampleBox.setAttribute('aria-hidden','true');
-    toggleExample.textContent = 'Show example output';
-  } else {
-    toggleExample.style.display = 'none';
-    exampleBox.style.display = 'none';
-    exampleBox.setAttribute('aria-hidden','true');
-  }
-  // render code & bank
-  renderCode(p);
-  renderBank(p.bank.slice());
-  msgEl.textContent = '';
-  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
-  selectedToken = null;
-  updateRevealHintBtn();
-  exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
+  current = idx;
+  puzzleSelect.value = idx;
+  renderDescription(idx);
+  buildCodeBox(idx);
+  messageEl.textContent = '';
+  if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
 }
 
-// Events wiring
-document.getElementById('submitBtn').addEventListener('click', checkAnswers);
-document.getElementById('resetBtn').addEventListener('click', resetCurrent);
-document.getElementById('nextBtn').addEventListener('click', ()=> {
-  currentIndex = (currentIndex + 1) % puzzles.length;
-  puzzleSelect.value = currentIndex;
-  loadPuzzle(currentIndex);
-});
-puzzleSelect.addEventListener('change', (e)=> loadPuzzle(Number(e.target.value)));
-revealHintBtn.addEventListener('click', revealRandomBlank);
+// init
+function init(){
+  populatePuzzleSelect();
+  renderDescription(0);
+  buildCodeBox(0);
+  // wire events
+  submitBtn.addEventListener('click', checkOrder);
+  revealHintBtn.addEventListener('click', revealHint);
+  resetBtn.addEventListener('click', resetPuzzle);
+  nextBtn.addEventListener('click', nextPuzzle);
+  puzzleSelect.addEventListener('change', e => loadPuzzle(Number(e.target.value)));
+  // accessibility: pressing Enter on the code container focuses the first block
+  codeBox.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      const first = codeBox.querySelector('.block');
+      if(first) first.focus();
+    }
+  });
+  updateRevealHintBtn();
+}
 
-// Init
-populatePuzzleSelect();
-loadPuzzle(0);
+init();
 
 </script>
 </body>

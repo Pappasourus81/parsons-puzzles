@@ -164,17 +164,17 @@
           "Prompt the user to enter numbers and output each number doubled.",
           "Stop when the user enters -1."
         ],
-        hint: "REPEAT: INPUT val; if val <> -1 OUTPUT val * 2; UNTIL val = -1.",
+        hint: "REPEAT: INPUT val; if val is not equal to -1 PRINT val * 2; STOP when val = -1.",
         example: "Input 3 → Output 6. Input -1 → loop stops.",
         lines: [
           "___1___",
           "INPUT ___2___",
-          "IF ___2___ ___3___ ___4___",
+          "IF ___2___ ___3___ ___4___ THEN",
           "OUTPUT ___2___ ___5___ ___6___",
           "ENDIF",
           "___7___ ___2___ ___8___ ___9___"
         ],
-        answers: ["REPEAT","val","<>","-1","*","2","UNTIL","val","=","-1"],
+        answers: ["REPEAT","val","val","<>","-1","val","*","2","UNTIL","val","=","-1"],
         bank: ["REPEAT","UNTIL","val","INPUT","OUTPUT","<>","=","-1","*","2","IF","ENDIF"]
       },
 

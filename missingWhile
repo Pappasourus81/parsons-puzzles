@@ -118,7 +118,7 @@ const puzzles = [
     bank: ["WHILE","ENDWHILE","n","1","10","2","<=",">","<","<>","+","OUTPUT"]
   },
 
-  // 3 WHILE Loop Taking Input (fixed - unique blanks)
+    // 3 WHILE Loop Taking Input (fixed — unique blanks)
   {
     title: "WHILE Loop Taking Input",
     bullets: [
@@ -129,20 +129,22 @@ const puzzles = [
     lines: [
       "INPUT ___1___",
       "___2___ ___3___ ___4___ ___5___ ___6___",
-      "INPUT ___1___",
-      "___7___"
+      "INPUT ___7___",
+      "___8___"
     ],
     // blanks mapping:
-    // 1 = x (input variable used twice)
+    // 1 = x (first INPUT variable)
     // 2 = WHILE
     // 3 = x
     // 4 = <>
     // 5 = 0
     // 6 = DO
-    // 7 = ENDWHILE
-    answers: ["x","WHILE","x","<>","0","DO","X","ENDWHILE"],
-    bank: ["WHILE","ENDWHILE","INPUT","x","=","<>","0","DO","<",">","OUTPUT"]
+    // 7 = x (second INPUT variable)
+    // 8 = ENDWHILE
+    answers: ["x","WHILE","x","<>","0","DO","x","ENDWHILE"],
+    bank: ["INPUT","WHILE","ENDWHILE","x","<>","0","DO","<",">","OUTPUT","="]
   },
+
 
   // 4 WHILE Loop with Input and Output (stop -1, doubled)
   {

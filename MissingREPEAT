@@ -1,35 +1,316 @@
-// 10 REPEAT UNTIL with FOR Loop and Conditional Statement (even numbers 1..N)
-{
-  title: "REPEAT UNTIL with FOR Loop and Conditional Statement",
-  bullets: [
-    "Ask the user to enter a number N repeatedly. Inside the REPEAT loop use a FOR loop to go 1..N and OUTPUT only the even numbers.",
-    "Stop when the user enters 0."
-  ],
-  hint: "Ask for N, then use a FOR loop from 1 to N. Check if each i is even using MOD, and output only even numbers. Stop when N = 0.",
-  example: "Input 5 → outputs 2 and 4. Input 0 → stops.",
-  lines: [
-    "___1___",
-    "INPUT ___2___",
-    "___3___ i = ___4___ TO ___5___ DO",
-    "IF i ___6___ ___7___ ___8___ 0 THEN",
-    "OUTPUT i",
-    "ENDIF",
-    "NEXT i",
-    "___9___ ___10___ ___11___ ___12___"
-  ],
-  // blanks mapping:
-  // 1 = REPEAT
-  // 2 = N
-  // 3 = FOR
-  // 4 = 1
-  // 5 = N
-  // 6 = MOD
-  // 7 = 2
-  // 8 = =
-  // 9 = UNTIL
-  // 10 = N
-  // 11 = =
-  // 12 = 0
-  answers: ["REPEAT","N","FOR","1","N","MOD","2","=","UNTIL","N","=","0"],
-  bank: ["REPEAT","UNTIL","FOR","i","1","N","MOD","2","=","INPUT","OUTPUT","NEXT","IF","ENDIF","0"]
-},
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>REPEAT UNTIL - Fill in the blanks</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --accent:#0066cc;
+      --ok:#d4f7d9;
+      --bad:#ffd6d6;
+      --panel:#f8f9fb;
+      --muted:#666;
+      --token-border:#e0e6ef;
+    }
+    body{
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin:18px;
+      background:var(--bg);
+      color:#111;
+    }
+    h1{ margin:0 0 12px 0; font-size:20px; }
+    .meta{ color:#444; margin-bottom:12px; }
+    .panel{ background:var(--panel); padding:12px; border-radius:10px; margin-bottom:12px; }
+    .desc-box{ padding:10px; border-radius:8px; background:#fff; border:1px solid #d1d7df; margin-bottom:10px; white-space:normal; }
+    .desc-bullets{ margin:6px 0 8px 18px; color:#222; }
+    .hint{ margin-top:6px; font-style:italic; color:#374151; }
+    .example-box{ margin-top:8px; padding:8px; background:#f7fbff; border:1px solid #d9eefc; border-radius:6px; font-family: "Courier New", monospace; color:#0b3b66; display:none; white-space:pre-line; }
+    .code-area{ font-family: "Courier New", monospace; background:#fff; padding:10px; border-radius:8px; border:1px dashed #ccc; min-height:160px; }
+    .code-line{ padding:6px 4px; white-space:pre-wrap; }
+    .blank{ display:inline-flex; align-items:center; justify-content:center; min-width:56px; padding:4px 8px; margin:0 4px; background:#f2f6fb; border-radius:4px; border:1px dashed #9fb8e6; cursor:pointer; outline:none; color:#111; font-weight:600; }
+    .blank.filled{ background:#fff; border-style:solid; border-color:var(--token-border); }
+    .blank.correct{ background:var(--ok); border-color:#2a9a4a; }
+    .blank.incorrect{ background:var(--bad); border-color:#c44; }
+    .bank{ display:flex; flex-wrap:wrap; gap:8px; padding:10px; margin-top:10px; background:transparent; }
+    .token{ background:#fff; border:1px solid var(--token-border); padding:6px 10px; border-radius:8px; cursor:grab; user-select:none; display:inline-flex; align-items:center; justify-content:center; min-width:40px; color:#111; font-weight:600; }
+    .token[aria-pressed="true"]{ outline:3px solid rgba(0,102,204,0.18); box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+    .controls{ display:flex; gap:8px; margin-top:12px; align-items:center; }
+    button.action{ background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+    button.secondary{ background:#666; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+    .small{ padding:6px 10px; font-size:13px; border-radius:6px; }
+    #message{ margin-top:10px; font-weight:600; }
+    .keyboard-hint{ color:var(--muted); font-size:13px; margin-top:6px; }
+    @media (max-width:700px){
+      .bank{ gap:6px; }
+      .blank{ min-width:44px; }
+      .token{ min-width:32px; padding:6px 8px;}
+    }
+  </style>
+</head>
+<body>
+  <h1>REPEAT UNTIL - Fill in the blanks</h1>
+  <div class="meta">Place the correct token into each blank. Use drag & drop, or keyboard: Tab to token → Enter to pick → Tab to blank → Enter to place.</div>
+
+  <div class="panel">
+    <div id="desc" class="desc-box">
+      <div id="descTitle" style="font-weight:700; margin-bottom:6px;">Select a puzzle to see its description</div>
+      <ul id="descBullets" class="desc-bullets"></ul>
+      <div id="teacherHint" class="hint"></div>
+
+      <div style="margin-top:8px;">
+        <button id="toggleExample" class="small">Show example output</button>
+        <button id="revealHintBtn" class="small" style="margin-left:8px;">Reveal hint (3 left)</button>
+      </div>
+      <div id="exampleBox" class="example-box" role="region" aria-hidden="true"></div>
+    </div>
+
+    <div class="code-area" id="codeArea" aria-live="polite"></div>
+    <div class="bank" id="bank" aria-label="token bank"></div>
+
+    <div class="keyboard-hint">Tip: click a token to select it, then click a blank to place it.</div>
+
+    <div class="controls">
+      <button id="submitBtn" class="action">Submit</button>
+      <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
+      <button id="nextBtn" class="action">Next Puzzle</button>
+
+      <div style="margin-left:auto;">
+        <label style="font-size:13px;color:#333">Puzzle:
+          <select id="puzzleSelect" style="margin-left:8px; padding:6px; border-radius:6px;"></select>
+        </label>
+      </div>
+    </div>
+
+    <div id="message" role="status"></div>
+  </div>
+
+  <script>
+    const MAX_HINTS_PER_PUZZLE = 3;
+
+    const puzzles = [
+      {
+        title: "Basic REPEAT UNTIL Output",
+        bullets: [
+          "No input — use a REPEAT UNTIL loop to print 1 through 5.",
+          "Each number should appear on its own line."
+        ],
+        hint: "Start at 1 and print each number, increasing by 1 until you have printed 5.",
+        example: "1\n2\n3\n4\n5",
+        lines: [
+          "i = ___1___",
+          "___2___",
+          "OUTPUT i",
+          "i = i + ___3___",
+          "UNTIL i ___4___ ___5___"
+        ],
+        answers: ["1","REPEAT","1",">","5"],
+        bank: ["REPEAT","UNTIL","i","1","2","3","4","5",">","+","OUTPUT","0","10","-1","IF"]
+      },
+      {
+        title: "REPEAT UNTIL with Counter Variable",
+        bullets: [
+          "No input — count from 1 to 10 using a REPEAT UNTIL loop.",
+          "Use a counter variable that increases by 1 each time."
+        ],
+        hint: "Initialize a counter to 1 and keep increasing by 1 until you have outputted 10.",
+        example: "1\n2\n3\n4\n5\n6\n7\n8\n9\n10",
+        lines: [
+          "count = ___1___",
+          "___2___",
+          "OUTPUT count",
+          "count = count + ___3___",
+          "UNTIL count ___4___ ___5___"
+        ],
+        answers: ["1","REPEAT","1",">","10"],
+        bank: ["REPEAT","UNTIL","count","1","10","+","OUTPUT",">","0","-1","MOD"]
+      },
+      {
+        title: "REPEAT UNTIL with Input (stop on 0)",
+        bullets: [
+          "Prompt the user to enter numbers repeatedly.",
+          "Stop the loop only when the user enters 0."
+        ],
+        hint: "Prompt for a number each time and end the loop when the entered number equals zero.",
+        example: "If user enters 4,5,0 → loop stops when 0 entered.",
+        lines: [
+          "___1___",
+          "INPUT ___2___",
+          "___3___ ___4___ ___5___ ___6___"
+        ],
+        answers: ["REPEAT","n","UNTIL","n","=","0"],
+        bank: ["REPEAT","UNTIL","INPUT","n","=","0","OUTPUT","1","-1","count"]
+      },
+      {
+        title: "REPEAT UNTIL with Input and Output (stop on -1)",
+        bullets: [
+          "Prompt the user to enter numbers and output each number doubled.",
+          "Stop when the user enters -1."
+        ],
+        hint: "Keep asking for numbers; for each non-sentinel number output twice its value; stop when sentinel entered.",
+        example: "Input 3 → Output 6. Input -1 → loop stops.",
+        lines: [
+          "___1___",
+          "INPUT ___2___",
+          "IF ___3___ ___4___ ___5___",
+          "OUTPUT ___6___ ___7___ ___8___",
+          "ENDIF",
+          "___9___ ___10___ ___11___ ___12___"
+        ],
+        answers: ["REPEAT","val","val","<>","-1","val","*","2","UNTIL","val","=","-1"],
+        bank: ["REPEAT","UNTIL","val","INPUT","OUTPUT","<>","=","-1","*","2","IF","ENDIF","0","1","MOD"]
+      },
+      {
+        title: "REPEAT UNTIL with Conditional Output",
+        bullets: [
+          "Ask for a number repeatedly and print whether it is positive or negative.",
+          "Stop when the user enters 0."
+        ],
+        hint: "After each input, decide if it is positive or negative and print the appropriate label; stop on zero.",
+        example: "Input 3 → Positive. Input -2 → Negative. Input 0 → stops.",
+        lines: [
+          "___1___",
+          "INPUT ___2___",
+          "IF ___3___ ___4___ ___5___ THEN",
+          "OUTPUT \"Positive\"",
+          "ELSE",
+          "OUTPUT \"Negative\"",
+          "ENDIF",
+          "___6___ ___7___ ___8___ ___9___"
+        ],
+        answers: ["REPEAT","n","n",">","0","UNTIL","n","=","0"],
+        bank: ["REPEAT","UNTIL","INPUT","n",">","0","IF","ELSE","OUTPUT","\"Positive\"","\"Negative\"","=","<","-1","MOD"]
+      },
+      {
+        title: "REPEAT UNTIL with IF–ELSE (age check)",
+        bullets: [
+          "Repeatedly ask the user to enter their age.",
+          "If the age is greater than or equal to 18, print \"Adult\", otherwise print \"Child\". Stop when -1 is entered."
+        ],
+        hint: "Repeatedly ask the user to enter their age. If the age is greater than or equal to 18, print \"Adult\", otherwise print \"Child\". Stop when -1 is entered.",
+        example: "Input 20 → Adult; input 12 → Child; -1 → stops.",
+        lines: [
+          "___1___",
+          "INPUT ___2___",
+          "IF ___3___ ___4___ ___5___ THEN",
+          "OUTPUT \"Adult\"",
+          "ELSE",
+          "OUTPUT \"Child\"",
+          "ENDIF",
+          "___6___ ___7___ ___8___ ___9___"
+        ],
+        answers: ["REPEAT","age","age",">=","18","UNTIL","age","=","-1"],
+        bank: ["REPEAT","UNTIL","INPUT","age",">=","18","IF","ELSE","OUTPUT","\"Adult\"","\"Child\"","=","-1","0","1","<"]
+      },
+      {
+        title: "REPEAT UNTIL Counting Condition",
+        bullets: [
+          "Ask the user to enter test scores repeatedly and count how many are above 50.",
+          "Stop when the user enters -1; then output the count."
+        ],
+        hint: "Keep a counter that you increment for each score above fifty; end when the sentinel is entered and print the counter.",
+        example: "Inputs 55,40,60,-1 → Output: 2",
+        lines: [
+          "count = ___1___",
+          "___2___",
+          "INPUT ___3___",
+          "IF ___4___ ___5___ ___6___ THEN",
+          "count = count + ___7___",
+          "ENDIF",
+          "___8___ ___9___ ___10___ ___11___",
+          "OUTPUT count"
+        ],
+        answers: ["0","REPEAT","score","score",">","50","1","UNTIL","score","=","-1"],
+        bank: ["REPEAT","UNTIL","score","count","0","1",">","50","=","-1","INPUT","OUTPUT","IF","ENDIF","+"]
+      },
+      {
+        title: "REPEAT UNTIL with Validation Check",
+        bullets: [
+          "Ask the user for a password repeatedly until the correct password 'Secret' is entered.",
+          "When correct, output 'Access granted'."
+        ],
+        hint: "Ask for a password repeatedly and stop only when the correct passphrase is supplied; then show access granted.",
+        example: "Input 'x' → repeats; input 'Secret' → 'Access granted'.",
+        lines: [
+          "___1___",
+          "INPUT ___2___",
+          "___3___ ___4___ ___5___ ___6___",
+          "OUTPUT \"Access granted\""
+        ],
+        answers: ["REPEAT","pw","UNTIL","pw","=","\"Secret\""],
+        bank: ["REPEAT","UNTIL","INPUT","pw","=","\"Secret\"","OUTPUT","\"Access granted\"","0","-1"]
+      },
+      {
+        title: "REPEAT UNTIL with Nested FOR Loop",
+        bullets: [
+          "Repeat asking how many stars to print. Use a FOR loop to print that many '*' characters.",
+          "Stop when the user enters 0."
+        ],
+        hint: "Ask for a number and then use an inner counted loop to print that many stars; stop when the entered number is zero.",
+        example: "Input 3 → prints ***. Input 0 → stops.",
+        lines: [
+          "___1___",
+          "OUTPUT \"Enter number of stars\"",
+          "INPUT ___2___",
+          "___3___ i = ___4___ TO ___5___ DO",
+          "OUTPUT \"*\"",
+          "NEXT i",
+          "___6___ ___7___ ___8___ ___9___"
+        ],
+        answers: ["REPEAT","n","FOR","1","n","UNTIL","n","=","0"],
+        bank: ["REPEAT","UNTIL","FOR","i","1","n","TO","DO","INPUT","OUTPUT","NEXT","=","0","\"*\"","MOD"]
+      },
+      {
+        title: "REPEAT UNTIL with FOR Loop and Conditional Statement",
+        bullets: [
+          "Ask the user to enter a number N repeatedly. Inside the REPEAT loop use a FOR loop to go 1..N and OUTPUT only the even numbers.",
+          "Stop when the user enters 0."
+        ],
+        hint: "Ask for N, then use a FOR loop from 1 to N. Check if each i is even using MOD, and output only even numbers. Stop when N = 0.",
+        example: "Input 5 → outputs 2 and 4. Input 0 → stops.",
+        lines: [
+          "___1___",
+          "INPUT ___2___",
+          "___3___ i = ___4___ TO ___5___ DO",
+          "IF i ___6___ ___7___ ___8___ 0 THEN",
+          "OUTPUT i",
+          "ENDIF",
+          "NEXT i",
+          "___9___ ___10___ ___11___ ___12___"
+        ],
+        answers: ["REPEAT","N","FOR","1","N","MOD","2","=","UNTIL","N","=","0"],
+        bank: ["REPEAT","UNTIL","FOR","i","1","N","MOD","2","=","INPUT","OUTPUT","NEXT","IF","ENDIF","0"]
+      }
+    ];
+
+    // --- Game Logic Below ---
+    const bankEl = document.getElementById('bank');
+    const codeArea = document.getElementById('codeArea');
+    const descTitle = document.getElementById('descTitle');
+    const descBullets = document.getElementById('descBullets');
+    const teacherHint = document.getElementById('teacherHint');
+    const toggleExample = document.getElementById('toggleExample');
+    const revealHintBtn = document.getElementById('revealHintBtn');
+    const exampleBox = document.getElementById('exampleBox');
+    const msgEl = document.getElementById('message');
+    const puzzleSelect = document.getElementById('puzzleSelect');
+    let currentIndex = 0, selectedToken = null;
+    const usedHintsCount = {};
+
+    function shuffleArray(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
+    function populatePuzzleSelect(){
+      puzzleSelect.innerHTML='';
+      puzzles.forEach((p,i)=>{
+        const opt=document.createElement('option');
+        opt.value=i;
+        opt.textContent=(i+1)+'. '+p.title;
+        puzzleSelect.appendChild(opt);
+      });
+      puzzleSelect.value=0;
+    }
+
+    function renderCode(puzzle){
+      codeArea.innerHTML='';
+      puzzle.lines.forEach(line=>{
+        const lineDiv=document.create

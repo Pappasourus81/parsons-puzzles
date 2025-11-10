@@ -210,23 +210,30 @@ const fullPuzzles = [
     ]
   },
   {
-    title: "Students and subjects (nested WHILE)",
-    bullets: ["Outer loop over students, inner loop over subjects to input marks."],
-    example: "Prompts for Student 1 Subject 1, Student 1 Subject 2 ... up to 3 students, 2 subjects each.",
-    lines: [
-      "Student ← 1",
-      "WHILE Student <= 3 DO",
-      "Subject ← 1",
-      "WHILE Subject <= 2 DO",
-      "OUTPUT \"Enter mark for Student \", Student, \" Subject \", Subject",
-      "INPUT Mark",
-      "Subject ← Subject + 1",
-      "ENDWHILE",
-      "Student ← Student + 1",
-      "ENDWHILE",
-      "OUTPUT \"All marks entered\""
-    ]
-  }
+  title: "Nested WHILE loops for student marks",
+  bullets: [
+    "This program uses two WHILE loops — one inside the other.",
+    "The outer WHILE loop repeats for each student (3 students in total).",
+    "The inner WHILE loop repeats for each subject (2 subjects per student).",
+    "For every subject of every student, ask the user to enter a mark.",
+    "After all marks are entered, print 'All marks entered'."
+  ],
+  example: "Expected sequence:\nStudent 1 Subject 1 → input mark\nStudent 1 Subject 2 → input mark\nStudent 2 Subject 1 → input mark\nStudent 2 Subject 2 → input mark\nStudent 3 Subject 1 → input mark\nStudent 3 Subject 2 → input mark\nThen: All marks entered",
+  lines: [
+    "Student ← 1",
+    "WHILE Student <= 3 DO",
+    "Subject ← 1",
+    "WHILE Subject <= 2 DO",
+    "OUTPUT \"Enter mark for Student \", Student, \" Subject \", Subject",
+    "INPUT Mark",
+    "Subject ← Subject + 1",
+    "ENDWHILE",
+    "Student ← Student + 1",
+    "ENDWHILE",
+    "OUTPUT \"All marks entered\""
+  ]
+}
+
 ];
 // (END FULL PUZZLES ARRAY)
 

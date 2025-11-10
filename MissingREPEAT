@@ -185,7 +185,7 @@
           "Ask for a number repeatedly and print whether it is positive or negative.",
           "Stop when the user enters 0."
         ],
-        hint: "After INPUT n, use IF n > 0 THEN OUTPUT \"Positive\" ELSE OUTPUT \"Negative\". Stop when n = 0.",
+        hint: "After entering n, check if n is greater than 0, and  print \"Positive\" , otherwise print \"Negative\". Stop when n is equal to 0.",
         example: "Input 3 → Positive. Input -2 → Negative. Input 0 → stops.",
         lines: [
           "___1___",

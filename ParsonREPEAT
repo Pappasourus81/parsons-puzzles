@@ -68,14 +68,9 @@
 
 <script>
 /*
- Updated Parsons reorder page with requested changes:
- 1) Example area now shows an "Expected Output" heading.
- 2) Lines support dragging — drop inserts the dragged line at the drop position, pushing subsequent lines down.
- 3) Assignment uses '<-' instead of '=' where the line is an assignment (not comparisons).
- 4) Puzzle 6 (age) description rewritten to explain behaviour without showing code.
- 5) Puzzle 7 wording uses "greater than 50" rather than the symbol.
- 6) All puzzles that request input now include an OUTPUT prompt line before the INPUT.
- 7) Puzzle 10 (the last puzzle) instructions no longer give code; they describe behaviour (use 'Loop through...').
+ Updated Parsons reorder page:
+ - assignment arrow uses actual left arrow '←'
+ - enhanced drag & drop: you can drop between lines or on lines; drop inserts the dragged line at that place and pushes subsequent lines down.
 */
 
 const MAX_HINTS_PER_PUZZLE = 3;
@@ -86,10 +81,10 @@ const puzzles = [
     bullets: ["No input — print numbers 1 to 5, each on its own line."],
     example: "1\n2\n3\n4\n5",
     lines: [
-      "i <- 1",
+      "i ← 1",
       "REPEAT",
       "OUTPUT i",
-      "i <- i + 1",
+      "i ← i + 1",
       "UNTIL i > 5"
     ]
   },
@@ -98,10 +93,10 @@ const puzzles = [
     bullets: ["No input — loop from 1 to 10 using a counter variable."],
     example: "1..10 (each on its own line)",
     lines: [
-      "count <- 1",
+      "count ← 1",
       "REPEAT",
       "OUTPUT count",
-      "count <- count + 1",
+      "count ← count + 1",
       "UNTIL count > 10"
     ]
   },
@@ -149,7 +144,6 @@ const puzzles = [
   {
     title: "Age check (Adult/Child), stop with -1",
     bullets: [
-      // rewritten to avoid giving the implementation away
       "Repeatedly ask for an age value.",
       "For each entered age, output whether that person should be classified as an adult or a child.",
       "A special sentinel value of -1 ends the loop."
@@ -172,12 +166,12 @@ const puzzles = [
     bullets: ["Keep a counter for scores greater than 50; stop on -1 and output the count."],
     example: "Inputs 55,40,60,-1 → Output: 2",
     lines: [
-      "count <- 0",
+      "count ← 0",
       "REPEAT",
       "OUTPUT \"Enter score (-1 to stop)\"",
       "INPUT score",
       "IF score > 50 THEN",
-      "count <- count + 1",
+      "count ← count + 1",
       "ENDIF",
       "UNTIL score = -1",
       "OUTPUT count"
@@ -212,7 +206,6 @@ const puzzles = [
   {
     title: "Print even numbers 1..N (REPEAT + inner loop)",
     bullets: [
-      // changed to avoid explicit code wording
       "Repeatedly ask the user for a number N.",
       "Loop through the integers from 1 to N and output only those that are even.",
       "A sentinel value of 0 ends the whole process."
@@ -248,7 +241,6 @@ let current = 0;
 let pickedBlock = null;
 const usedHintsCount = {}; // in-memory per puzzle
 
-// shuffle helper
 function shuffleArray(arr){
   for(let i=arr.length-1;i>0;i--){
     const j = Math.floor(Math.random()*(i+1));
@@ -267,7 +259,6 @@ function populatePuzzleSelect(){
   puzzleSelect.value = 0;
 }
 
-// render description (and Expected Output heading)
 function renderDescription(idx){
   const p = puzzles[idx];
   descTitle.textContent = p.title;
@@ -279,7 +270,6 @@ function renderDescription(idx){
   });
   if(p.example && p.example.trim() !== ''){
     exampleBox.style.display = 'block';
-    // create heading + pre (safe)
     exampleBox.innerHTML = '';
     const head = document.createElement('div');
     head.style.fontWeight = '700';
@@ -297,81 +287,102 @@ function renderDescription(idx){
   updateRevealHintBtn();
 }
 
-// build code box with scrambled lines; drag inserts at drop position (pushes down)
+// build code box and wire DnD: container drop computes insertion point by mouse Y
 function buildCodeBox(idx){
   codeBox.innerHTML = '';
   const p = puzzles[idx];
   const items = p.lines.map((line, i) => ({line, idx:i}));
   const shuffled = items.slice();
   shuffleArray(shuffled);
+
   shuffled.forEach(item => {
     const el = document.createElement('div');
     el.className = 'block';
     el.draggable = true;
     el.tabIndex = 0;
-    el.dataset.origIndex = String(item.idx); // correct position index
+    el.dataset.origIndex = String(item.idx);
     el.textContent = item.line;
 
-    // dragstart
     el.addEventListener('dragstart', e => {
       el.classList.add('dragging');
-      // store id of dragged element (use a unique id: use current time + random if needed)
-      // we'll store a reference by using a data key (origIndex + a random stamp) to avoid collisions
-      // but origIndex is unique per puzzle lines so it's okay here.
       e.dataTransfer.setData('text/plain', el.dataset.origIndex);
       e.dataTransfer.effectAllowed = 'move';
     });
-
     el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
 
-    // allow dropping onto a block to insert dragged element at that spot
-    el.addEventListener('dragover', e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-    });
-
+    // keep per-block dragover/drop to provide drop visual on the block itself
+    el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
     el.addEventListener('drop', e => {
       e.preventDefault();
-      const draggedOrig = e.dataTransfer.getData('text/plain');
-      // find the dragged element by dataset.origIndex among current children
-      const children = Array.from(codeBox.children);
-      const draggedEl = children.find(c => c.dataset.origIndex === String(draggedOrig) && c !== el);
-      if(!draggedEl) return;
-      // When dropping, insert the dragged element *before* the target element
-      // so the dragged element becomes the position of the target, pushing the target and subsequent lines down.
-      // To achieve intuitive behaviour, if the dragged element came from above the drop target we will insert after the target
-      // (so it appears to move 'down' onto the target). Otherwise insert before.
-      const currentChildren = Array.from(codeBox.children);
-      const a = currentChildren.indexOf(draggedEl);
-      const b = currentChildren.indexOf(el);
-      if(a < 0 || b < 0) return;
-
-      if(a < b){
-        // dragged from above -> insert after target so it lands below the target
-        codeBox.insertBefore(draggedEl, el.nextSibling);
-      } else {
-        // dragged from below -> insert before target
-        codeBox.insertBefore(draggedEl, el);
-      }
-
-      // quick visual nudge
-      el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:140});
+      // delegate to container drop logic for consistent behavior
+      handleContainerDrop(e);
     });
 
-    // click-to-swap support (click one block, then another to move the picked block to that place)
     el.addEventListener('click', onBlockClick);
-
     codeBox.appendChild(el);
   });
 
-  // clear message and styling
+  // container-level dragover & drop allow dropping between elements based on mouse Y
+  codeBox.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+  codeBox.addEventListener('drop', handleContainerDrop);
+
   messageEl.textContent = '';
   Array.from(codeBox.children).forEach(c => c.classList.remove('correct','incorrect'));
   if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
   updateRevealHintBtn();
 }
 
-// click-to-swap handler: click one block (picked), click another to move the picked block to that position
+// compute insertion and move dragged element there
+function handleContainerDrop(e){
+  e.preventDefault();
+  const draggedOrig = e.dataTransfer.getData('text/plain');
+  if(!draggedOrig) return;
+
+  // find the dragged element among current children
+  const children = Array.from(codeBox.children);
+  const draggedEl = children.find(c => c.dataset.origIndex === String(draggedOrig) && c.classList.contains('dragging'));
+  // If dragging class isn't present (different browsers), also accept by dataset match even if not dragging
+  const draggedElFallback = children.find(c => c.dataset.origIndex === String(draggedOrig));
+  const dragged = draggedEl || draggedElFallback;
+  if(!dragged) return;
+
+  // determine insertion index by mouse position relative to children
+  const rect = codeBox.getBoundingClientRect();
+  const y = (e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY)) || 0;
+
+  // build list of children excluding the dragged element (we'll reinsert)
+  const remaining = children.filter(c => c !== dragged);
+
+  let insertBeforeNode = null;
+  for(let i=0;i<remaining.length;i++){
+    const node = remaining[i];
+    const r = node.getBoundingClientRect();
+    const mid = r.top + r.height/2;
+    if(y < mid){
+      insertBeforeNode = node;
+      break;
+    }
+  }
+
+  // remove dragged from DOM if present
+  if(dragged.parentNode === codeBox) {
+    codeBox.removeChild(dragged);
+  }
+
+  // insert at computed position (before insertBeforeNode or at end)
+  if(insertBeforeNode){
+    codeBox.insertBefore(dragged, insertBeforeNode);
+  } else {
+    codeBox.appendChild(dragged);
+  }
+
+  // small visual nudge on nearby node
+  if(insertBeforeNode) insertBeforeNode.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:140});
+
+  // clear dragging class
+  dragged.classList.remove('dragging');
+}
+
 function onBlockClick(e){
   const el = e.currentTarget;
   if(!pickedBlock){
@@ -390,9 +401,7 @@ function onBlockClick(e){
   if(aIndex < 0 || bIndex < 0){
     pickedBlock.style.outline = ''; pickedBlock = null; return;
   }
-  // Move pickedBlock to just before the clicked block (so it pushes it down)
   if(aIndex < bIndex){
-    // if picked is above target, insert after target to make the movement feel like replacement
     codeBox.insertBefore(pickedBlock, el.nextSibling);
   } else {
     codeBox.insertBefore(pickedBlock, el);
@@ -402,9 +411,7 @@ function onBlockClick(e){
   el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:120});
 }
 
-// check order (mark correct/incorrect). A block is correct if its original index equals its current index.
 function checkOrder(){
-  const p = puzzles[current];
   const children = Array.from(codeBox.children);
   let allCorrect = true;
   children.forEach((c, i) => {
@@ -425,20 +432,17 @@ function checkOrder(){
   }
 }
 
-// Reset = reshuffle current puzzle (keep hint counts)
 function resetPuzzle(){
   buildCodeBox(current);
   messageEl.textContent = '';
 }
 
-// Next puzzle
 function nextPuzzle(){
   current = (current + 1) % puzzles.length;
   puzzleSelect.value = current;
   loadPuzzle(current);
 }
 
-// Reveal hint: place one random incorrect block into its correct position
 function revealHint(){
   const used = usedHintsCount[current] || 0;
   if(used >= MAX_HINTS_PER_PUZZLE){
@@ -462,7 +466,6 @@ function revealHint(){
   const block = choice.el;
   const targetPos = choice.orig;
 
-  // remove block from DOM and insert at the correct position
   const remaining = Array.from(codeBox.children).filter(n => n !== block);
   if(targetPos >= remaining.length){
     codeBox.appendChild(block);
@@ -477,7 +480,6 @@ function revealHint(){
   updateRevealHintBtn();
 }
 
-// update hint button label and disabled state
 function updateRevealHintBtn(){
   const used = usedHintsCount[current] || 0;
   const left = Math.max(0, MAX_HINTS_PER_PUZZLE - used);
@@ -492,7 +494,6 @@ function updateRevealHintBtn(){
   }
 }
 
-// load puzzle by index
 function loadPuzzle(idx){
   current = idx;
   puzzleSelect.value = idx;
@@ -502,18 +503,15 @@ function loadPuzzle(idx){
   if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
 }
 
-// init
 function init(){
   populatePuzzleSelect();
   renderDescription(0);
   buildCodeBox(0);
-  // wire events
   submitBtn.addEventListener('click', checkOrder);
   revealHintBtn.addEventListener('click', revealHint);
   resetBtn.addEventListener('click', resetPuzzle);
   nextBtn.addEventListener('click', nextPuzzle);
   puzzleSelect.addEventListener('change', e => loadPuzzle(Number(e.target.value)));
-  // accessibility: pressing Enter on the code container focuses the first block
   codeBox.addEventListener('keydown', (e) => {
     if(e.key === 'Enter' || e.key === ' '){
       e.preventDefault();

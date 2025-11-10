@@ -70,7 +70,7 @@
 /*
   Parsons shuffle-in-place page for WHILE DO puzzles.
   - Shuffled lines are placed inside the code box on load.
-  - Drag a block onto another to INSERT before it.
+  - Drag a block onto another to INSERT before it. (Improved container-level dragover)
   - Click one block, then another, to INSERT the first before the second.
   - Submit marks blocks correct/incorrect (green/red).
   - Reveal hint places a random incorrect block into its correct position.
@@ -83,7 +83,11 @@ const puzzles = [
   {
     title: "Increment counter from 1 to 5",
     bullets: ["No input — print numbers 1 to 5, each on its own line."],
-    example: "1\n2\n3\n4\n5",
+    example: "1
+2
+3
+4
+5",
     lines: [
       "Counter ← 1",
       "WHILE Counter <= 5 DO",
@@ -95,7 +99,8 @@ const puzzles = [
   {
     title: "Greet names until STOP",
     bullets: ["Keep asking for a name until the user types STOP (case-sensitive)."],
-    example: "Input: Alice, Bob, STOP → Output: Hello Alice\nHello Bob",
+    example: "Input: Alice, Bob, STOP → Output: Hello Alice
+Hello Bob",
     lines: [
       "INPUT Name",
       "WHILE Name <> \"STOP\" DO",
@@ -280,6 +285,32 @@ function renderDescription(idx){
   updateRevealHintBtn();
 }
 
+// improved drag helpers
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('.block:not(.dragging)')];
+  let closest = null;
+  let closestOffset = Number.NEGATIVE_INFINITY;
+  for (const el of draggableElements) {
+    const box = el.getBoundingClientRect();
+    const offset = y - (box.top + box.height / 2);
+    if (offset < 0 && offset > closestOffset) {
+      closestOffset = offset;
+      closest = el;
+    }
+  }
+  return closest;
+}
+
+function setNoSelect(on) {
+  if (on) {
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
+  } else {
+    document.body.style.userSelect = '';
+    document.body.style.webkitUserSelect = '';
+  }
+}
+
 // build code box with shuffled lines already inside
 function buildCodeBox(idx){
   codeBox.innerHTML = '';
@@ -287,38 +318,59 @@ function buildCodeBox(idx){
   const items = p.lines.map((line, i) => ({line, idx:i}));
   const shuffled = items.slice();
   shuffleArray(shuffled);
+
   shuffled.forEach(item => {
     const el = document.createElement('div');
     el.className = 'block';
     el.draggable = true;
     el.tabIndex = 0;
+    // unique id to avoid ambiguity when lines have identical text
+    el.dataset.id = `line-${item.idx}-${Math.random().toString(36).slice(2,9)}`;
     el.dataset.origIndex = String(item.idx);
     el.textContent = item.line;
+
+    // dragstart / dragend only on the element itself
     el.addEventListener('dragstart', e => {
       el.classList.add('dragging');
-      e.dataTransfer.setData('text/plain', el.dataset.origIndex);
+      e.dataTransfer.setData('text/plain', el.dataset.id);
       e.dataTransfer.effectAllowed = 'move';
+      setNoSelect(true);
     });
-    el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
-    el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
-    el.addEventListener('drop', e => {
-      e.preventDefault();
-      const draggedOrig = e.dataTransfer.getData('text/plain');
-      const draggedEl = Array.from(codeBox.children).find(c => c.dataset.origIndex === String(draggedOrig) && c !== el);
-      if(!draggedEl) return;
-      codeBox.insertBefore(draggedEl, el);
-      el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:140});
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      setNoSelect(false);
     });
+
+    // click-to-move support
     el.addEventListener('click', onBlockClick);
     codeBox.appendChild(el);
   });
+
+  // container-level dragover for accurate insert-before positioning
+  codeBox.addEventListener('dragover', onContainerDragOver);
+  codeBox.addEventListener('drop', e => { e.preventDefault(); /* positions already set during dragover */ });
+
   messageEl.textContent = '';
   Array.from(codeBox.children).forEach(c => c.classList.remove('correct','incorrect'));
   updateRevealHintBtn();
 }
 
+function onContainerDragOver(e){
+  e.preventDefault();
+  const draggedId = e.dataTransfer.getData('text/plain');
+  if (!draggedId) return;
+  const draggedEl = codeBox.querySelector(`[data-id="${draggedId}"]`);
+  if (!draggedEl) return;
+  const afterEl = getDragAfterElement(codeBox, e.clientY);
+  if (afterEl == null) {
+    if (codeBox.lastElementChild !== draggedEl) codeBox.appendChild(draggedEl);
+  } else {
+    if (afterEl !== draggedEl.previousElementSibling) codeBox.insertBefore(draggedEl, afterEl);
+  }
+}
+
 function onBlockClick(e){
-  const el = e.currentTarget;
+  const el = e.currentTarget; // This is the block that was clicked
   if(!pickedBlock){
     pickedBlock = el;
     el.style.outline = '3px solid rgba(5,104,214,0.18)';
@@ -329,6 +381,7 @@ function onBlockClick(e){
     pickedBlock = null;
     return;
   }
+  // SECOND CLICK: 'el' is the target. Insert 'pickedBlock' *before* 'el'.
   codeBox.insertBefore(pickedBlock, el);
   el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:120});
   pickedBlock.style.outline = '';
@@ -338,17 +391,21 @@ function onBlockClick(e){
 // check order (mark correct/incorrect)
 function checkOrder(){
   const p = puzzles[current];
+  const expected = p.lines.map(s => s.trim());
   const children = Array.from(codeBox.children);
   let allCorrect = true;
+
   children.forEach((c, i) => {
-    const correctIdx = Number(c.dataset.origIndex);
-    if(correctIdx === i){
+    const actual = c.textContent.trim();
+    // mark correct if the text in this DOM position matches the expected line for that position
+    if(actual === expected[i]){
       c.classList.remove('incorrect'); c.classList.add('correct');
     } else {
       c.classList.remove('correct'); c.classList.add('incorrect');
       allCorrect = false;
     }
   });
+
   if(allCorrect){
     messageEl.textContent = 'All correct — great job!';
     messageEl.style.color = '#0b7';
@@ -358,17 +415,24 @@ function checkOrder(){
   }
 }
 
+// Reset = reshuffle current puzzle (keep hint counts)
 function resetPuzzle(){
+  // remove container-level handlers before rebuilding to avoid duplicates
+  codeBox.removeEventListener('dragover', onContainerDragOver);
   buildCodeBox(current);
   messageEl.textContent = '';
 }
 
+// Next puzzle
 function nextPuzzle(){
+  // remove old handler
+  codeBox.removeEventListener('dragover', onContainerDragOver);
   current = (current + 1) % puzzles.length;
   puzzleSelect.value = current;
   loadPuzzle(current);
 }
 
+// Reveal hint: place one random incorrect block into its correct position
 function revealHint(){
   const used = usedHintsCount[current] || 0;
   if(used >= MAX_HINTS_PER_PUZZLE){
@@ -404,6 +468,7 @@ function revealHint(){
   updateRevealHintBtn();
 }
 
+// update hint button label and disabled state
 function updateRevealHintBtn(){
   const used = usedHintsCount[current] || 0;
   const left = Math.max(0, MAX_HINTS_PER_PUZZLE - used);
@@ -418,24 +483,29 @@ function updateRevealHintBtn(){
   }
 }
 
+// load puzzle by index
 function loadPuzzle(idx){
   current = idx;
   puzzleSelect.value = idx;
   renderDescription(idx);
   buildCodeBox(idx);
   messageEl.textContent = '';
+  // clear any picked block state
   if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
 }
 
+// init
 function init(){
   populatePuzzleSelect();
   renderDescription(0);
   buildCodeBox(0);
+  // wire events
   submitBtn.addEventListener('click', checkOrder);
   revealHintBtn.addEventListener('click', revealHint);
   resetBtn.addEventListener('click', resetPuzzle);
   nextBtn.addEventListener('click', nextPuzzle);
   puzzleSelect.addEventListener('change', e => loadPuzzle(Number(e.target.value)));
+  // accessibility: focus handling
   codeBox.addEventListener('keydown', (e) => {
     if(e.key === 'Enter' || e.key === ' '){
       e.preventDefault();
@@ -443,6 +513,24 @@ function init(){
       if(first) first.focus();
     }
   });
+
+  // keyboard up/down to move focused block
+  codeBox.addEventListener('keydown', (e) => {
+    const focused = document.activeElement;
+    if (!focused || !focused.classList || !focused.classList.contains('block')) return;
+    if (e.key === 'ArrowUp'){
+      e.preventDefault();
+      const prev = focused.previousElementSibling;
+      if (prev) codeBox.insertBefore(focused, prev);
+      focused.focus();
+    } else if (e.key === 'ArrowDown'){
+      e.preventDefault();
+      const next = focused.nextElementSibling;
+      if (next) codeBox.insertBefore(next, focused);
+      focused.focus();
+    }
+  });
+
   updateRevealHintBtn();
 }
 

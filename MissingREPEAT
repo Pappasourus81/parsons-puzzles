@@ -246,7 +246,7 @@
           "IF ___4___ ___5___ ___6___ THEN",
           "count = count + ___7___",
           "ENDIF",
-          "___8___ ___9___ ___10___ __11___",
+          "___8___ ___9___ ___10___ -1",
           "OUTPUT count"
         ],
         // mapping blanks: 1=0,2=REPEAT,3=score,4=>,5=50,6=1,7=UNTIL,8=score,9==,10? Wait there are only 9 blanks in lines here (1..9). So answers should be:

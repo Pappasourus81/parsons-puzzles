@@ -1,393 +1,497 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Code Shuffler – FOR Loops</title>
-  <style>
-    :root{
-      --gap: 12px;
-      --card-bg: #f8f9fb;
-      --slot-border: #ccccd6;
-      --ok: #d4f7d9;
-      --bad: #ffd6d6;
-      --accent: #0066cc;
-    }
-    body{
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      margin: 18px;
-      background: #ffffff;
-      color:#111;
-    }
-    h1{ margin: 0 0 14px 0; font-size: 20px; }
-    .controls{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center }
-    button{
-      background:var(--accent);
-      color:white;
-      border: none;
-      padding:8px 12px;
-      border-radius:8px;
-      cursor:pointer;
-      font-weight:600;
-      font-size:14px;
-    }
-    button.secondary{ background:#666; }
-    .layout{
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
-      align-items:start;
-    }
-    .panel{
-      background:var(--card-bg);
-      padding:12px;
-      border-radius:10px;
-      box-shadow: 0 2px 6px rgba(10,10,20,0.03);
-    }
-    .puzzle-box{
-      margin:10px 0 12px 0;
-      padding:10px 12px;
-      border-radius:8px;
-      border:1px solid #d1d7df;
-      background:#ffffff;
-      box-shadow:0 1px 3px rgba(10,10,20,0.04);
-      font-size:14px;
-      font-weight:600;
-      color:#222;
-    }
-    .scrambled-box{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      padding:10px;
-      border: 2px dashed var(--slot-border);
-      min-height: 120px;
-      border-radius:8px;
-      background: #fff;
-    }
-    .piece{
-      padding:8px 10px;
-      background:white;
-      border-radius:6px;
-      box-shadow:0 1px 2px rgba(0,0,0,0.05);
-      cursor:grab;
-      user-select:none;
-      white-space:pre-wrap;
-      font-family: "Courier New", monospace;
-      font-size: 13px;
-      border:1px solid transparent;
-      transition: transform 200ms ease, background-color 200ms ease, border-color 200ms ease;
-    }
-    .piece.dragover{ outline:2px dashed #0066cc; }
-    .piece.picked{ transform: scale(1.02); box-shadow:0 4px 10px rgba(0,0,0,0.08); }
-    .swap-anim {
-      animation: swapFlash 280ms ease;
-    }
-    @keyframes swapFlash {
-      0% { transform: translateY(0) scale(1); }
-      25% { transform: translateY(-6px) scale(1.02); }
-      60% { transform: translateY(2px) scale(.995); }
-      100% { transform: translateY(0) scale(1); }
-    }
-    .message{ margin-top:10px; font-weight:600; }
-    .meta{ font-size:14px; color:#444; margin-bottom:8px; }
-    @media (max-width:900px){
-      .layout{ grid-template-columns: 1fr; }
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Parsons — FOR Loop (Reorder mode)</title>
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#fff; --accent:#0568d6; --ok:#e6fbec; --bad:#ffecec;
+    --border:#dfe7f2; --muted:#556;
+  }
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); margin:20px; color:#122;}
+  .container{max-width:960px;margin:0 auto;}
+  header{display:flex;align-items:center;gap:16px;}
+  h1{margin:0;font-size:20px;}
+  .panel{background:var(--card);border:1px solid var(--border);padding:12px;border-radius:10px;margin-top:12px;}
+  .desc-box{border-radius:8px;padding:10px;border:1px solid #e2e8f0;background:#fff;margin-bottom:12px;}
+  .desc-title{font-weight:700;margin-bottom:6px;}
+  .desc-list{margin:6px 0 0 18px;color:#123;}
+  .example{font-family:monospace;background:#f3f9ff;padding:8px;border-radius:6px;border:1px solid #dbeeff;margin-top:8px;white-space:pre-wrap;}
+  .code-box{min-height:160px;border:2px dashed var(--border);background:#fff;padding:12px;border-radius:8px;display:flex;flex-direction:column;gap:8px;}
+  .block{user-select:none;padding:10px 12px;border-radius:8px;background:#f9fbff;border:1px solid #d0d9ef;cursor:grab;min-width:220px;box-shadow:0 1px 0 rgba(0,0,0,0.02);transition:transform .12s ease, background .18s;}
+  .block.dragging{opacity:0.6;transform:scale(0.98);}
+  .block.correct{background:var(--ok);border-color:#80d08a;}
+  .block.incorrect{background:var(--bad);border-color:#f3a3a3;}
+  .controls{display:flex;gap:8px;align-items:center;margin-top:12px;}
+  button{padding:8px 12px;border-radius:8px;border:0;font-weight:700;cursor:pointer;}
+  .btn-primary{background:var(--accent);color:white;}
+  .btn-secondary{background:#657; color:#fff; opacity:0.95}
+  .btn-ghost{background:#eef2f7;color:#223;border:1px solid #d6e0f4;}
+  select{padding:6px;border-radius:8px;border:1px solid #d7e0f5;}
+  #message{margin-top:10px;font-weight:700;color:#444;}
+  @media (max-width:700px){
+    .block{min-width:150px;}
+  }
+</style>
 </head>
 <body>
-  <h1>Code Shuffler – FOR Loops</h1>
-  <div class="meta">Drag lines to reorder them. Drop a line onto another to swap places. Submit to check.</div>
+  <div class="container">
+    <header>
+      <h1>Parsons — FOR Loop (Reorder mode)</h1>
+    </header>
 
-  <div class="puzzle-box" id="puzzleDescription">Select a puzzle to see its description.</div>
+    <div class="panel" id="puzzlePanel">
+      <div class="desc-box" id="descriptionBox">
+        <div class="desc-title" id="descTitle">Select a puzzle</div>
+        <ul class="desc-list" id="descBullets"></ul>
+        <div id="exampleBox" class="example" style="display:none;"></div>
+      </div>
 
-  <div class="layout">
-    <div class="panel">
-      <strong>Scrambled code (reorder here)</strong>
-      <div id="scrambled" class="scrambled-box" aria-label="scrambled code lines"></div>
-      <div class="controls">
-        <button id="submitBtn">Submit</button>
-        <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
-        <button id="nextBtn">New Puzzle</button>
-        <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
-          <label style="font-size:13px; color:#333">Puzzle:
-            <select id="puzzleSelect" style="margin-left:6px; padding:6px; border-radius:6px;"></select>
+      <div id="codeBox" class="code-box" aria-label="Scrambled code lines" tabindex="0"></div>
+
+      <div class="controls" style="justify-content:flex-start;">
+        <button id="submitBtn" class="btn-primary">Submit</button>
+        <button id="revealHintBtn" class="btn-ghost">Reveal hint (3 left)</button>
+        <button id="resetBtn" class="btn-secondary">Reset (Reshuffle)</button>
+        <button id="nextBtn" class="btn-ghost">Next Puzzle</button>
+        <div style="margin-left:auto;">
+          <label> Puzzle:
+            <select id="puzzleSelect"></select>
           </label>
         </div>
       </div>
-      <div id="message" class="message" role="status"></div>
+
+      <div id="message"></div>
     </div>
   </div>
 
 <script>
-const puzzles = [
+/* Parsons FOR Loop — uses container-level drag handling and text-based checking
+   Copies the same interaction model as the WHILE DO file.
+*/
+
+const MAX_HINTS_PER_PUZZLE = 3;
+
+const fullPuzzles = [
   {
-    title: "Basic Output Loop",
-    description: "Use a FOR loop to print the numbers 1 to 5. Example output: 1 2 3 4 5 (each number on a new line).",
+    title: "Count from 1 to 5",
+    bullets: ["No input — print numbers 1 to 5 using a FOR loop."],
+    example: "1\n2\n3\n4\n5",
     lines: [
-      "FOR i = 1 TO 5 DO",
+      "FOR Counter ← 1 TO 5",
+      "OUTPUT Counter",
+      "NEXT Counter"
+    ]
+  },
+  {
+    title: "Count down from 10 to 1",
+    bullets: ["Use a FOR loop with STEP -1 to count down and then print Blast off!"],
+    example: "10..1 then Blast off!",
+    lines: [
+      "FOR Count ← 10 TO 1 STEP -1",
+      "OUTPUT Count",
+      "NEXT Count",
+      "OUTPUT \"Blast off!\""
+    ]
+  },
+  {
+    title: "Display a message five times",
+    bullets: ["Repeat the same output 5 times using a FOR loop."],
+    example: "Keep practicing pseudocode! (printed 5 times)",
+    lines: [
+      "FOR i ← 1 TO 5",
+      "OUTPUT \"Keep practicing pseudocode!\"",
+      "NEXT i"
+    ]
+  },
+  {
+    title: "Add the numbers 1 to 10",
+    bullets: ["Use a FOR loop to sum the numbers 1 through 10 and output the total."],
+    example: "The total is 55",
+    lines: [
+      "Total ← 0",
+      "FOR i ← 1 TO 10",
+      "Total ← Total + i",
+      "NEXT i",
+      "OUTPUT \"The total is \", Total"
+    ]
+  },
+  {
+    title: "Ask user for 3 names and display them",
+    bullets: ["Prompt for a name three times and greet each name."],
+    example: "Input: Tom, Sue, Ana → Output greetings for each",
+    lines: [
+      "FOR i ← 1 TO 3",
+      "INPUT Name",
+      "OUTPUT \"Hello \", Name",
+      "NEXT i"
+    ]
+  },
+  {
+    title: "Display squares of numbers 1 to 5",
+    bullets: ["Compute and output the square of each number from 1 to 5."],
+    example: "1 squared is 1\n2 squared is 4 ...",
+    lines: [
+      "FOR Number ← 1 TO 5",
+      "Square ← Number * Number",
+      "OUTPUT Number, \" squared is \", Square",
+      "NEXT Number"
+    ]
+  },
+  {
+    title: "Print only even numbers between 1 and 10",
+    bullets: ["Loop 1..10 and output the number only when it is even."],
+    example: "2\n4\n6\n8\n10",
+    lines: [
+      "FOR Number ← 1 TO 10",
+      "IF Number MOD 2 = 0 THEN",
+      "OUTPUT Number",
+      "ENDIF",
+      "NEXT Number"
+    ]
+  },
+  {
+    title: "Display every third number from 3 to 30",
+    bullets: ["Use STEP 3 to output every third number starting at 3."],
+    example: "3,6,9,...,30",
+    lines: [
+      "FOR i ← 3 TO 30 STEP 3",
       "OUTPUT i",
       "NEXT i"
     ]
   },
   {
-    title: "Output with Arithmetic",
-    description: "Use a FOR loop to output the square of each number from 1 to 5. Example output: 1 4 9 16 25.",
+    title: "Display a 1 to 3 multiplication table",
+    bullets: ["Nested FOR loops: outer loop for rows, inner loop for columns."],
+    example: "1 x 1 = 1 ... 3 x 3 = 9",
     lines: [
-      "FOR i = 1 TO 5 DO",
-      "OUTPUT i * i",
-      "NEXT i"
-    ]
-  },
-  {
-    title: "FOR Loop with Input and Output",
-    description: "Ask the user to enter 5 numbers and output each one doubled. Example: entering 3 prints 6.",
-    lines: [
-      "FOR i = 1 TO 5 DO",
-      "OUTPUT \"Enter number:\"",
-      "INPUT n",
-      "OUTPUT n * 2",
-      "NEXT i"
-    ]
-  },
-  {
-    title: "FOR Loop with Accumulation",
-    description: "Ask the user to enter 4 numbers, add them together, and output the total after the loop ends. Example: 1,2,3,4 outputs 10.",
-    lines: [
-      "total = 0",
-      "FOR i = 1 TO 4 DO",
-      "INPUT num",
-      "total = total + num",
-      "NEXT i",
-      "OUTPUT total"
-    ]
-  },
-  {
-    title: "FOR Loop with Conditional Output",
-    description: "Ask the user to enter 5 numbers and output only the even ones. Example: 2,3,4,5,6 outputs 2,4,6.",
-    lines: [
-      "FOR i = 1 TO 5 DO",
-      "INPUT val",
-      "IF val MOD 2 = 0 THEN",
-      "OUTPUT val",
-      "ENDIF",
-      "NEXT i"
-    ]
-  },
-  {
-    title: "FOR Loop Containing IF–ELSE",
-    description: "Ask the user to enter 5 numbers. Output 'Even' if even, otherwise 'Odd'. Example: entering 4 prints Even.",
-    lines: [
-      "FOR i = 1 TO 5 DO",
-      "INPUT x",
-      "IF x MOD 2 = 0 THEN",
-      "OUTPUT \"Even\"",
-      "ELSE",
-      "OUTPUT \"Odd\"",
-      "ENDIF",
-      "NEXT i"
-    ]
-  },
-  {
-    title: "FOR Loop Counting Specific Values",
-    description: "Ask the user to enter 5 test scores. Count how many are greater than 50 and output the count after the loop. Example: 60,45,70,50,55 outputs 3.",
-    lines: [
-      "count = 0",
-      "FOR i = 1 TO 5 DO",
-      "INPUT score",
-      "IF score > 50 THEN",
-      "count = count + 1",
-      "ENDIF",
-      "NEXT i",
-      "OUTPUT count"
-    ]
-  },
-  {
-    title: "FOR Loop with Step Increment",
-    description: "Use a FOR loop with STEP 2 to output every second number from 2 to 10. Example output: 2 4 6 8 10.",
-    lines: [
-      "FOR i = 2 TO 10 STEP 2 DO",
-      "OUTPUT i",
-      "NEXT i"
-    ]
-  },
-  {
-    title: "Nested FOR Loop – Grid Pattern",
-    description: "Use nested FOR loops to print a 3×3 grid of * characters. Example output: three rows of three stars each.",
-    lines: [
-      "FOR r = 1 TO 3 DO",
-      "FOR c = 1 TO 3 DO",
-      "OUTPUT \"*\"",
-      "NEXT c",
-      "NEXT r"
-    ]
-  },
-  {
-    title: "Nested FOR Loop with Logic – Number Triangle",
-    description: "Use nested FOR loops to output a triangle of numbers: 1, then 12, then 123, then 1234.",
-    lines: [
-      "FOR i = 1 TO 4 DO",
-      "FOR j = 1 TO i DO",
-      "OUTPUT j",
+      "FOR i ← 1 TO 3",
+      "FOR j ← 1 TO 3",
+      "OUTPUT i, \" x \", j, \" = \", i * j",
       "NEXT j",
       "NEXT i"
+    ]
+  },
+  {
+    title: "Add only numbers above 50 from 5 inputs",
+    bullets: ["Read 5 numbers and sum only those greater than 50."],
+    example: "Input: 60,40,55,10,80 → Total of numbers above 50 is 195",
+    lines: [
+      "Total ← 0",
+      "FOR i ← 1 TO 5",
+      "INPUT Number",
+      "IF Number > 50 THEN",
+      "Total ← Total + Number",
+      "ENDIF",
+      "NEXT i",
+      "OUTPUT \"Total of numbers above 50 is \", Total"
     ]
   }
 ];
 
-let currentIndex = 0;
-let currentOrder = [];
-const scrambledEl = document.getElementById('scrambled');
-const messageEl = document.getElementById('message');
+// DOM refs
+const codeBox = document.getElementById('codeBox');
+const descTitle = document.getElementById('descTitle');
+const descBullets = document.getElementById('descBullets');
+const exampleBox = document.getElementById('exampleBox');
 const puzzleSelect = document.getElementById('puzzleSelect');
-const puzzleDescriptionEl = document.getElementById('puzzleDescription');
+const submitBtn = document.getElementById('submitBtn');
+const revealHintBtn = document.getElementById('revealHintBtn');
+const resetBtn = document.getElementById('resetBtn');
+const nextBtn = document.getElementById('nextBtn');
+const messageEl = document.getElementById('message');
 
-puzzles.forEach((p, i) => {
-  const opt = document.createElement('option');
-  opt.value = i;
-  opt.textContent = `${i+1}. ${p.title}`;
-  puzzleSelect.appendChild(opt);
-});
+let current = 0;
+let pickedBlock = null;
+const usedHintsCount = {}; // in-memory per puzzle
 
-puzzleSelect.addEventListener('change', e => {
-  currentIndex = parseInt(e.target.value, 10);
-  loadPuzzle(currentIndex);
-});
-
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+function shuffleArray(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
 }
 
-function renderScrambled() {
-  scrambledEl.innerHTML = '';
-  currentOrder.forEach((line, idx) => {
-    const el = document.createElement('div');
-    el.className = 'piece';
-    el.draggable = true;
-    el.dataset.index = idx;
-    el.dataset.line = line;
-    el.textContent = line;
-
-    el.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/plain', idx);
-      e.dataTransfer.effectAllowed = 'move';
-      el.classList.add('picked');
-    });
-
-    el.addEventListener('dragend', () => el.classList.remove('picked'));
-
-    el.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      el.classList.add('dragover');
-    });
-    el.addEventListener('dragleave', () => el.classList.remove('dragover'));
-
-    el.addEventListener('drop', (e) => {
-      e.preventDefault();
-      el.classList.remove('dragover');
-      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
-      const toIdx = parseInt(el.dataset.index, 10);
-      if (!Number.isNaN(fromIdx) && !Number.isNaN(toIdx) && fromIdx !== toIdx) {
-        swapItems(fromIdx, toIdx);
-        renderScrambled();
-        setTimeout(() => {
-          const children = Array.from(scrambledEl.children);
-          const a = children[toIdx];
-          const b = children[fromIdx];
-          if (a) { a.classList.add('swap-anim'); setTimeout(()=>a.classList.remove('swap-anim'), 300); }
-          if (b) { b.classList.add('swap-anim'); setTimeout(()=>b.classList.remove('swap-anim'), 300); }
-        }, 10);
-      }
-    });
-
-    el.addEventListener('click', () => {
-      const prev = scrambledEl.querySelector('.picked');
-      if (prev && prev !== el) {
-        const i1 = parseInt(prev.dataset.index,10);
-        const i2 = parseInt(el.dataset.index,10);
-        swapItems(i1,i2);
-        prev.classList.remove('picked');
-        renderScrambled();
-        setTimeout(()=>{
-          const children = Array.from(scrambledEl.children);
-          const a = children[i1];
-          const b = children[i2];
-          if (a) { a.classList.add('swap-anim'); setTimeout(()=>a.classList.remove('swap-anim'), 300); }
-          if (b) { b.classList.add('swap-anim'); setTimeout(()=>b.classList.remove('swap-anim'), 300); }
-        },10);
-      } else {
-        scrambledEl.querySelectorAll('.picked').forEach(x=>x.classList.remove('picked'));
-        el.classList.add('picked');
-      }
-    });
-
-    scrambledEl.appendChild(el);
+function populatePuzzleSelect(){
+  puzzleSelect.innerHTML = '';
+  fullPuzzles.forEach((p,i)=>{
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${i+1}. ${p.title}`;
+    puzzleSelect.appendChild(opt);
   });
+  puzzleSelect.value = 0;
 }
 
-function swapItems(i, j) {
-  const tmp = currentOrder[i];
-  currentOrder[i] = currentOrder[j];
-  currentOrder[j] = tmp;
+function renderDescription(idx){
+  const p = fullPuzzles[idx];
+  descTitle.textContent = p.title;
+  descBullets.innerHTML = '';
+  p.bullets.forEach(b=>{
+    const li = document.createElement('li');
+    li.textContent = b;
+    descBullets.appendChild(li);
+  });
+  if(p.example && p.example.trim() !== ''){
+    exampleBox.style.display = 'block';
+    exampleBox.innerHTML = `<div style="font-weight:600; margin-bottom:4px;">Expected Output</div>${p.example}`;
+  } else {
+    exampleBox.style.display = 'none';
+    exampleBox.innerHTML = '';
+  }
+  updateRevealHintBtn();
 }
 
-function resetPuzzle() {
-  const puzzle = puzzles[currentIndex];
-  currentOrder = puzzle.lines.slice();
-  shuffle(currentOrder);
-  renderScrambled();
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('.block:not(.dragging)')];
+  let closest = null;
+  let closestOffset = Number.NEGATIVE_INFINITY;
+  for (const el of draggableElements) {
+    const box = el.getBoundingClientRect();
+    const offset = y - (box.top + box.height / 2);
+    if (offset < 0 && offset > closestOffset) {
+      closestOffset = offset;
+      closest = el;
+    }
+  }
+  return closest;
+}
+
+function setNoSelect(on) {
+  if (on) {
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
+  } else {
+    document.body.style.userSelect = '';
+    document.body.style.webkitUserSelect = '';
+  }
+}
+
+function buildCodeBox(idx){
+  codeBox.innerHTML = '';
+  const p = fullPuzzles[idx];
+  const items = p.lines.map((line, i) => ({line, idx:i}));
+  const shuffled = items.slice();
+  shuffleArray(shuffled);
+
+  shuffled.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'block';
+    el.draggable = true;
+    el.tabIndex = 0;
+    el.dataset.id = `line-${item.idx}-${Math.random().toString(36).slice(2,9)}`;
+    el.dataset.origIndex = String(item.idx);
+    el.textContent = item.line;
+
+    el.addEventListener('dragstart', e => {
+      el.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', el.dataset.id);
+      e.dataTransfer.effectAllowed = 'move';
+      setNoSelect(true);
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      setNoSelect(false);
+    });
+
+    el.addEventListener('click', onBlockClick);
+    codeBox.appendChild(el);
+  });
+
+  Array.from(codeBox.children).forEach(c => c.classList.remove('correct','incorrect'));
   messageEl.textContent = '';
+  updateRevealHintBtn();
 }
 
-function submitPuzzle() {
-  const puzzle = puzzles[currentIndex];
-  const correct = puzzle.lines;
+function onBlockClick(e){
+  const el = e.currentTarget;
+  if(!pickedBlock){
+    pickedBlock = el;
+    el.style.outline = '3px solid rgba(5,104,214,0.18)';
+    return;
+  }
+  if(pickedBlock === el){
+    pickedBlock.style.outline = '';
+    pickedBlock = null;
+    return;
+  }
+  codeBox.insertBefore(pickedBlock, el);
+  el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:120});
+  pickedBlock.style.outline = '';
+  pickedBlock = null;
+}
+
+function checkOrder(){
+  const p = fullPuzzles[current];
+  const expected = p.lines.map(s => s.trim());
+  const children = Array.from(codeBox.children);
   let allCorrect = true;
-  const pieces = Array.from(scrambledEl.children);
-  pieces.forEach((p, i) => {
-    p.style.background = '';
-    p.style.borderColor = '';
-    const text = p.dataset.line.trim();
-    if (text === correct[i].trim()) {
-      p.style.background = 'var(--ok)';
-      p.style.borderColor = '#2a9a4a';
+  children.forEach((c, i) => {
+    const actual = c.textContent.trim();
+    if(actual === expected[i]){
+      c.classList.remove('incorrect'); c.classList.add('correct');
     } else {
-      p.style.background = 'var(--bad)';
-      p.style.borderColor = '#c44';
+      c.classList.remove('correct'); c.classList.add('incorrect');
       allCorrect = false;
     }
   });
-  if (allCorrect) {
-    messageEl.textContent = 'All correct! Well done 🎉';
-    messageEl.style.color = '#1a7f3a';
+  if(allCorrect){
+    messageEl.textContent = 'All correct — great job!';
+    messageEl.style.color = '#0b7';
   } else {
-    messageEl.textContent = 'Some lines are incorrect — incorrect lines are highlighted.';
-    messageEl.style.color = '#a00';
+    messageEl.textContent = 'Some lines are in the wrong order. Incorrect blocks are highlighted.';
+    messageEl.style.color = '#b33';
   }
 }
 
-function nextPuzzle() {
-  currentIndex = (currentIndex + 1) % puzzles.length;
-  puzzleSelect.value = currentIndex;
-  loadPuzzle(currentIndex);
+function revealHint(){
+  const used = usedHintsCount[current] || 0;
+  if(used >= MAX_HINTS_PER_PUZZLE){
+    messageEl.textContent = `No hints left for this puzzle (max ${MAX_HINTS_PER_PUZZLE}).`;
+    messageEl.style.color = '#a00';
+    updateRevealHintBtn();
+    return;
+  }
+  const p = fullPuzzles[current];
+  const expected = p.lines.map(s => s.trim());
+  const children = Array.from(codeBox.children);
+
+  const wrongPositions = [];
+  children.forEach((c, idx) => {
+    if(c.textContent.trim() !== expected[idx]) wrongPositions.push(idx);
+  });
+  if(wrongPositions.length === 0){
+    messageEl.textContent = 'All lines are already correct.';
+    messageEl.style.color = '#444';
+    return;
+  }
+
+  const targetPos = wrongPositions[Math.floor(Math.random()*wrongPositions.length)];
+  const neededText = expected[targetPos];
+  const candidate = children.find((c, idx) => idx !== targetPos && c.textContent.trim() === neededText);
+  if(candidate){
+    const remaining = Array.from(codeBox.children).filter(n => n !== candidate);
+    if(targetPos >= remaining.length) codeBox.appendChild(candidate);
+    else codeBox.insertBefore(candidate, remaining[targetPos]);
+    candidate.classList.remove('incorrect'); candidate.classList.add('correct');
+    usedHintsCount[current] = used + 1;
+    messageEl.textContent = `Hint used: one line placed correctly (${usedHintsCount[current]} of ${MAX_HINTS_PER_PUZZLE}).`;
+    messageEl.style.color = '#0b5';
+    updateRevealHintBtn();
+    return;
+  }
+
+  const eligible = [];
+  children.forEach((c, idx) => {
+    const orig = Number(c.dataset.origIndex);
+    if(orig !== idx) eligible.push({el:c, orig});
+  });
+  if(eligible.length === 0){
+    messageEl.textContent = 'All lines are already correct.';
+    messageEl.style.color = '#444';
+    return;
+  }
+  const choice = eligible[Math.floor(Math.random()*eligible.length)];
+  const block = choice.el;
+  const origPos = choice.orig;
+  const remaining = Array.from(codeBox.children).filter(n => n !== block);
+  if(origPos >= remaining.length) codeBox.appendChild(block);
+  else codeBox.insertBefore(block, remaining[origPos]);
+  block.classList.remove('incorrect'); block.classList.add('correct');
+  usedHintsCount[current] = used + 1;
+  messageEl.textContent = `Hint used: one line placed correctly (${usedHintsCount[current]} of ${MAX_HINTS_PER_PUZZLE}).`;
+  messageEl.style.color = '#0b5';
+  updateRevealHintBtn();
 }
 
-function loadPuzzle(index) {
-  currentIndex = index;
-  puzzleDescriptionEl.textContent = puzzles[index].description || '';
-  resetPuzzle();
+function updateRevealHintBtn(){
+  const used = usedHintsCount[current] || 0;
+  const left = Math.max(0, MAX_HINTS_PER_PUZZLE - used);
+  if(left <= 0){
+    revealHintBtn.disabled = true;
+    revealHintBtn.textContent = `Reveal hint (used up)`;
+    revealHintBtn.style.opacity = '0.6';
+  } else {
+    revealHintBtn.disabled = false;
+    revealHintBtn.textContent = `Reveal hint (${left} left)`;
+    revealHintBtn.style.opacity = '1';
+  }
 }
 
-document.getElementById('submitBtn').addEventListener('click', submitPuzzle);
-document.getElementById('resetBtn').addEventListener('click', resetPuzzle);
-document.getElementById('nextBtn').addEventListener('click', nextPuzzle);
+function resetPuzzle(){
+  usedHintsCount[current] = usedHintsCount[current] || 0;
+  buildCodeBox(current);
+}
 
-puzzleSelect.value = 0;
-loadPuzzle(0);
+function nextPuzzle(){
+  current = (current + 1) % fullPuzzles.length;
+  puzzleSelect.value = current;
+  loadPuzzle(current);
+}
+
+function loadPuzzle(idx){
+  current = idx;
+  puzzleSelect.value = idx;
+  renderDescription(idx);
+  buildCodeBox(idx);
+  messageEl.textContent = '';
+  if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
+}
+
+function init(){
+  populatePuzzleSelect();
+  renderDescription(0);
+  buildCodeBox(0);
+
+  submitBtn.addEventListener('click', checkOrder);
+  revealHintBtn.addEventListener('click', revealHint);
+  resetBtn.addEventListener('click', resetPuzzle);
+  nextBtn.addEventListener('click', nextPuzzle);
+  puzzleSelect.addEventListener('change', e => loadPuzzle(Number(e.target.value)));
+
+  codeBox.addEventListener('dragover', e => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData('text/plain');
+    if (!draggedId) return;
+    const draggedEl = codeBox.querySelector(`[data-id="${draggedId}"]`);
+    if (!draggedEl) return;
+    const afterEl = getDragAfterElement(codeBox, e.clientY);
+    if (afterEl == null) {
+      if (codeBox.lastElementChild !== draggedEl) codeBox.appendChild(draggedEl);
+    } else {
+      if (afterEl !== draggedEl.previousElementSibling) codeBox.insertBefore(draggedEl, afterEl);
+    }
+  });
+  codeBox.addEventListener('drop', e => { e.preventDefault(); });
+
+  codeBox.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      const first = codeBox.querySelector('.block');
+      if(first) first.focus();
+      return;
+    }
+    const focused = document.activeElement;
+    if (!focused || !focused.classList || !focused.classList.contains('block')) return;
+    if (e.key === 'ArrowUp'){
+      e.preventDefault();
+      const prev = focused.previousElementSibling;
+      if (prev) codeBox.insertBefore(focused, prev);
+      focused.focus();
+    } else if (e.key === 'ArrowDown'){
+      e.preventDefault();
+      const next = focused.nextElementSibling;
+      if (next) codeBox.insertBefore(next, focused);
+      focused.focus();
+    }
+  });
+
+  updateRevealHintBtn();
+}
+
+init();
+
 </script>
 </body>
 </html>

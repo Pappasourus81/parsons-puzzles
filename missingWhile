@@ -42,7 +42,6 @@
     <div id="desc" class="desc-box">
       <div id="descTitle" style="font-weight:700; margin-bottom:6px;">Select a puzzle to see its description</div>
       <ul id="descBullets" class="desc-bullets"></ul>
-      <!-- teacherHint intentionally removed per request -->
       <div style="margin-top:8px;">
         <button id="toggleExample" class="small">Show example output</button>
         <button id="revealHintBtn" class="small" style="margin-left:8px;">Reveal hint (3 left)</button>
@@ -97,7 +96,7 @@ const puzzles = [
       "___6___"
     ],
     answers: ["1","WHILE","<=","5","1","ENDWHILE"],
-    bank: ["WHILE","ENDWHILE","i","1","2","3","5","<=",">","<",">>","<>","OUTPUT","+","0"]
+    bank: ["WHILE","ENDWHILE","i","1","2","3","5","<=",">","<","<>",">>","OUTPUT","+","0"]
   },
 
   // 2 WHILE Loop with Counter Variable (1..10)
@@ -116,10 +115,10 @@ const puzzles = [
       "___6___"
     ],
     answers: ["1","WHILE","<=","10","1","ENDWHILE"],
-    bank: ["WHILE","ENDWHILE","n","1","10","2","<=",">","<",">>","<>","+","OUTPUT"]
+    bank: ["WHILE","ENDWHILE","n","1","10","2","<=",">","<","<>","+","OUTPUT"]
   },
 
-  // 3 WHILE Loop Taking Input (stop on 0)
+  // 3 WHILE Loop Taking Input (fixed - unique blanks)
   {
     title: "WHILE Loop Taking Input",
     bullets: [
@@ -129,13 +128,20 @@ const puzzles = [
     example: "User enters 4,2,0 → loop stops when 0 entered.",
     lines: [
       "INPUT ___1___",
-      "___2___ ___1___ ___3___ ___4___",
+      "___2___ ___3___ ___4___ ___5___ ___6___",
       "INPUT ___1___",
-      "___5___"
+      "___7___"
     ],
-    // blanks: 1=x, 2=WHILE, 3=<>, 4=0, 5=ENDWHILE
-    answers: ["x","WHILE","<>","0","ENDWHILE"],
-    bank: ["WHILE","ENDWHILE","INPUT","x","=","<>","0","<",">","OUTPUT"]
+    // blanks mapping:
+    // 1 = x (input variable used twice)
+    // 2 = WHILE
+    // 3 = x
+    // 4 = <>
+    // 5 = 0
+    // 6 = DO
+    // 7 = ENDWHILE
+    answers: ["x","WHILE","x","<>","0","DO","X","ENDWHILE"],
+    bank: ["WHILE","ENDWHILE","INPUT","x","=","<>","0","DO","<",">","OUTPUT"]
   },
 
   // 4 WHILE Loop with Input and Output (stop -1, doubled)
@@ -153,9 +159,8 @@ const puzzles = [
       "INPUT ___1___",
       "___7___"
     ],
-    // blanks: 1=v,2=WHILE,3=<>,4=-1,5=*,6=2,7=ENDWHILE
-    answers: ["v","WHILE","<>","-1","*","2","ENDWHILE"],
-    bank: ["WHILE","ENDWHILE","v","INPUT","OUTPUT","<>","=","-1","*","2","+","0","<",">","<>"]
+    answers: ["v","WHILE","<>","-1","v","*","2","v","ENDWHILE"],
+    bank: ["WHILE","v","INPUT","OUTPUT","<>","=","-1","*","2","+","0","<",">"]
   },
 
   // 5 WHILE Loop with Conditional Output (positive/negative stop on 0)
@@ -177,7 +182,6 @@ const puzzles = [
       "INPUT ___1___",
       "___7___"
     ],
-    // blanks: 1=n,2=WHILE,3=<>,4=0,5=>,6=0,7=ENDWHILE
     answers: ["n","WHILE","<>","0",">","0","ENDWHILE"],
     bank: ["WHILE","ENDWHILE","INPUT","n",">","<","<>","0","IF","ELSE","ENDIF","OUTPUT","\"Positive\"","\"Negative\"","="]
   },
@@ -201,7 +205,6 @@ const puzzles = [
       "INPUT ___1___",
       "___7___"
     ],
-    // blanks: 1=age,2=WHILE,3=<>,4=-1,5=>=,6=18,7=ENDWHILE
     answers: ["age","WHILE","<>","-1",">=","18","ENDWHILE"],
     bank: ["WHILE","ENDWHILE","INPUT","age",">=","18","IF","ELSE","OUTPUT","\"Adult\"","\"Child\"","=","<>","-1","<",">"]
   },
@@ -225,7 +228,6 @@ const puzzles = [
       "___9___",
       "OUTPUT count"
     ],
-    // blanks mapping: 1=0,2=s,3=WHILE,4=<>,5=-1,6=>,7=50,8=1,9=ENDWHILE
     answers: ["0","s","WHILE","<>","-1",">","50","1","ENDWHILE"],
     bank: ["WHILE","ENDWHILE","INPUT","s","count","0","1",">","<","<>","50","=","OUTPUT","IF","ENDIF","+"]
   },
@@ -245,7 +247,6 @@ const puzzles = [
       "___5___",
       "OUTPUT \"Access granted\""
     ],
-    // blanks: 1=pw,2=WHILE,3=<>,4="Secret",5=ENDWHILE
     answers: ["pw","WHILE","<>","\"Secret\"","ENDWHILE"],
     bank: ["WHILE","ENDWHILE","INPUT","pw","=","<>","\"Secret\"","OUTPUT","\"Access granted\"","<",">"]
   },
@@ -267,7 +268,6 @@ const puzzles = [
       "INPUT ___1___",
       "___8___"
     ],
-    // blanks: 1=N,2=WHILE,3=<>,4=0,5=FOR,6=1,7=N,8=ENDWHILE
     answers: ["N","WHILE","<>","0","FOR","1","N","ENDWHILE"],
     bank: ["WHILE","ENDWHILE","INPUT","N","FOR","i","1","N","TO","DO","OUTPUT","NEXT","=","<>","0","<",">"]
   },
@@ -291,7 +291,6 @@ const puzzles = [
       "INPUT ___1___",
       "___12___"
     ],
-    // blanks: 1=N,2=WHILE,3=<>,4=0,5=FOR,6=1,7=N,8=MOD,9=2,10==,11=0,12=ENDWHILE
     answers: ["N","WHILE","<>","0","FOR","1","N","MOD","2","=","0","ENDWHILE"],
     bank: ["WHILE","ENDWHILE","INPUT","N","FOR","i","1","N","TO","DO","IF","MOD","2","=","0","OUTPUT","NEXT","ENDIF","<>","<",">"]
   }
@@ -302,7 +301,6 @@ const bankEl = document.getElementById('bank');
 const codeArea = document.getElementById('codeArea');
 const descTitle = document.getElementById('descTitle');
 const descBullets = document.getElementById('descBullets');
-// teacherHint removed on purpose
 const toggleExample = document.getElementById('toggleExample');
 const revealHintBtn = document.getElementById('revealHintBtn');
 const exampleBox = document.getElementById('exampleBox');
@@ -341,7 +339,6 @@ function renderDescription(p){
     li.textContent = b;
     descBullets.appendChild(li);
   });
-  // teacherHint intentionally not shown
   if(p.example && p.example.trim().length > 0){
     toggleExample.style.display = 'inline-block';
     exampleBox.textContent = p.example;
@@ -565,7 +562,6 @@ function loadPuzzle(idx){
     li.textContent = b;
     descBullets.appendChild(li);
   });
-  // teacherHint intentionally not shown
   if(p.example && p.example.trim().length > 0){
     toggleExample.style.display = 'inline-block';
     exampleBox.textContent = p.example;

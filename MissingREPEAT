@@ -190,14 +190,14 @@
         lines: [
           "___1___",
           "INPUT ___2___",
-          "IF ___2___ ___3___ ___4___",
+          "IF ___3___ ___4___ ___5___" THEN,
           "OUTPUT \"Positive\"",
           "ELSE",
           "OUTPUT \"Negative\"",
           "ENDIF",
-          "___5___ ___2___ ___6___ ___7___"
+          "___6___ ___7___ ___8___ ___9___"
         ],
-        answers: ["REPEAT","n",">","0","UNTIL","n","=","0"],
+        answers: ["REPEAT","n","n",">","0","UNTIL","n","=","0"],
         bank: ["REPEAT","UNTIL","INPUT","n",">","0","IF","ELSE","OUTPUT","\"Positive\"","\"Negative\"","="]
       },
 
@@ -206,21 +206,21 @@
         title: "REPEAT UNTIL with IF–ELSE (age check)",
         bullets: [
           "Prompt the user for age repeatedly.",
-          "If age >= 18 output 'Adult' otherwise 'Child'. Stop when the user enters -1."
+          "If age is greater than or equal to 18 output 'Adult' otherwise 'Child'. Stop when the user enters -1."
         ],
         hint: "REPEAT: INPUT age; IF age >= 18 OUTPUT 'Adult' ELSE OUTPUT 'Child'; UNTIL age = -1.",
         example: "Input 20 → Adult; input 12 → Child; -1 → stops.",
         lines: [
           "___1___",
           "INPUT ___2___",
-          "IF ___2___ ___3___ ___4___",
+          "IF ___3___ ___4___ ___5___ THEN",
           "OUTPUT \"Adult\"",
           "ELSE",
           "OUTPUT \"Child\"",
           "ENDIF",
-          "___5___ ___2___ ___6___ ___7___"
+          "___6___ ___7___ ___8___ ___9___"
         ],
-        answers: ["REPEAT","age",">=","18","UNTIL","age","=","-1"],
+        answers: ["REPEAT","age","age",">=","18","UNTIL","age","=","-1"],
         bank: ["REPEAT","UNTIL","INPUT","age",">=","18","IF","ELSE","OUTPUT","\"Adult\"","\"Child\"","=","-1"]
       },
 

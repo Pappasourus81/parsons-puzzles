@@ -85,10 +85,10 @@ const puzzles = [
     bullets: ["No input — print numbers 1 to 5, each on its own line."],
     example: "1\n2\n3\n4\n5",
     lines: [
-      "i <- 1",
+      "i ← 1",
       "REPEAT",
       "OUTPUT i",
-      "i <- i + 1",
+      "i ← i + 1",
       "UNTIL i > 5"
     ]
   },
@@ -97,10 +97,10 @@ const puzzles = [
     bullets: ["No input — loop from 1 to 10 using a counter variable."],
     example: "1..10 (each on its own line)",
     lines: [
-      "count <- 1",
+      "count ← 1",
       "REPEAT",
       "OUTPUT count",
-      "count <- count + 1",
+      "count ← count + 1",
       "UNTIL count > 10"
     ]
   },
@@ -166,12 +166,12 @@ const puzzles = [
     bullets: ["Keep a counter for scores greater than 50; stop on -1 and output the count."],
     example: "Inputs 55,40,60,-1 → Output: 2",
     lines: [
-      "count <- 0",
+      "count ← 0",
       "REPEAT",
       "OUTPUT \"Enter a score (-1 to stop):\"",
       "INPUT score",
       "IF score > 50 THEN",
-      "count <- count + 1",
+      "count ← count + 1",
       "ENDIF",
       "UNTIL score = -1",
       "OUTPUT count"
@@ -268,7 +268,7 @@ function renderDescription(idx){
   });
   if(p.example && p.example.trim() !== ''){
     exampleBox.style.display = 'block';
-    // **MODIFICATION 1: Add "Expected Output" heading**
+    // Add "Expected Output" heading
     exampleBox.innerHTML = `<div style="font-weight:600; margin-bottom:4px;">Expected Output</div>${p.example}`;
   } else {
     exampleBox.style.display = 'none';
@@ -303,7 +303,7 @@ function buildCodeBox(idx){
     el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
     el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
     
-    // **MODIFICATION 2: Change drop logic from SWAP to INSERT-BEFORE**
+    // Change drop logic from SWAP to INSERT-BEFORE
     el.addEventListener('drop', e => {
       e.preventDefault();
       const draggedOrig = e.dataTransfer.getData('text/plain');

@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Parsons — Arrays (Reorder mode)</title>
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#fff; --accent:#0568d6; --ok:#e6fbec; --bad:#ffecec;
+    --border:#dfe7f2; --muted:#556;
+  }
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); margin:20px; color:#122;}
+  .container{max-width:960px;margin:0 auto;}
+  header{display:flex;align-items:center;gap:16px;}
+  h1{margin:0;font-size:20px;}
+  .panel{background:var(--card);border:1px solid var(--border);padding:12px;border-radius:10px;margin-top:12px;}
+  .desc-box{border-radius:8px;padding:10px;border:1px solid #e2e8f0;background:#fff;margin-bottom:12px;}
+  .desc-title{font-weight:700;margin-bottom:6px;}
+  .desc-list{margin:6px 0 0 18px;color:#123;}
+  .example{font-family:monospace;background:#f3f9ff;padding:8px;border-radius:6px;border:1px solid #dbeeff;margin-top:8px;white-space:pre-wrap;}
+  .code-box{min-height:160px;border:2px dashed var(--border);background:#fff;padding:12px;border-radius:8px;display:flex;flex-direction:column;gap:8px;}
+  .block{user-select:none;padding:10px 12px;border-radius:8px;background:#f9fbff;border:1px solid #d0d9ef;cursor:grab;min-width:220px;box-shadow:0 1px 0 rgba(0,0,0,0.02);transition:transform .12s ease, background .18s;}
+  .block.dragging{opacity:0.6;transform:scale(0.98);}
+  .block.correct{background:var(--ok);border-color:#80d08a;}
+  .block.incorrect{background:var(--bad);border-color:#f3a3a3;}
+  .controls{display:flex;gap:8px;align-items:center;margin-top:12px;}
+  button{padding:8px 12px;border-radius:8px;border:0;font-weight:700;cursor:pointer;}
+  .btn-primary{background:var(--accent);color:white;}
+  .btn-secondary{background:#657; color:#fff; opacity:0.95}
+  .btn-ghost{background:#eef2f7;color:#223;border:1px solid #d6e0f4;}
+  select{padding:6px;border-radius:8px;border:1px solid #d7e0f5;}
+  #message{margin-top:10px;font-weight:700;color:#444;}
+  @media (max-width:700px){
+    .block{min-width:150px;}
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Parsons — Arrays (Reorder mode)</h1>
+    </header>
+
+    <div class="panel" id="puzzlePanel">
+      <div class="desc-box" id="descriptionBox">
+        <div class="desc-title" id="descTitle">Select a puzzle</div>
+        <ul class="desc-list" id="descBullets"></ul>
+        <div id="exampleBox" class="example" style="display:none;"></div>
+      </div>
+
+      <div id="codeBox" class="code-box" aria-label="Scrambled code lines" tabindex="0"></div>
+
+      <div class="controls" style="justify-content:flex-start;">
+        <button id="submitBtn" class="btn-primary">Submit</button>
+        <button id="revealHintBtn" class="btn-ghost">Reveal hint (3 left)</button>
+        <button id="resetBtn" class="btn-secondary">Reset (Reshuffle)</button>
+        <button id="nextBtn" class="btn-ghost">Next Puzzle</button>
+        <div style="margin-left:auto;">
+          <label> Puzzle:
+            <select id="puzzleSelect"></select>
+          </label>
+        </div>
+      </div>
+
+      <div id="message"></div>
+    </div>
+  </div>
+
+<script>
+/* Parsons Arrays — same interaction as other files.
+   - Text-based checker that accepts duplicate lines when the visible text matches the expected slot.
+   - Container-level dragover for accurate insert-before behavior.
+   - Reveal hint prefers matching-text blocks for duplicate lines.
+*/
+
+const MAX_HINTS_PER_PUZZLE = 3;
+
+const fullPuzzles = [
+  {
+    title: "Declare and assign 3 names",
+    bullets: ["Declare an array of 3 names and assign values, then output them."],
+    example: "Ali, Beth, Chen",
+    lines: [
+      "DECLARE Names : ARRAY[1:3] OF STRING",
+      "Names[1] ← \"Ali\"",
+      "Names[2] ← \"Beth\"",
+      "Names[3] ← \"Chen\"",
+      "",
+      "OUTPUT Names[1], \", \", Names[2], \", \", Names[3]"
+    ]
+  },
+  {
+    title: "Store numbers 1 to 5 in an array",
+    bullets: ["Use a FOR loop to store the numbers 1..5 into an array."],
+    example: "Numbers[1]=1 ... Numbers[5]=5",
+    lines: [
+      "DECLARE Numbers : ARRAY[1:5] OF INTEGER",
+      "FOR i ← 1 TO 5",
+      "    Numbers[i] ← i",
+      "NEXT"
+    ]
+  },
+  {
+    title: "Display the array elements",
+    bullets: ["Fill an array with double values and then output each element."],
+    example: "Outputs the array values line by line",
+    lines: [
+      "DECLARE Numbers : ARRAY[1:5] OF INTEGER",
+      "FOR i ← 1 TO 5",
+      "    Numbers[i] ← i * 2",
+      "NEXT",
+      "",
+      "FOR i ← 1 TO 5",
+      "    OUTPUT Numbers[i]",
+      "NEXT"
+    ]
+  },
+  {
+    title: "Input 3 ages and display them",
+    bullets: ["Read three ages into an array and then print them."],
+    example: "Prompts for 3 ages then prints them",
+    lines: [
+      "DECLARE Ages : ARRAY[1:3] OF INTEGER",
+      "FOR i ← 1 TO 3",
+      "    INPUT Ages[i]",
+      "NEXT",
+      "",
+      "OUTPUT \"The ages entered are:\"",
+      "FOR i ← 1 TO 3",
+      "    OUTPUT Ages[i]",
+      "NEXT"
+    ]
+  },
+  {
+    title: "Find total of 5 marks",
+    bullets: ["Read 5 marks into an array and compute their total."],
+    example: "Total marks = <sum>",
+    lines: [
+      "DECLARE Marks : ARRAY[1:5] OF INTEGER",
+      "Total ← 0",
+      "",
+      "FOR i ← 1 TO 5",
+      "    INPUT Marks[i]",
+      "    Total ← Total + Marks[i]",
+      "NEXT",
+      "",
+      "OUTPUT \"Total marks = \", Total"
+    ]
+  },
+  {
+    title: "Find average of 4 numbers",
+    bullets: ["Read 4 numbers into an array and compute the average."],
+    example: "Average score = <value>",
+    lines: [
+      "DECLARE Scores : ARRAY[1:4] OF REAL",
+      "Total ← 0",
+      "",
+      "FOR i ← 1 TO 4",
+      "    INPUT Scores[i]",
+      "    Total ← Total + Scores[i]",
+      "NEXT",
+      "",
+      "Average ← Total / 4",
+      "OUTPUT \"Average score = \", Average"
+    ]
+  },
+  {
+    title: "Find largest number in array",
+    bullets: ["Read 5 numbers into an array and find the largest value."],
+    example: "Outputs the largest number",
+    lines: [
+      "DECLARE Numbers : ARRAY[1:5] OF INTEGER",
+      "FOR i ← 1 TO 5",
+      "    INPUT Numbers[i]",
+      "NEXT",
+      "",
+      "Largest ← Numbers[1]",
+      "FOR i ← 2 TO 5",
+      "    IF Numbers[i] > Largest THEN",
+      "        Largest ← Numbers[i]",
+      "    ENDIF",
+      "NEXT",
+      "",
+      "OUTPUT \"The largest number is \", Largest"
+    ]
+  },
+  {
+    title: "Search for a name in an array",
+    bullets: ["Input names into an array and search for a given name; output found/not found."],
+    example: "Outputs 'Name found' or 'Name not found'",
+    lines: [
+      "DECLARE Names : ARRAY[1:4] OF STRING",
+      "FOR i ← 1 TO 4",
+      "    INPUT Names[i]",
+      "NEXT",
+      "",
+      "INPUT SearchName",
+      "Found ← FALSE",
+      "",
+      "FOR i ← 1 TO 4",
+      "    IF Names[i] = SearchName THEN",
+      "        Found ← TRUE",
+      "    ENDIF",
+      "NEXT",
+      "",
+      "IF Found = TRUE THEN",
+      "    OUTPUT \"Name found\"",
+      "ELSE",
+      "    OUTPUT \"Name not found\"",
+      "ENDIF"
+    ]
+  },
+  {
+    title: "Store names and corresponding ages",
+    bullets: ["Read names and ages into parallel arrays and then print each name with its age."],
+    example: "Name is X years old",
+    lines: [
+      "DECLARE Names : ARRAY[1:3] OF STRING",
+      "DECLARE Ages : ARRAY[1:3] OF INTEGER",
+      "",
+      "FOR i ← 1 TO 3",
+      "    INPUT Names[i]",
+      "    INPUT Ages[i]",
+      "NEXT",
+      "",
+      "FOR i ← 1 TO 3",
+      "    OUTPUT Names[i], \" is \", Ages[i], \" years old\"",
+      "NEXT"
+    ]
+  },
+  {
+    title: "Input and display a 2x2 grid of numbers",
+    bullets: ["Use a 2D array to read and then display a 2x2 grid of numbers."],
+    example: "Prints the 2x2 grid values in row-major order",
+    lines: [
+      "DECLARE Grid : ARRAY[1:2,1:2] OF INTEGER",
+      "",
+      "FOR Row ← 1 TO 2",
+      "    FOR Column ← 1 TO 2",
+      "        INPUT Grid[Row,Column]",
+      "    NEXT Column",
+      "NEXT Row",
+      "",
+      "OUTPUT \"The grid is:\"",
+      "FOR Row ← 1 TO 2",
+      "    FOR Column ← 1 TO 2",
+      "        OUTPUT Grid[Row,Column]",
+      "    NEXT Column",
+      "NEXT Row"
+    ]
+  }
+];
+
+// DOM refs
+const codeBox = document.getElementById('codeBox');
+const descTitle = document.getElementById('descTitle');
+const descBullets = document.getElementById('descBullets');
+const exampleBox = document.getElementById('exampleBox');
+const puzzleSelect = document.getElementById('puzzleSelect');
+const submitBtn = document.getElementById('submitBtn');
+const revealHintBtn = document.getElementById('revealHintBtn');
+const resetBtn = document.getElementById('resetBtn');
+const nextBtn = document.getElementById('nextBtn');
+const messageEl = document.getElementById('message');
+
+let current = 0;
+let pickedBlock = null;
+const usedHintsCount = {}; // in-memory per puzzle
+
+function shuffleArray(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function populatePuzzleSelect(){
+  puzzleSelect.innerHTML = '';
+  fullPuzzles.forEach((p,i)=>{
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${i+1}. ${p.title}`;
+    puzzleSelect.appendChild(opt);
+  });
+  puzzleSelect.value = 0;
+}
+
+function renderDescription(idx){
+  const p = fullPuzzles[idx];
+  descTitle.textContent = p.title;
+  descBullets.innerHTML = '';
+  p.bullets.forEach(b=>{
+    const li = document.createElement('li');
+    li.textContent = b;
+    descBullets.appendChild(li);
+  });
+  if(p.example && p.example.trim() !== ''){
+    exampleBox.style.display = 'block';
+    exampleBox.innerHTML = `<div style="font-weight:600; margin-bottom:4px;">Expected Output</div>${p.example}`;
+  } else {
+    exampleBox.style.display = 'none';
+    exampleBox.innerHTML = '';
+  }
+  updateRevealHintBtn();
+}
+
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('.block:not(.dragging)')];
+  let closest = null;
+  let closestOffset = Number.NEGATIVE_INFINITY;
+  for (const el of draggableElements) {
+    const box = el.getBoundingClientRect();
+    const offset = y - (box.top + box.height / 2);
+    if (offset < 0 && offset > closestOffset) {
+      closestOffset = offset;
+      closest = el;
+    }
+  }
+  return closest;
+}
+
+function setNoSelect(on) {
+  if (on) {
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
+  } else {
+    document.body.style.userSelect = '';
+    document.body.style.webkitUserSelect = '';
+  }
+}
+
+function buildCodeBox(idx){
+  codeBox.innerHTML = '';
+  const p = fullPuzzles[idx];
+  const items = p.lines.map((line, i) => ({line, idx:i}));
+  const shuffled = items.slice();
+  shuffleArray(shuffled);
+
+  shuffled.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'block';
+    el.draggable = true;
+    el.tabIndex = 0;
+    el.dataset.id = `line-${item.idx}-${Math.random().toString(36).slice(2,9)}`;
+    el.dataset.origIndex = String(item.idx);
+    el.textContent = item.line;
+
+    el.addEventListener('dragstart', e => {
+      el.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', el.dataset.id);
+      e.dataTransfer.effectAllowed = 'move';
+      setNoSelect(true);
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      setNoSelect(false);
+    });
+
+    el.addEventListener('click', onBlockClick);
+    codeBox.appendChild(el);
+  });
+
+  Array.from(codeBox.children).forEach(c => c.classList.remove('correct','incorrect'));
+  messageEl.textContent = '';
+  updateRevealHintBtn();
+}
+
+function onBlockClick(e){
+  const el = e.currentTarget;
+  if(!pickedBlock){
+    pickedBlock = el;
+    el.style.outline = '3px solid rgba(5,104,214,0.18)';
+    return;
+  }
+  if(pickedBlock === el){
+    pickedBlock.style.outline = '';
+    pickedBlock = null;
+    return;
+  }
+  codeBox.insertBefore(pickedBlock, el);
+  el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:120});
+  pickedBlock.style.outline = '';
+  pickedBlock = null;
+}
+
+function checkOrder(){
+  const p = fullPuzzles[current];
+  const expected = p.lines.map(s => s.trim());
+  const children = Array.from(codeBox.children);
+  let allCorrect = true;
+  children.forEach((c, i) => {
+    const actual = c.textContent.trim();
+    if(actual === expected[i]){
+      c.classList.remove('incorrect'); c.classList.add('correct');
+    } else {
+      c.classList.remove('correct'); c.classList.add('incorrect');
+      allCorrect = false;
+    }
+  });
+  if(allCorrect){
+    messageEl.textContent = 'All correct — great job!';
+    messageEl.style.color = '#0b7';
+  } else {
+    messageEl.textContent = 'Some lines are in the wrong order. Incorrect blocks are highlighted.';
+    messageEl.style.color = '#b33';
+  }
+}
+
+function revealHint(){
+  const used = usedHintsCount[current] || 0;
+  if(used >= MAX_HINTS_PER_PUZZLE){
+    messageEl.textContent = `No hints left for this puzzle (max ${MAX_HINTS_PER_PUZZLE}).`;
+    messageEl.style.color = '#a00';
+    updateRevealHintBtn();
+    return;
+  }
+  const p = fullPuzzles[current];
+  const expected = p.lines.map(s => s.trim());
+  const children = Array.from(codeBox.children);
+
+  const wrongPositions = [];
+  children.forEach((c, idx) => {
+    if(c.textContent.trim() !== expected[idx]) wrongPositions.push(idx);
+  });
+  if(wrongPositions.length === 0){
+    messageEl.textContent = 'All lines are already correct.';
+    messageEl.style.color = '#444';
+    return;
+  }
+
+  const targetPos = wrongPositions[Math.floor(Math.random()*wrongPositions.length)];
+  const neededText = expected[targetPos];
+  const candidate = children.find((c, idx) => idx !== targetPos && c.textContent.trim() === neededText);
+  if(candidate){
+    const remaining = Array.from(codeBox.children).filter(n => n !== candidate);
+    if(targetPos >= remaining.length) codeBox.appendChild(candidate);
+    else codeBox.insertBefore(candidate, remaining[targetPos]);
+    candidate.classList.remove('incorrect'); candidate.classList.add('correct');
+    usedHintsCount[current] = used + 1;
+    messageEl.textContent = `Hint used: one line placed correctly (${usedHintsCount[current]} of ${MAX_HINTS_PER_PUZZLE}).`;
+    messageEl.style.color = '#0b5';
+    updateRevealHintBtn();
+    return;
+  }
+
+  const eligible = [];
+  children.forEach((c, idx) => {
+    const orig = Number(c.dataset.origIndex);
+    if(orig !== idx) eligible.push({el:c, orig});
+  });
+  if(eligible.length === 0){
+    messageEl.textContent = 'All lines are already correct.';
+    messageEl.style.color = '#444';
+    return;
+  }
+  const choice = eligible[Math.floor(Math.random()*eligible.length)];
+  const block = choice.el;
+  const origPos = choice.orig;
+  const remaining = Array.from(codeBox.children).filter(n => n !== block);
+  if(origPos >= remaining.length) codeBox.appendChild(block);
+  else codeBox.insertBefore(block, remaining[origPos]);
+  block.classList.remove('incorrect'); block.classList.add('correct');
+  usedHintsCount[current] = used + 1;
+  messageEl.textContent = `Hint used: one line placed correctly (${usedHintsCount[current]} of ${MAX_HINTS_PER_PUZZLE}).`;
+  messageEl.style.color = '#0b5';
+  updateRevealHintBtn();
+}
+
+function updateRevealHintBtn(){
+  const used = usedHintsCount[current] || 0;
+  const left = Math.max(0, MAX_HINTS_PER_PUZZLE - used);
+  if(left <= 0){
+    revealHintBtn.disabled = true;
+    revealHintBtn.textContent = `Reveal hint (used up)`;
+    revealHintBtn.style.opacity = '0.6';
+  } else {
+    revealHintBtn.disabled = false;
+    revealHintBtn.textContent = `Reveal hint (${left} left)`;
+    revealHintBtn.style.opacity = '1';
+  }
+}
+
+function resetPuzzle(){
+  usedHintsCount[current] = usedHintsCount[current] || 0;
+  buildCodeBox(current);
+}
+
+function nextPuzzle(){
+  current = (current + 1) % fullPuzzles.length;
+  puzzleSelect.value = current;
+  loadPuzzle(current);
+}
+
+function loadPuzzle(idx){
+  current = idx;
+  puzzleSelect.value = idx;
+  renderDescription(idx);
+  buildCodeBox(idx);
+  messageEl.textContent = '';
+  if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
+}
+
+function init(){
+  populatePuzzleSelect();
+  renderDescription(0);
+  buildCodeBox(0);
+
+  submitBtn.addEventListener('click', checkOrder);
+  revealHintBtn.addEventListener('click', revealHint);
+  resetBtn.addEventListener('click', resetPuzzle);
+  nextBtn.addEventListener('click', nextPuzzle);
+  puzzleSelect.addEventListener('change', e => loadPuzzle(Number(e.target.value)));
+
+  codeBox.addEventListener('dragover', e => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData('text/plain');
+    if (!draggedId) return;
+    const draggedEl = codeBox.querySelector(`[data-id="${draggedId}"]`);
+    if (!draggedEl) return;
+    const afterEl = getDragAfterElement(codeBox, e.clientY);
+    if (afterEl == null) {
+      if (codeBox.lastElementChild !== draggedEl) codeBox.appendChild(draggedEl);
+    } else {
+      if (afterEl !== draggedEl.previousElementSibling) codeBox.insertBefore(draggedEl, afterEl);
+    }
+  });
+  codeBox.addEventListener('drop', e => { e.preventDefault(); });
+
+  codeBox.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      const first = codeBox.querySelector('.block');
+      if(first) first.focus();
+      return;
+    }
+    const focused = document.activeElement;
+    if (!focused || !focused.classList || !focused.classList.contains('block')) return;
+    if (e.key === 'ArrowUp'){
+      e.preventDefault();
+      const prev = focused.previousElementSibling;
+      if (prev) codeBox.insertBefore(focused, prev);
+      focused.focus();
+    } else if (e.key === 'ArrowDown'){
+      e.preventDefault();
+      const next = focused.nextElementSibling;
+      if (next) codeBox.insertBefore(next, focused);
+      focused.focus();
+    }
+  });
+
+  updateRevealHintBtn();
+}
+
+init();
+
+</script>
+</body>
+</html>

@@ -1,244 +1,298 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Parsons — WHILE (Reorder mode)</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WHILE - Fill in the blanks</title>
 <style>
   :root{
-    --bg:#f6f8fb; --card:#fff; --accent:#0568d6; --ok:#e6fbec; --bad:#ffecec;
-    --border:#dfe7f2; --muted:#556;
+    --bg:#ffffff; --accent:#0066cc; --ok:#d4f7d9; --bad:#ffd6d6;
+    --panel:#f8f9fb; --muted:#666; --token-border:#e0e6ef;
   }
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); margin:20px; color:#122;}
-  .container{max-width:960px;margin:0 auto;}
-  header{display:flex;align-items:center;gap:16px;}
-  h1{margin:0;font-size:20px;}
-  .panel{background:var(--card);border:1px solid var(--border);padding:12px;border-radius:10px;margin-top:12px;}
-  .desc-box{border-radius:8px;padding:10px;border:1px solid #e2e8f0;background:#fff;margin-bottom:12px;}
-  .desc-title{font-weight:700;margin-bottom:6px;}
-  .desc-list{margin:6px 0 0 18px;color:#123;}
-  .example{font-family:monospace;background:#f3f9ff;padding:8px;border-radius:6px;border:1px solid #dbeeff;margin-top:8px;white-space:pre-wrap;}
-  .code-box{min-height:160px;border:2px dashed var(--border);background:#fff;padding:12px;border-radius:8px;display:flex;flex-direction:column;gap:8px;}
-  .block{user-select:none;padding:10px 12px;border-radius:8px;background:#f9fbff;border:1px solid #d0d9ef;cursor:grab;min-width:220px;box-shadow:0 1px 0 rgba(0,0,0,0.02);transition:transform .12s ease, background .18s;}
-  .block.dragging{opacity:0.6;transform:scale(0.98);}
-  .block.correct{background:var(--ok);border-color:#80d08a;}
-  .block.incorrect{background:var(--bad);border-color:#f3a3a3;}
-  .controls{display:flex;gap:8px;align-items:center;margin-top:12px;}
-  button{padding:8px 12px;border-radius:8px;border:0;font-weight:700;cursor:pointer;}
-  .btn-primary{background:var(--accent);color:white;}
-  .btn-secondary{background:#657; color:#fff; opacity:0.95}
-  .btn-ghost{background:#eef2f7;color:#223;border:1px solid #d6e0f4;}
-  select{padding:6px;border-radius:8px;border:1px solid #d7e0f5;}
-  #message{margin-top:10px;font-weight:700;color:#444;}
-  @media (max-width:700px){
-    .block{min-width:150px;}
-  }
+  body{ font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:18px; background:var(--bg); color:#111; }
+  h1{ margin:0 0 12px 0; font-size:20px; }
+  .meta{ color:#444; margin-bottom:12px; }
+  .panel{ background:var(--panel); padding:12px; border-radius:10px; margin-bottom:12px; }
+  .desc-box{ padding:10px; border-radius:8px; background:#fff; border:1px solid #d1d7df; margin-bottom:10px; white-space:normal; }
+  .desc-bullets{ margin:6px 0 8px 18px; color:#222; }
+  .example-box{ margin-top:8px; padding:8px; background:#f7fbff; border:1px solid #d9eefc; border-radius:6px; font-family: "Courier New", monospace; color:#0b3b66; display:none; white-space:pre-line; }
+  .code-area{ font-family: "Courier New", monospace; background:#fff; padding:10px; border-radius:8px; border:1px dashed #ccc; min-height:160px; }
+  .code-line{ padding:6px 4px; white-space:pre-wrap; }
+  .blank{ display:inline-flex; align-items:center; justify-content:center; min-width:56px; padding:4px 8px; margin:0 4px; background:#f2f6fb; border-radius:4px; border:1px dashed #9fb8e6; cursor:pointer; outline:none; color:#111; font-weight:600; }
+  .blank.filled{ background:#fff; border-style:solid; border-color:var(--token-border); }
+  .blank.correct{ background:var(--ok); border-color:#2a9a4a; }
+  .blank.incorrect{ background:var(--bad); border-color:#c44; }
+  .bank{ display:flex; flex-wrap:wrap; gap:8px; padding:10px; margin-top:10px; background:transparent; }
+  .token{ background:#fff; border:1px solid var(--token-border); padding:6px 10px; border-radius:8px; cursor:grab; user-select:none; display:inline-flex; align-items:center; justify-content:center; min-width:40px; color:#111; font-weight:600; }
+  .token[aria-pressed="true"]{ outline:3px solid rgba(0,102,204,0.18); box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+  .controls{ display:flex; gap:8px; margin-top:12px; align-items:center; }
+  button.action{ background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+  button.secondary{ background:#666; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+  .small{ padding:6px 10px; font-size:13px; border-radius:6px; }
+  #message{ margin-top:10px; font-weight:600; }
+  .keyboard-hint{ color:var(--muted); font-size:13px; margin-top:6px; }
+  @media (max-width:700px){ .bank{ gap:6px; } .blank{ min-width:44px; } .token{ min-width:32px; padding:6px 8px;} }
 </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Parsons — WHILE (Reorder mode)</h1>
-    </header>
+  <h1>WHILE - Fill in the blanks</h1>
+  <div class="meta">Place the correct token into each blank. Use drag & drop, or keyboard: Tab to token → Enter to pick → Tab to blank → Enter to place.</div>
 
-    <div class="panel" id="puzzlePanel">
-      <div class="desc-box" id="descriptionBox">
-        <div class="desc-title" id="descTitle">Select a puzzle</div>
-        <ul class="desc-list" id="descBullets"></ul>
-        <div id="exampleBox" class="example" style="display:none;"></div>
+  <div class="panel">
+    <div id="desc" class="desc-box">
+      <div id="descTitle" style="font-weight:700; margin-bottom:6px;">Select a puzzle to see its description</div>
+      <ul id="descBullets" class="desc-bullets"></ul>
+      <div style="margin-top:8px;">
+        <button id="toggleExample" class="small">Show example output</button>
+        <button id="revealHintBtn" class="small" style="margin-left:8px;">Reveal hint (3 left)</button>
       </div>
-
-      <div id="codeBox" class="code-box" aria-label="Scrambled code lines" tabindex="0"></div>
-
-      <div class="controls" style="justify-content:flex-start;">
-        <button id="submitBtn" class="btn-primary">Submit</button>
-        <button id="revealHintBtn" class="btn-ghost">Reveal hint (3 left)</button>
-        <button id="resetBtn" class="btn-secondary">Reset (Reshuffle)</button>
-        <button id="nextBtn" class="btn-ghost">Next Puzzle</button>
-        <div style="margin-left:auto;">
-          <label> Puzzle:
-            <select id="puzzleSelect"></select>
-          </label>
-        </div>
-      </div>
-
-      <div id="message"></div>
+      <div id="exampleBox" class="example-box" role="region" aria-hidden="true"></div>
     </div>
+
+    <div class="code-area" id="codeArea" aria-live="polite"></div>
+
+    <div class="bank" id="bank" aria-label="token bank"></div>
+
+    <div class="keyboard-hint">Tip: click a token to select it, then click a blank to place it.</div>
+
+    <div class="controls">
+      <button id="submitBtn" class="action">Submit</button>
+      <button id="resetBtn" class="secondary">Reset (reshuffle)</button>
+      <button id="nextBtn" class="action">Next Puzzle</button>
+      <div style="margin-left:auto;">
+        <label style="font-size:13px;color:#333">Puzzle:
+          <select id="puzzleSelect" style="margin-left:8px; padding:6px; border-radius:6px;"></select>
+        </label>
+      </div>
+    </div>
+
+    <div id="message" role="status"></div>
   </div>
 
 <script>
-/*
- Parsons-style WHILE reorder page
- - scrambled lines are placed inside codeBox on load
- - drag-to-swap or click-to-swap
- - Submit to mark correct/incorrect
- - Reveal hint places one random incorrect line into its correct position (up to 3 per puzzle, in-session)
- - Reset reshuffles current puzzle (does not reset hint counts)
+/* WHILE - Fill in the blanks
+   - 10 puzzles provided by user
+   - Random reveal hint up to 3 per puzzle
+   - Tokens reusable, drag & drop and keyboard
 */
 
 const MAX_HINTS_PER_PUZZLE = 3;
 
 const puzzles = [
+  // 1 Increment counter from 1 to 5
   {
-    title: "Basic WHILE Loop with Output",
-    bullets: ["No input — use a WHILE loop to print numbers 1 to 5, each on its own line."],
+    title: "Increment counter 1..5",
+    bullets: ["No input — print numbers 1 to 5 using a WHILE loop.", "Each number should be on its own line."],
+    hint: "Start Counter at 1; WHILE Counter <= 5 DO: OUTPUT Counter; increment Counter.",
     example: "1\n2\n3\n4\n5",
     lines: [
-      "i = 1",
-      "WHILE i <= 5 DO",
-      "OUTPUT i",
-      "i = i + 1",
-      "ENDWHILE"
-    ]
+      "Counter = ___1___",
+      "___2___ Counter ___3___ ___4___ ___5___",
+      "OUTPUT Counter",
+      "Counter = Counter + ___6___",
+      "___7___"
+    ],
+    answers: ["1","WHILE","<=","5","DO","1","ENDWHILE"],
+    bank: ["WHILE","ENDWHILE","Counter","1","2","3","5","<=",">","<","OUTPUT","+","DO"]
   },
+
+  // 2 Keep asking for a name until "STOP"
   {
-    title: "WHILE Loop with Counter Variable",
-    bullets: ["Use a WHILE loop and a variable starting at 1, increase by 1 each time, stop when it reaches 10."],
-    example: "1..10 (each on its own line)",
+    title: "Ask for name until \"STOP\"",
+    bullets: ["Keep asking the user for a name and greet them until they enter \"STOP\"."],
+    hint: "INPUT Name; WHILE Name <> \"STOP\" DO: OUTPUT greeting; INPUT Name; ENDWHILE.",
+    example: "Input Alice → Hello Alice; Input STOP → stop",
     lines: [
-      "n = 1",
-      "WHILE n <= 10 DO",
-      "OUTPUT n",
-      "n = n + 1",
-      "ENDWHILE"
-    ]
+      "INPUT ___1___",
+      "___2___ ___3___ ___4___ ___5___",
+      "OUTPUT \"Hello \", ___6___",
+      "INPUT ___7___",
+      "___8___"
+    ],
+    answers: ["Name","WHILE","Name","<>","\"STOP\"","Name","Name","ENDWHILE"],
+    bank: ["INPUT","WHILE","ENDWHILE","Name","<>","\"STOP\"","OUTPUT","\"Hello \"","DO"]
   },
+
+  // 3 Running total of positive numbers
   {
-    title: "WHILE Loop Taking Input",
-    bullets: ["Ask the user to enter a number repeatedly. Continue until they enter 0."],
-    example: "User enters 4,2,0 → loop stops when 0 entered",
+    title: "Running total of positive numbers",
+    bullets: ["Keep asking for numbers and add them to Total while Number > 0. Stop when non-positive entered."],
+    hint: "Initialise Total=0; INPUT Number; WHILE Number > 0 DO Total = Total + Number; INPUT Number; ENDWHILE.",
+    example: "Inputs 5,3,-1 → The total is 8",
     lines: [
-      "INPUT x",
-      "WHILE x <> 0 DO",
-      "INPUT x",
-      "ENDWHILE"
-    ]
+      "Total = ___1___",
+      "INPUT ___2___",
+      "___3___ ___4___ ___5___ ___6___ ___7___",
+      "Total = Total + ___8___",
+      "INPUT ___9___",
+      "___10___",
+      "OUTPUT \"The total is \", Total"
+    ],
+    answers: ["0","Number","WHILE","Number",">","0","DO","Number","Number","ENDWHILE"],
+    bank: ["WHILE","ENDWHILE","INPUT","OUTPUT","Total","Number","0",">","<","=","DO","+","\"The total is \""]
   },
+
+  // 4 Countdown from 10 to 1
   {
-    title: "WHILE Loop with Input and Output",
-    bullets: ["Ask the user to enter a number and output it doubled. Repeat until the user enters -1."],
-    example: "Input 3 → Output 6; Input -1 → stop",
+    title: "Countdown 10..1",
+    bullets: ["Print a countdown from 10 to 1 using a WHILE loop; then print 'Blast off!'."],
+    hint: "Start Count=10; WHILE Count >= 1 DO OUTPUT Count; Count = Count - 1; ENDWHILE; OUTPUT 'Blast off!'.",
+    example: "10\n9\n...\n1\nBlast off!",
     lines: [
-      "INPUT v",
-      "WHILE v <> -1 DO",
-      "OUTPUT v * 2",
-      "INPUT v",
-      "ENDWHILE"
-    ]
+      "Count = ___1___",
+      "___2___ ___3___ ___4___ ___5___ ___6___",
+      "OUTPUT Count",
+      "Count = Count - ___7___",
+      "___8___",
+      "OUTPUT \"Blast off!\""
+    ],
+    answers: ["10","WHILE","Count",">=","1","DO","1","ENDWHILE"],
+    bank: ["WHILE","ENDWHILE","Count","10",">=","1","0","OUTPUT","-","DO"]
   },
+
+  // 5 Stop loop when correct password entered
   {
-    title: "WHILE Loop with Conditional Output",
-    bullets: ["Ask for a number repeatedly. Output 'Positive' if >0, 'Negative' if <0. Stop when user enters 0."],
-    example: "Input 3 → 'Positive'; Input -2 → 'Negative'; Input 0 → stop",
+    title: "Password check loop",
+    bullets: ["Keep asking for a password until the correct one is entered; then grant access."],
+    hint: "WHILE Correct = FALSE DO INPUT Password; IF Password = \"Secret123\" THEN grant access and set Correct=TRUE; ENDIF; ENDWHILE.",
+    example: "Input x → Try again; Input Secret123 → Access granted",
     lines: [
-      "INPUT n",
-      "WHILE n <> 0 DO",
-      "IF n > 0 THEN",
-      "OUTPUT \"Positive\"",
+      "Correct = ___1___",
+      "___2___ ___3___ ___4___ ___5___ ___6___",
+      "INPUT ___7___",
+      "IF ___8___ ___9___ ___10___ THEN",
+      "OUTPUT \"Access granted\"",
+      "Correct = ___11___",
       "ELSE",
-      "OUTPUT \"Negative\"",
+      "OUTPUT \"Try again\"",
       "ENDIF",
-      "INPUT n",
-      "ENDWHILE"
-    ]
+      "___12___"
+    ],
+    answers: ["FALSE","WHILE","Correct","=","FALSE","DO","Password","Password","=","\"Secret123\"","TRUE","ENDWHILE"],
+    bank: ["WHILE","ENDWHILE","INPUT","OUTPUT","IF","ELSE","ENDIF","Password","Correct","=","FALSE","TRUE","\"Secret123\"","DO"]
   },
+
+  // 6 Multiply a number by 2 until it exceeds 100
   {
-    title: "WHILE Loop with IF–ELSE Statement (age check)",
-    bullets: ["Ask for age repeatedly. If age >= 18 output 'Adult' else 'Child'. Stop when user enters -1."],
-    example: "Input 20 → 'Adult'; input 12 → 'Child'; -1 → stop",
+    title: "Multiply until > 100",
+    bullets: ["Start Number at 5 and keep doubling it while Number <= 100; print each value."],
+    hint: "Number = 5; WHILE Number <= 100 DO OUTPUT Number; Number = Number * 2; ENDWHILE.",
+    example: "5\n10\n20\n40\n80\n160",
     lines: [
-      "INPUT age",
-      "WHILE age <> -1 DO",
-      "IF age >= 18 THEN",
-      "OUTPUT \"Adult\"",
-      "ELSE",
-      "OUTPUT \"Child\"",
+      "Number = ___1___",
+      "___2___ ___3___ ___4___ ___5___ ___6___",
+      "OUTPUT Number",
+      "Number = Number * ___7___",
+      "___8___"
+    ],
+    answers: ["5","WHILE","Number","<=","100","DO","2","ENDWHILE"],
+    bank: ["WHILE","ENDWHILE","Number","5","100","2","<=",">","*","OUTPUT","DO"]
+  },
+
+  // 7 Add only even numbers
+  {
+    title: "Sum of even numbers",
+    bullets: ["Add only even numbers entered by the user; stop when 0 entered and output the sum of evens."],
+    hint: "WHILE Number <> 0 DO IF Number MOD 2 = 0 THEN Sum = Sum + Number ENDIF; INPUT Number; ENDWHILE.",
+    example: "Inputs 4,3,6,0 → Sum of even numbers is 10",
+    lines: [
+      "Sum = ___1___",
+      "INPUT ___2___",
+      "___3___ ___4___ ___5___ ___6___ ___7___",
+      "IF ___8___ ___9___ ___10___ THEN",
+      "Sum = Sum + ___11___",
       "ENDIF",
-      "INPUT age",
-      "ENDWHILE"
-    ]
+      "INPUT ___12___",
+      "___13___",
+      "OUTPUT \"Sum of even numbers is \", Sum"
+    ],
+    answers: ["0","Number","WHILE","Number","<>","0","DO","Number","MOD","2","Number","Number","ENDWHILE"],
+    bank: ["WHILE","ENDWHILE","INPUT","OUTPUT","IF","ENDIF","Number","Sum","0","MOD","2","+","DO"]
   },
+
+  // 8 Table printing until user enters 0
   {
-    title: "WHILE Loop Counting Condition",
-    bullets: ["Keep asking for test scores and count how many are above 50. Stop when user enters -1, then output the count."],
-    example: "Inputs 55,40,60,-1 → Output: 2",
+    title: "Print table repeatedly",
+    bullets: ["Ask for a Number and print its multiplication table 1..5; repeat until user enters 0."],
+    hint: "WHILE Number <> 0 DO FOR i = 1 TO 5 DO OUTPUT Number x i = Number*i NEXT i; INPUT Number; ENDWHILE.",
+    example: "Input 3 → 3 x 1 = 3 ... 3 x 5 = 15",
     lines: [
-      "count = 0",
-      "INPUT s",
-      "WHILE s <> -1 DO",
-      "IF s > 50 THEN",
-      "count = count + 1",
-      "ENDIF",
-      "INPUT s",
-      "ENDWHILE",
-      "OUTPUT count"
-    ]
-  },
-  {
-    title: "WHILE Loop as Validation Check (password)",
-    bullets: ["Ask for a password repeatedly until the correct password 'Secret' is entered. When correct, output 'Access granted'."],
-    example: "Input 'x' → repeats; input 'Secret' → 'Access granted'",
-    lines: [
-      "INPUT pw",
-      "WHILE pw <> \"Secret\" DO",
-      "INPUT pw",
-      "ENDWHILE",
-      "OUTPUT \"Access granted\""
-    ]
-  },
-  {
-    title: "WHILE Loop with FOR Loop Inside",
-    bullets: ["Ask for a number N. Use a FOR loop inside the WHILE to output numbers 1..N. Continue asking until user enters 0."],
-    example: "Input 3 → outputs 1 2 3 ; Input 0 → stop",
-    lines: [
-      "INPUT N",
-      "WHILE N <> 0 DO",
-      "FOR i = 1 TO N DO",
-      "OUTPUT i",
+      "INPUT ___1___",
+      "___2___ ___3___ ___4___ ___5___ ___6___",
+      "FOR i = ___7___ TO ___8___",
+      "OUTPUT ___9___, \" x \", i, \" = \", ___10___ * i",
       "NEXT i",
-      "INPUT N",
-      "ENDWHILE"
-    ]
+      "INPUT ___11___",
+      "___12___"
+    ],
+    answers: ["Number","WHILE","Number","<>","0","DO","1","5","Number","Number","Number","ENDWHILE"],
+    bank: ["WHILE","ENDWHILE","INPUT","OUTPUT","FOR","NEXT","Number","i","1","5","TO","DO","*","\" x \""]
   },
+
+  // 9 WHILE with two conditions
   {
-    title: "WHILE Loop with FOR Loop and Conditional Statement",
-    bullets: ["Ask for N. Inside the WHILE, use a FOR loop to go 1..N and output only even numbers. Stop when N = 0."],
-    example: "Input 5 → outputs 2 and 4 ; Input 0 → stop",
+    title: "WHILE with two conditions",
+    bullets: ["Loop while Count <= 5 AND Total < 100; read a number each iteration and update totals."],
+    hint: "WHILE Count <= 5 AND Total < 100 DO INPUT Number; Total = Total + Number; Count = Count + 1; ENDWHILE.",
+    example: "Reads up to 5 numbers or until total reaches 100.",
     lines: [
-      "INPUT N",
-      "WHILE N <> 0 DO",
-      "FOR i = 1 TO N DO",
-      "IF i MOD 2 = 0 THEN",
-      "OUTPUT i",
-      "ENDIF",
-      "NEXT i",
-      "INPUT N",
-      "ENDWHILE"
-    ]
+      "Count = ___1___",
+      "Total = ___2___",
+      "___3___ ___4___ ___5___ ___6___ ___7___ ___8___ ___9___ ___10___ ___11___",
+      "INPUT ___12___",
+      "Total = Total + ___13___",
+      "Count = Count + ___14___",
+      "___15___",
+      "OUTPUT \"Final total is \", Total"
+    ],
+    answers: ["1","0","WHILE","Count","<=","5","AND","Total","<","100","DO","Number","Number","1","ENDWHILE"],
+    bank: ["WHILE","ENDWHILE","INPUT","OUTPUT","Count","Total","1","5","100","<=",">","<","AND","DO","Number","+","="]
+  },
+
+  // 10 Nested WHILE loops students and subjects
+  {
+    title: "Nested WHILE: students & subjects",
+    bullets: ["Outer loop for students, inner loop for subjects; ask for marks for each student and subject."],
+    hint: "WHILE Student <= 3 DO Subject loop 1..2 asking for marks; ENDWHILE.",
+    example: "Prompts for marks for Student 1 Subject 1, Student 1 Subject 2, ...",
+    lines: [
+      "Student = ___1___",
+      "___2___ ___3___ ___4___ ___5___ ___6___",
+      "Subject = ___7___",
+      "___8___ ___9___ ___10___ ___11___ ___12___",
+      "OUTPUT \"Enter mark for Student \", Student, \" Subject \", Subject",
+      "INPUT ___13___",
+      "Subject = Subject + ___14___",
+      "___15___",
+      "Student = Student + ___16___",
+      "___17___",
+      "OUTPUT \"All marks entered\""
+    ],
+    answers: ["1","WHILE","Student","<=","3","DO","1","WHILE","Subject","<=","2","DO","Mark","1","ENDWHILE","1","ENDWHILE"],
+    bank: ["WHILE","ENDWHILE","INPUT","OUTPUT","Student","Subject","1","2","3","<=",">","DO","Mark","+","\"Enter mark for Student \""]
   }
 ];
 
-// DOM refs
-const codeBox = document.getElementById('codeBox');
+// DOM elements
+const bankEl = document.getElementById('bank');
+const codeArea = document.getElementById('codeArea');
 const descTitle = document.getElementById('descTitle');
 const descBullets = document.getElementById('descBullets');
-const exampleBox = document.getElementById('exampleBox');
-const puzzleSelect = document.getElementById('puzzleSelect');
-const submitBtn = document.getElementById('submitBtn');
+const toggleExample = document.getElementById('toggleExample');
 const revealHintBtn = document.getElementById('revealHintBtn');
-const resetBtn = document.getElementById('resetBtn');
-const nextBtn = document.getElementById('nextBtn');
-const messageEl = document.getElementById('message');
+const exampleBox = document.getElementById('exampleBox');
+const msgEl = document.getElementById('message');
+const puzzleSelect = document.getElementById('puzzleSelect');
 
-let current = 0;
-let pickedBlock = null;
-const usedHintsCount = {}; // in-session per puzzle
+let currentIndex = 0;
+let selectedToken = null;
+const usedHintsCount = {}; // in-session
 
-// helpers
-function shuffleArray(arr){
-  for(let i=arr.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+// Helpers
+function shuffleArray(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
   }
 }
 
@@ -253,175 +307,213 @@ function populatePuzzleSelect(){
   puzzleSelect.value = 0;
 }
 
-// render description
-function renderDescription(idx){
-  const p = puzzles[idx];
-  descTitle.textContent = p.title;
+// Render description & examples
+function renderDescription(p){
+  descTitle.textContent = p.title || '';
   descBullets.innerHTML = '';
-  p.bullets.forEach(b=>{
+  (p.bullets || []).forEach(b => {
     const li = document.createElement('li');
     li.textContent = b;
     descBullets.appendChild(li);
   });
-  if(p.example && p.example.trim() !== ''){
-    exampleBox.style.display = 'block';
+  if(p.example && p.example.trim().length > 0){
+    toggleExample.style.display = 'inline-block';
     exampleBox.textContent = p.example;
-  } else {
     exampleBox.style.display = 'none';
-  }
-  updateRevealHintBtn();
-}
-
-// build code box with scrambled lines
-function buildCodeBox(idx){
-  codeBox.innerHTML = '';
-  const p = puzzles[idx];
-  const items = p.lines.map((line, i) => ({line, idx:i}));
-  const shuffled = items.slice();
-  shuffleArray(shuffled);
-  shuffled.forEach(item => {
-    const el = document.createElement('div');
-    el.className = 'block';
-    el.draggable = true;
-    el.tabIndex = 0;
-    el.dataset.origIndex = String(item.idx); // original/correct index
-    el.textContent = item.line;
-    // dragstart
-    el.addEventListener('dragstart', e => {
-      el.classList.add('dragging');
-      e.dataTransfer.setData('text/plain', el.dataset.origIndex);
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
-    el.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
-    el.addEventListener('drop', e => {
-      e.preventDefault();
-      const draggedOrig = e.dataTransfer.getData('text/plain');
-      const draggedEl = Array.from(codeBox.children).find(c => c.dataset.origIndex === String(draggedOrig) && c !== el && !c.classList.contains('placeholder'));
-      if(!draggedEl) return;
-      const children = Array.from(codeBox.children);
-      const a = children.indexOf(draggedEl);
-      const b = children.indexOf(el);
-      if(a < 0 || b < 0) return;
-      if(a < b){
-        codeBox.insertBefore(draggedEl, el.nextSibling);
-      } else {
-        codeBox.insertBefore(draggedEl, el);
-      }
-      el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:140});
-    });
-    el.addEventListener('click', onBlockClick);
-    codeBox.appendChild(el);
-  });
-  messageEl.textContent = '';
-  Array.from(codeBox.children).forEach(c => c.classList.remove('correct','incorrect'));
-  updateRevealHintBtn();
-}
-
-// click-to-swap handler
-function onBlockClick(e){
-  const el = e.currentTarget;
-  if(!pickedBlock){
-    pickedBlock = el;
-    el.style.outline = '3px solid rgba(5,104,214,0.18)';
-    return;
-  }
-  if(pickedBlock === el){
-    pickedBlock.style.outline = '';
-    pickedBlock = null;
-    return;
-  }
-  const children = Array.from(codeBox.children);
-  const aIndex = children.indexOf(pickedBlock);
-  const bIndex = children.indexOf(el);
-  if(aIndex < 0 || bIndex < 0){
-    pickedBlock.style.outline = ''; pickedBlock = null; return;
-  }
-  if(aIndex < bIndex){
-    codeBox.insertBefore(pickedBlock, el.nextSibling);
+    exampleBox.setAttribute('aria-hidden','true');
+    toggleExample.textContent = 'Show example output';
   } else {
-    codeBox.insertBefore(pickedBlock, el);
+    toggleExample.style.display = 'none';
+    exampleBox.style.display = 'none';
+    exampleBox.setAttribute('aria-hidden','true');
   }
-  el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:120});
-  pickedBlock.style.outline = '';
-  pickedBlock = null;
+  updateRevealHintBtn();
 }
 
-// check order
-function checkOrder(){
-  const p = puzzles[current];
-  const children = Array.from(codeBox.children);
+toggleExample.addEventListener('click', ()=>{
+  const visible = exampleBox.style.display !== 'none';
+  if(visible){
+    exampleBox.style.display = 'none';
+    exampleBox.setAttribute('aria-hidden','true');
+    toggleExample.textContent = 'Show example output';
+  } else {
+    exampleBox.style.display = 'block';
+    exampleBox.setAttribute('aria-hidden','false');
+    toggleExample.textContent = 'Hide example output';
+  }
+});
+
+// Render code area with blanks
+function renderCode(puzzle){
+  codeArea.innerHTML = '';
+  puzzle.lines.forEach(line=>{
+    const lineDiv = document.createElement('div');
+    lineDiv.className = 'code-line';
+    let last = 0;
+    const re = /___(\d+)___/g;
+    let m;
+    while((m = re.exec(line)) !== null){
+      const idx = m.index;
+      const before = line.slice(last, idx);
+      if(before) lineDiv.appendChild(document.createTextNode(before));
+      const num = m[1];
+      const span = document.createElement('button');
+      span.type = 'button';
+      span.className = 'blank';
+      span.dataset.blank = num;
+      span.dataset.filled = 'false';
+      span.dataset.token = '';
+      span.textContent = `___${num}___`;
+      // drag/drop
+      span.addEventListener('dragover', e => { e.preventDefault(); span.classList.add('dragover'); });
+      span.addEventListener('dragleave', ()=> span.classList.remove('dragover'));
+      span.addEventListener('drop', e => {
+        e.preventDefault();
+        span.classList.remove('dragover');
+        const tok = e.dataTransfer.getData('text/plain');
+        placeTokenInBlank(tok, span);
+      });
+      // click / keyboard
+      span.addEventListener('click', ()=> { if(selectedToken) placeTokenInBlank(selectedToken.val, span); });
+      span.addEventListener('keydown', (e)=> { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); if(selectedToken) placeTokenInBlank(selectedToken.val, span); }});
+      lineDiv.appendChild(span);
+      last = re.lastIndex;
+    }
+    const rest = line.slice(last);
+    if(rest) lineDiv.appendChild(document.createTextNode(rest));
+    codeArea.appendChild(lineDiv);
+  });
+}
+
+// Render token bank
+function renderBank(tokens){
+  bankEl.innerHTML = '';
+  const arr = tokens.slice();
+  shuffleArray(arr);
+  arr.forEach(tok=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'token';
+    b.textContent = tok;
+    b.setAttribute('aria-pressed','false');
+    b.draggable = true;
+    b.tabIndex = 0;
+    b.addEventListener('click', ()=> toggleSelectToken(b, tok));
+    b.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggleSelectToken(b,tok); }});
+    b.addEventListener('dragstart', (e)=> e.dataTransfer.setData('text/plain', tok));
+    bankEl.appendChild(b);
+  });
+}
+
+function toggleSelectToken(el, val){
+  if(selectedToken && selectedToken.el === el){
+    el.setAttribute('aria-pressed','false'); selectedToken = null; return;
+  }
+  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  el.setAttribute('aria-pressed','true');
+  selectedToken = {el, val};
+}
+
+// Place token into blank — tokens are reusable
+function placeTokenInBlank(tokenValue, blankEl){
+  if(!blankEl) return;
+  blankEl.dataset.token = tokenValue;
+  blankEl.dataset.filled = 'true';
+  blankEl.textContent = tokenValue;
+  blankEl.classList.add('filled');
+  // clear selection
+  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  selectedToken = null;
+}
+
+// Reset puzzle (clear blanks and reshuffle tokens)
+function resetCurrent(){
+  const p = puzzles[currentIndex];
+  document.querySelectorAll('.blank').forEach(b=>{
+    b.dataset.filled = 'false';
+    b.dataset.token = '';
+    b.classList.remove('filled','correct','incorrect');
+    b.textContent = `___${b.dataset.blank}___`;
+  });
+  renderBank(p.bank.slice());
+  msgEl.textContent = '';
+  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  selectedToken = null;
+  updateRevealHintBtn();
+  exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
+}
+
+// Check answers
+function checkAnswers(){
+  const p = puzzles[currentIndex];
+  const answers = p.answers || [];
+  const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
   let allCorrect = true;
-  children.forEach((c, i) => {
-    const correctIdx = Number(c.dataset.origIndex);
-    if(correctIdx === i){
-      c.classList.remove('incorrect'); c.classList.add('correct');
+  blanks.forEach((b, i)=>{
+    const placed = b.dataset.filled === 'true' ? b.dataset.token : '';
+    const correct = answers[i] !== undefined ? String(answers[i]) : '';
+    if(correct === '' || correct === undefined) {
+      b.classList.remove('correct','incorrect');
+      return;
+    }
+    const placedTrim = placed !== null ? placed.toString().trim() : '';
+    const correctTrim = correct.toString().trim();
+    if(placedTrim === correctTrim){
+      b.classList.remove('incorrect'); b.classList.add('correct');
     } else {
-      c.classList.remove('correct'); c.classList.add('incorrect');
+      b.classList.remove('correct'); b.classList.add('incorrect');
       allCorrect = false;
     }
   });
   if(allCorrect){
-    messageEl.textContent = 'All correct — great job!';
-    messageEl.style.color = '#0b7';
+    msgEl.textContent = 'All correct! Well done 🎉'; msgEl.style.color = '#1a7f3a';
   } else {
-    messageEl.textContent = 'Some lines are in the wrong order. Incorrect blocks are highlighted.';
-    messageEl.style.color = '#b33';
+    msgEl.textContent = 'Some blanks are incorrect — incorrect blanks are highlighted.'; msgEl.style.color = '#a00';
   }
 }
 
-// reset (reshuffle)
-function resetPuzzle(){
-  buildCodeBox(current);
-  messageEl.textContent = '';
-}
-
-// next puzzle
-function nextPuzzle(){
-  current = (current + 1) % puzzles.length;
-  puzzleSelect.value = current;
-  loadPuzzle(current);
-}
-
-// reveal hint: place a random incorrect block into its correct position
-function revealHint(){
-  const used = usedHintsCount[current] || 0;
+// Reveal a random eligible blank (up to MAX_HINTS_PER_PUZZLE)
+function revealRandomBlank(){
+  const used = usedHintsCount[currentIndex] || 0;
   if(used >= MAX_HINTS_PER_PUZZLE){
-    messageEl.textContent = `No hints left for this puzzle (max ${MAX_HINTS_PER_PUZZLE}).`;
-    messageEl.style.color = '#a00';
+    msgEl.textContent = `No hints left for this puzzle (max ${MAX_HINTS_PER_PUZZLE}).`;
+    msgEl.style.color = '#a00';
     updateRevealHintBtn();
     return;
   }
-  const children = Array.from(codeBox.children);
+  const p = puzzles[currentIndex];
+  const answers = p.answers || [];
+  const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
   const eligible = [];
-  children.forEach((c, idx) => {
-    const orig = Number(c.dataset.origIndex);
-    if(orig !== idx) eligible.push({el:c, orig});
+  blanks.forEach((b, i)=>{
+    const correct = answers[i] !== undefined ? String(answers[i]) : '';
+    if(!correct || correct.trim()==='') return;
+    const placed = b.dataset.filled === 'true' ? (b.dataset.token || '') : '';
+    if(placed.toString().trim() !== correct.toString().trim()){
+      eligible.push(i);
+    }
   });
   if(eligible.length === 0){
-    messageEl.textContent = 'All lines are already correct.';
-    messageEl.style.color = '#444';
+    msgEl.textContent = 'All blanks are already correct or there are no defined answers to reveal.';
+    msgEl.style.color = '#444';
     return;
   }
-  const choice = eligible[Math.floor(Math.random()*eligible.length)];
-  const block = choice.el;
-  const targetPos = choice.orig;
-  const remaining = Array.from(codeBox.children).filter(n => n !== block);
-  if(targetPos >= remaining.length){
-    codeBox.appendChild(block);
-  } else {
-    codeBox.insertBefore(block, remaining[targetPos]);
-  }
-  block.classList.remove('incorrect'); block.classList.add('correct');
-  usedHintsCount[current] = used + 1;
-  messageEl.textContent = `Hint used: one line placed correctly (${usedHintsCount[current]} of ${MAX_HINTS_PER_PUZZLE}).`;
-  messageEl.style.color = '#0b5';
+  const randIdx = eligible[Math.floor(Math.random()*eligible.length)];
+  const targetBlank = blanks[randIdx];
+  const correctVal = answers[randIdx];
+  targetBlank.dataset.token = correctVal;
+  targetBlank.dataset.filled = 'true';
+  targetBlank.textContent = correctVal;
+  targetBlank.classList.remove('incorrect'); targetBlank.classList.add('correct');
+  usedHintsCount[currentIndex] = used + 1;
+  msgEl.textContent = `Hint used: a blank has been filled (${usedHintsCount[currentIndex]} of ${MAX_HINTS_PER_PUZZLE}).`;
+  msgEl.style.color = '#0b5';
   updateRevealHintBtn();
 }
 
-// update reveal button text/state
+// Update reveal button label
 function updateRevealHintBtn(){
-  const used = usedHintsCount[current] || 0;
+  const used = usedHintsCount[currentIndex] || 0;
   const left = Math.max(0, MAX_HINTS_PER_PUZZLE - used);
   if(left <= 0){
     revealHintBtn.disabled = true;
@@ -434,37 +526,53 @@ function updateRevealHintBtn(){
   }
 }
 
-// load puzzle
+// Load puzzle
 function loadPuzzle(idx){
-  current = idx;
-  puzzleSelect.value = idx;
-  renderDescription(idx);
-  buildCodeBox(idx);
-  messageEl.textContent = '';
-  if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
-}
-
-// init
-function init(){
-  populatePuzzleSelect();
-  renderDescription(0);
-  buildCodeBox(0);
-  submitBtn.addEventListener('click', checkOrder);
-  revealHintBtn.addEventListener('click', revealHint);
-  resetBtn.addEventListener('click', resetPuzzle);
-  nextBtn.addEventListener('click', nextPuzzle);
-  puzzleSelect.addEventListener('change', e => loadPuzzle(Number(e.target.value)));
-  codeBox.addEventListener('keydown', (e) => {
-    if(e.key === 'Enter' || e.key === ' '){
-      e.preventDefault();
-      const first = codeBox.querySelector('.block');
-      if(first) first.focus();
-    }
+  if(idx < 0 || idx >= puzzles.length) idx = 0;
+  currentIndex = idx;
+  const p = puzzles[currentIndex];
+  // description
+  descTitle.textContent = p.title || '';
+  descBullets.innerHTML = '';
+  (p.bullets || []).forEach(b => {
+    const li = document.createElement('li');
+    li.textContent = b;
+    descBullets.appendChild(li);
   });
+  if(p.example && p.example.trim().length > 0){
+    toggleExample.style.display = 'inline-block';
+    exampleBox.textContent = p.example;
+    exampleBox.style.display = 'none';
+    exampleBox.setAttribute('aria-hidden','true');
+    toggleExample.textContent = 'Show example output';
+  } else {
+    toggleExample.style.display = 'none';
+    exampleBox.style.display = 'none';
+    exampleBox.setAttribute('aria-hidden','true');
+  }
+  renderCode(p);
+  renderBank(p.bank.slice());
+  msgEl.textContent = '';
+  document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
+  selectedToken = null;
   updateRevealHintBtn();
+  exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
 }
 
-init();
+// Events
+document.getElementById('submitBtn').addEventListener('click', checkAnswers);
+document.getElementById('resetBtn').addEventListener('click', resetCurrent);
+document.getElementById('nextBtn').addEventListener('click', ()=> {
+  currentIndex = (currentIndex + 1) % puzzles.length;
+  puzzleSelect.value = currentIndex;
+  loadPuzzle(currentIndex);
+});
+puzzleSelect.addEventListener('change', (e)=> loadPuzzle(Number(e.target.value)));
+revealHintBtn.addEventListener('click', revealRandomBlank);
+
+// Init
+populatePuzzleSelect();
+loadPuzzle(0);
 
 </script>
 </body>

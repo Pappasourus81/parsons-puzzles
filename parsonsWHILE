@@ -67,27 +67,27 @@
   </div>
 
 <script>
-/*
-  Parsons shuffle-in-place page for WHILE DO puzzles.
-  - Shuffled lines are placed inside the code box on load.
-  - Drag a block onto another to INSERT before it. (Improved container-level dragover)
-  - Click one block, then another, to INSERT the first before the second.
-  - Submit marks blocks correct/incorrect (green/red).
-  - Reveal hint places a random incorrect block into its correct position.
-  - Reset reshuffles the current puzzle.
+/* Parsons WHILE DO — stable, single-listener version.
+   Fixes: container-level dragover registered once (in init), safer reveal hint for duplicates,
+   checker compares visible text, and avoids double-registering event handlers.
 */
 
 const MAX_HINTS_PER_PUZZLE = 3;
 
-const puzzles = [
+const puzzles = [ /* puzzles array omitted in this snippet for brevity */ ];
+
+// --- paste the puzzles array here programmatically by reusing existing content ---
+
+// Instead of duplicating, we'll build the puzzles array dynamically from the existing DOM
+// But since the canvas requires a full HTML file, we must include the puzzles inline.
+// For safety, the full puzzles array is reinserted below.
+
+// (BEGIN FULL PUZZLES ARRAY)
+const fullPuzzles = [
   {
     title: "Increment counter from 1 to 5",
     bullets: ["No input — print numbers 1 to 5, each on its own line."],
-    example: "1
-2
-3
-4
-5",
+    example: "1\n2\n3\n4\n5",
     lines: [
       "Counter ← 1",
       "WHILE Counter <= 5 DO",
@@ -99,8 +99,7 @@ const puzzles = [
   {
     title: "Greet names until STOP",
     bullets: ["Keep asking for a name until the user types STOP (case-sensitive)."],
-    example: "Input: Alice, Bob, STOP → Output: Hello Alice
-Hello Bob",
+    example: "Input: Alice, Bob, STOP → Output: Hello Alice\nHello Bob",
     lines: [
       "INPUT Name",
       "WHILE Name <> \"STOP\" DO",
@@ -229,6 +228,7 @@ Hello Bob",
     ]
   }
 ];
+// (END FULL PUZZLES ARRAY)
 
 // DOM refs
 const codeBox = document.getElementById('codeBox');
@@ -246,7 +246,7 @@ let current = 0;
 let pickedBlock = null;
 const usedHintsCount = {}; // in-memory per puzzle
 
-// shuffle helper
+// helpers
 function shuffleArray(arr){
   for(let i=arr.length-1;i>0;i--){
     const j = Math.floor(Math.random()*(i+1));
@@ -256,7 +256,7 @@ function shuffleArray(arr){
 
 function populatePuzzleSelect(){
   puzzleSelect.innerHTML = '';
-  puzzles.forEach((p,i)=>{
+  fullPuzzles.forEach((p,i)=>{
     const opt = document.createElement('option');
     opt.value = i;
     opt.textContent = `${i+1}. ${p.title}`;
@@ -265,9 +265,8 @@ function populatePuzzleSelect(){
   puzzleSelect.value = 0;
 }
 
-// render description
 function renderDescription(idx){
-  const p = puzzles[idx];
+  const p = fullPuzzles[idx];
   descTitle.textContent = p.title;
   descBullets.innerHTML = '';
   p.bullets.forEach(b=>{
@@ -311,10 +310,10 @@ function setNoSelect(on) {
   }
 }
 
-// build code box with shuffled lines already inside
+// build code box
 function buildCodeBox(idx){
   codeBox.innerHTML = '';
-  const p = puzzles[idx];
+  const p = fullPuzzles[idx];
   const items = p.lines.map((line, i) => ({line, idx:i}));
   const shuffled = items.slice();
   shuffleArray(shuffled);
@@ -324,12 +323,10 @@ function buildCodeBox(idx){
     el.className = 'block';
     el.draggable = true;
     el.tabIndex = 0;
-    // unique id to avoid ambiguity when lines have identical text
     el.dataset.id = `line-${item.idx}-${Math.random().toString(36).slice(2,9)}`;
     el.dataset.origIndex = String(item.idx);
     el.textContent = item.line;
 
-    // dragstart / dragend only on the element itself
     el.addEventListener('dragstart', e => {
       el.classList.add('dragging');
       e.dataTransfer.setData('text/plain', el.dataset.id);
@@ -341,36 +338,18 @@ function buildCodeBox(idx){
       setNoSelect(false);
     });
 
-    // click-to-move support
     el.addEventListener('click', onBlockClick);
     codeBox.appendChild(el);
   });
 
-  // container-level dragover for accurate insert-before positioning
-  codeBox.addEventListener('dragover', onContainerDragOver);
-  codeBox.addEventListener('drop', e => { e.preventDefault(); /* positions already set during dragover */ });
-
-  messageEl.textContent = '';
+  // clear visual marks
   Array.from(codeBox.children).forEach(c => c.classList.remove('correct','incorrect'));
+  messageEl.textContent = '';
   updateRevealHintBtn();
 }
 
-function onContainerDragOver(e){
-  e.preventDefault();
-  const draggedId = e.dataTransfer.getData('text/plain');
-  if (!draggedId) return;
-  const draggedEl = codeBox.querySelector(`[data-id="${draggedId}"]`);
-  if (!draggedEl) return;
-  const afterEl = getDragAfterElement(codeBox, e.clientY);
-  if (afterEl == null) {
-    if (codeBox.lastElementChild !== draggedEl) codeBox.appendChild(draggedEl);
-  } else {
-    if (afterEl !== draggedEl.previousElementSibling) codeBox.insertBefore(draggedEl, afterEl);
-  }
-}
-
 function onBlockClick(e){
-  const el = e.currentTarget; // This is the block that was clicked
+  const el = e.currentTarget;
   if(!pickedBlock){
     pickedBlock = el;
     el.style.outline = '3px solid rgba(5,104,214,0.18)';
@@ -381,23 +360,20 @@ function onBlockClick(e){
     pickedBlock = null;
     return;
   }
-  // SECOND CLICK: 'el' is the target. Insert 'pickedBlock' *before* 'el'.
   codeBox.insertBefore(pickedBlock, el);
   el.animate([{transform:'scale(1)'},{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:120});
   pickedBlock.style.outline = '';
   pickedBlock = null;
 }
 
-// check order (mark correct/incorrect)
+// check order: compare visible text to expected text for that position
 function checkOrder(){
-  const p = puzzles[current];
+  const p = fullPuzzles[current];
   const expected = p.lines.map(s => s.trim());
   const children = Array.from(codeBox.children);
   let allCorrect = true;
-
   children.forEach((c, i) => {
     const actual = c.textContent.trim();
-    // mark correct if the text in this DOM position matches the expected line for that position
     if(actual === expected[i]){
       c.classList.remove('incorrect'); c.classList.add('correct');
     } else {
@@ -405,7 +381,6 @@ function checkOrder(){
       allCorrect = false;
     }
   });
-
   if(allCorrect){
     messageEl.textContent = 'All correct — great job!';
     messageEl.style.color = '#0b7';
@@ -415,24 +390,7 @@ function checkOrder(){
   }
 }
 
-// Reset = reshuffle current puzzle (keep hint counts)
-function resetPuzzle(){
-  // remove container-level handlers before rebuilding to avoid duplicates
-  codeBox.removeEventListener('dragover', onContainerDragOver);
-  buildCodeBox(current);
-  messageEl.textContent = '';
-}
-
-// Next puzzle
-function nextPuzzle(){
-  // remove old handler
-  codeBox.removeEventListener('dragover', onContainerDragOver);
-  current = (current + 1) % puzzles.length;
-  puzzleSelect.value = current;
-  loadPuzzle(current);
-}
-
-// Reveal hint: place one random incorrect block into its correct position
+// reveal hint: find an expected position that is wrong and place a matching block (by text)
 function revealHint(){
   const used = usedHintsCount[current] || 0;
   if(used >= MAX_HINTS_PER_PUZZLE){
@@ -441,7 +399,41 @@ function revealHint(){
     updateRevealHintBtn();
     return;
   }
+  const p = fullPuzzles[current];
+  const expected = p.lines.map(s => s.trim());
   const children = Array.from(codeBox.children);
+
+  // find indices where the current text doesn't match expected
+  const wrongPositions = [];
+  children.forEach((c, idx) => {
+    if(c.textContent.trim() !== expected[idx]) wrongPositions.push(idx);
+  });
+  if(wrongPositions.length === 0){
+    messageEl.textContent = 'All lines are already correct.';
+    messageEl.style.color = '#444';
+    return;
+  }
+
+  // pick a random wrong position
+  const targetPos = wrongPositions[Math.floor(Math.random()*wrongPositions.length)];
+  const neededText = expected[targetPos];
+
+  // find a block elsewhere whose text equals neededText
+  const candidate = children.find((c, idx) => idx !== targetPos && c.textContent.trim() === neededText);
+  if(candidate){
+    // move candidate into targetPos
+    const remaining = Array.from(codeBox.children).filter(n => n !== candidate);
+    if(targetPos >= remaining.length) codeBox.appendChild(candidate);
+    else codeBox.insertBefore(candidate, remaining[targetPos]);
+    candidate.classList.remove('incorrect'); candidate.classList.add('correct');
+    usedHintsCount[current] = used + 1;
+    messageEl.textContent = `Hint used: one line placed correctly (${usedHintsCount[current]} of ${MAX_HINTS_PER_PUZZLE}).`;
+    messageEl.style.color = '#0b5';
+    updateRevealHintBtn();
+    return;
+  }
+
+  // fallback: if no matching-text block found (shouldn't happen), fallback to original behavior using origIndex
   const eligible = [];
   children.forEach((c, idx) => {
     const orig = Number(c.dataset.origIndex);
@@ -454,13 +446,10 @@ function revealHint(){
   }
   const choice = eligible[Math.floor(Math.random()*eligible.length)];
   const block = choice.el;
-  const targetPos = choice.orig;
+  const origPos = choice.orig;
   const remaining = Array.from(codeBox.children).filter(n => n !== block);
-  if(targetPos >= remaining.length){
-    codeBox.appendChild(block);
-  } else {
-    codeBox.insertBefore(block, remaining[targetPos]);
-  }
+  if(origPos >= remaining.length) codeBox.appendChild(block);
+  else codeBox.insertBefore(block, remaining[origPos]);
   block.classList.remove('incorrect'); block.classList.add('correct');
   usedHintsCount[current] = used + 1;
   messageEl.textContent = `Hint used: one line placed correctly (${usedHintsCount[current]} of ${MAX_HINTS_PER_PUZZLE}).`;
@@ -468,7 +457,6 @@ function revealHint(){
   updateRevealHintBtn();
 }
 
-// update hint button label and disabled state
 function updateRevealHintBtn(){
   const used = usedHintsCount[current] || 0;
   const left = Math.max(0, MAX_HINTS_PER_PUZZLE - used);
@@ -483,39 +471,62 @@ function updateRevealHintBtn(){
   }
 }
 
-// load puzzle by index
+function resetPuzzle(){
+  usedHintsCount[current] = usedHintsCount[current] || 0;
+  buildCodeBox(current);
+}
+
+function nextPuzzle(){
+  current = (current + 1) % fullPuzzles.length;
+  puzzleSelect.value = current;
+  loadPuzzle(current);
+}
+
 function loadPuzzle(idx){
   current = idx;
   puzzleSelect.value = idx;
   renderDescription(idx);
   buildCodeBox(idx);
   messageEl.textContent = '';
-  // clear any picked block state
   if(pickedBlock){ pickedBlock.style.outline=''; pickedBlock=null; }
 }
 
-// init
+// init: register container-level drag handlers only once
 function init(){
   populatePuzzleSelect();
   renderDescription(0);
   buildCodeBox(0);
-  // wire events
+
   submitBtn.addEventListener('click', checkOrder);
   revealHintBtn.addEventListener('click', revealHint);
   resetBtn.addEventListener('click', resetPuzzle);
   nextBtn.addEventListener('click', nextPuzzle);
   puzzleSelect.addEventListener('change', e => loadPuzzle(Number(e.target.value)));
-  // accessibility: focus handling
+
+  // container-level dragover/drop
+  codeBox.addEventListener('dragover', e => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData('text/plain');
+    if (!draggedId) return;
+    const draggedEl = codeBox.querySelector(`[data-id="${draggedId}"]`);
+    if (!draggedEl) return;
+    const afterEl = getDragAfterElement(codeBox, e.clientY);
+    if (afterEl == null) {
+      if (codeBox.lastElementChild !== draggedEl) codeBox.appendChild(draggedEl);
+    } else {
+      if (afterEl !== draggedEl.previousElementSibling) codeBox.insertBefore(draggedEl, afterEl);
+    }
+  });
+  codeBox.addEventListener('drop', e => { e.preventDefault(); });
+
+  // keyboard accessibility: focus handling + arrow keys for moving blocks
   codeBox.addEventListener('keydown', (e) => {
     if(e.key === 'Enter' || e.key === ' '){
       e.preventDefault();
       const first = codeBox.querySelector('.block');
       if(first) first.focus();
+      return;
     }
-  });
-
-  // keyboard up/down to move focused block
-  codeBox.addEventListener('keydown', (e) => {
     const focused = document.activeElement;
     if (!focused || !focused.classList || !focused.classList.contains('block')) return;
     if (e.key === 'ArrowUp'){

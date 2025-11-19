@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pseudocode practice — Compare & Hints</title>
+<style>
+  :root{
+    --bg:#f6f8fb;
+    --card:#ffffff;
+    --accent:#1f6feb;
+    --muted:#6b7280;
+    --success:#16a34a;
+    --danger:#dc2626;
+    --mono: "Courier New", monospace;
+  }
+  body{
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background:var(--bg);
+    margin:0;
+    padding:24px;
+    color:#0f172a;
+  }
+  .wrap{max-width:900px;margin:0 auto;}
+  h1{font-size:20px;margin:0 0 8px;}
+  p.lead{margin:0 0 18px;color:var(--muted);}
+  .card{background:var(--card);border-radius:10px;padding:18px;box-shadow:0 6px 20px rgba(15,23,42,0.06);margin-bottom:18px;}
+  .editor-row{display:flex;gap:12px;align-items:flex-start;}
+  /* line number gutter */
+  .gutter{
+    background:#eef2ff;border-radius:6px;padding:8px 6px;font-family:var(--mono);font-size:13px;color:#334155;
+    text-align:right;min-width:48px;
+    user-select:none;
+  }
+  textarea#editor{
+    font-family:var(--mono);font-size:13px;line-height:1.45;padding:12px;border-radius:6px;border:1px solid #e6e9ef;resize:vertical;
+    min-height:260px;width:100%;box-sizing:border-box;background:#fafbff;
+  }
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  button, .link{
+    background:var(--accent); color:white; border:0; padding:8px 12px;border-radius:8px; cursor:pointer;
+    font-weight:600;
+  }
+  button.secondary{background:#e6eefc;color:var(--accent);border:1px solid #cfe0ff;}
+  button.danger{background:var(--danger);}
+  .link{background:transparent;color:var(--accent);padding:0;border:none;text-decoration:underline;font-weight:600;}
+  .status{margin-top:12px;padding:10px;border-radius:8px;font-weight:600;}
+  .status.good{background:rgba(22,163,74,0.12);color:var(--success);border:1px solid rgba(22,163,74,0.15)}
+  .status.bad{background:rgba(220,38,38,0.06);color:var(--danger);border:1px solid rgba(220,38,38,0.08)}
+  .small{font-size:13px;color:var(--muted);}
+  pre.codebox{background:#0b1220;color:#e6eefc;padding:12px;border-radius:8px;overflow:auto;font-family:var(--mono);font-size:13px;}
+  .hints{margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .hint-line{background:#fffceb;border-radius:6px;padding:8px 10px;border:1px dashed #f1d08a;font-family:var(--mono);font-size:13px;}
+  footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:right;}
+  @media(max-width:700px){
+    .editor-row{flex-direction:column;}
+    .gutter{text-align:left;}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Pseudocode practice — write & check</h1>
+    <p class="lead">Type your pseudocode into the editor. Click <strong>Check</strong> to compare your code with the model answer. Indentation and letter-case do not matter. Use <strong>Hint</strong> to reveal one correct line at a time, or <strong>Reveal full code</strong>.</p>
+
+    <div class="card" aria-live="polite">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <div style="font-weight:700;">Editor</div>
+        <div class="small" style="margin-left:auto;">Lines: <span id="lineCount">9</span></div>
+      </div>
+
+      <div class="editor-row" style="margin-top:12px;">
+        <div class="gutter" id="gutter">
+          <!-- line numbers injected by JS -->
+        </div>
+
+        <textarea id="editor" placeholder="Write your pseudocode here. One statement per line."></textarea>
+      </div>
+
+      <div class="controls">
+        <button id="checkBtn">Check</button>
+        <button class="secondary" id="clearBtn">Clear</button>
+        <button class="secondary" id="formatBtn" title="Trim whitespace & normalize spacing">Auto-format</button>
+        <button class="link" id="hintBtn">Hint (reveal one line)</button>
+        <button class="link" id="revealBtn">Reveal full code</button>
+      </div>
+
+      <div id="status" class="status" style="display:none;"></div>
+
+      <div class="hints" id="hintsArea" aria-live="polite"></div>
+
+      <div style="margin-top:14px;">
+        <div style="font-weight:700;margin-bottom:6px;">Model answer (hidden when embedded) — shown on Reveal/Hint</div>
+        <pre id="modelArea" class="codebox" style="display:none;"></pre>
+      </div>
+    </div>
+
+    <div class="card small">
+      <strong>Notes for students:</strong>
+      <ul>
+        <li>Ignore leading spaces — indentation doesn't affect matching.</li>
+        <li>Match keywords and structure (DECLARE, INPUT, OUTPUT, IF, THEN, ELSE, ENDIF).</li>
+        <li>If your code doesn't match exactly, try adjusting spacing or capitalization; use Hint to reveal one correct line at a time.</li>
+      </ul>
+    </div>
+
+    <footer>Teacher: you can edit the canonical code inside the HTML if you want to change the model answer.</footer>
+  </div>
+
+<script>
+/* ========== Canonical model answer (teacher can edit here) ========== */
+const MODEL_LINES = [
+  'DECLARE Name : String',
+  'OUTPUT "Please enter your name:"',
+  'INPUT Name',
+  'IF Name = "John"',
+  'THEN',
+  'OUTPUT "Hello John"',
+  'ELSE',
+  'OUTPUT "Where is John?"',
+  'ENDIF'
+];
+/* ================================================================== */
+
+const editor = document.getElementById('editor');
+const gutter = document.getElementById('gutter');
+const lineCountDisplay = document.getElementById('lineCount');
+const status = document.getElementById('status');
+const hintBtn = document.getElementById('hintBtn');
+const revealBtn = document.getElementById('revealBtn');
+const modelArea = document.getElementById('modelArea');
+const hintsArea = document.getElementById('hintsArea');
+const checkBtn = document.getElementById('checkBtn');
+const clearBtn = document.getElementById('clearBtn');
+const formatBtn = document.getElementById('formatBtn');
+
+let revealedCount = 0;
+
+// Initialize editor with empty lines equal to model lines (helps students)
+function initEditor(){
+  const initial = Array.from({length: MODEL_LINES.length}, ()=>'').join('\\n');
+  editor.value = initial;
+  updateGutter();
+}
+function updateGutter(){
+  const lines = editor.value.split('\\n').length;
+  gutter.innerHTML = Array.from({length:lines}, (_,i)=> (i+1) ).join('<br>');
+  lineCountDisplay.textContent = lines;
+}
+editor.addEventListener('input', updateGutter);
+editor.addEventListener('scroll', ()=>{gutter.scrollTop = editor.scrollTop;});
+
+// Normalization: remove leading/trailing whitespace, collapse multiple spaces to single, lowercase, remove spaces around ":" and "=" and before parentheses
+function normalizeLine(s){
+  if (s === null || typeof s === 'undefined') return '';
+  // convert common variants
+  s = s.replace(/\\u00A0/g,' '); // no-break spaces
+  s = s.trim();
+  // remove quotes style differences (convert fancy quotes to simple)
+  s = s.replace(/[“”]/g,'"').replace(/[‘’]/g,"'");
+  // collapse multiple spaces to single
+  s = s.replace(/\\s+/g,' ');
+  // remove spaces around ':' and '=' for consistent tokenization
+  s = s.replace(/\\s*:\\s*/g,':').replace(/\\s*=\\s*/g,'=');
+  // remove any trailing semicolons (not expected) or stray unmatched parens at end
+  s = s.replace(/;+$|\\)+$/g, function(m){ return m.startsWith(')')? '' : ''; });
+  // lowercase for case-insensitive comparison
+  return s.toLowerCase();
+}
+function normalizeLines(arr){
+  // remove empty leading/trailing blank lines
+  let copy = arr.slice();
+  // trim lines
+  copy = copy.map(l=>normalizeLine(l));
+  // drop empty lines at start/end
+  while(copy.length && copy[0] === '') copy.shift();
+  while(copy.length && copy[copy.length-1] === '') copy.pop();
+  return copy;
+}
+
+function checkAnswer(){
+  const userRaw = editor.value.split('\\n');
+  const user = normalizeLines(userRaw);
+  const model = normalizeLines(MODEL_LINES.slice());
+  // If user has different number of non-empty lines, it's likely wrong.
+  if (user.length !== model.length){
+    showStatus(false, `Not correct yet — expected ${model.length} non-empty lines, but found ${user.length}. Keep trying!`);
+    return;
+  }
+  // Compare line-by-line
+  for (let i=0;i<model.length;i++){
+    if (user[i] !== model[i]){
+      showStatus(false, `Not correct yet — difference on line ${i+1}. Keep trying!`);
+      return;
+    }
+  }
+  showStatus(true, 'Well done — your pseudocode matches the model answer!');
+}
+
+function showStatus(ok, message){
+  status.style.display = 'block';
+  status.textContent = message;
+  if (ok){
+    status.className = 'status good';
+  } else {
+    status.className = 'status bad';
+  }
+}
+
+// Hint: reveal next unrevealed model line (in order)
+function revealNextLine(){
+  if (revealedCount >= MODEL_LINES.length){
+    hintBtn.disabled = true;
+    hintBtn.textContent = 'All lines revealed';
+    return;
+  }
+  const line = MODEL_LINES[revealedCount];
+  const el = document.createElement('div');
+  el.className = 'hint-line';
+  el.textContent = `${revealedCount+1}. ${line}`;
+  hintsArea.appendChild(el);
+  revealedCount++;
+  // If all revealed, disable hint button
+  if (revealedCount >= MODEL_LINES.length){
+    hintBtn.disabled = true;
+    hintBtn.textContent = 'All lines revealed';
+  }
+}
+
+// Reveal full code toggling
+let revealedFull = false;
+function toggleRevealFull(){
+  if (!revealedFull){
+    modelArea.style.display = 'block';
+    modelArea.textContent = MODEL_LINES.join('\\n');
+    revealBtn.textContent = 'Hide model answer';
+    revealedFull = true;
+  } else {
+    modelArea.style.display = 'none';
+    revealBtn.textContent = 'Reveal full code';
+    revealedFull = false;
+  }
+}
+
+// Auto-format: perform normalization but keep original case for user
+function autoFormat(){
+  const lines = editor.value.split('\\n');
+  const formatted = lines.map(l=>{
+    // trim and collapse spaces but preserve case
+    let t = l.replace(/\\u00A0/g,' ');
+    t = t.trim();
+    t = t.replace(/\\s+/g,' ');
+    t = t.replace(/\\s*:\\s*/g,':').replace(/\\s*=\\s*/g,' = ');
+    return t;
+  });
+  editor.value = formatted.join('\\n');
+  updateGutter();
+  showStatus(false, 'Editor auto-formatted (spacing/indentation normalized).');
+}
+
+// Clear editor
+function clearEditor(){
+  if (!confirm('Clear the editor?')) return;
+  editor.value = Array.from({length: MODEL_LINES.length}, ()=>'').join('\\n');
+  updateGutter();
+  status.style.display = 'none';
+  hintsArea.innerHTML = '';
+  revealedCount = 0;
+  hintBtn.disabled = false;
+  hintBtn.textContent = 'Hint (reveal one line)';
+  modelArea.style.display = 'none';
+  revealedFull = false;
+  revealBtn.textContent = 'Reveal full code';
+}
+
+checkBtn.addEventListener('click', checkAnswer);
+hintBtn.addEventListener('click', revealNextLine);
+revealBtn.addEventListener('click', toggleRevealFull);
+clearBtn.addEventListener('click', clearEditor);
+formatBtn.addEventListener('click', autoFormat);
+
+// initialize
+initEditor();
+updateGutter();
+
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>FOR Loops- Fill in the blanks</title>
+<title>FOR Loops - Pseudocode Puzzles</title>
 <style>
   :root{
     --bg:#ffffff; --accent:#0066cc; --ok:#d4f7d9; --bad:#ffd6d6;
@@ -36,7 +36,7 @@
 </style>
 </head>
 <body>
-  <h1>FOR Loops- Fill in the blanks</h1>
+  <h1>FOR Loops - Pseudocode Puzzles</h1>
   <div class="meta">Place the correct token into each blank. Use drag & drop, or keyboard: Tab to token → Enter to pick → Tab to blank → Enter to place.</div>
 
   <div class="panel">
@@ -72,197 +72,275 @@
   </div>
 
 <script>
-/* Student-facing version
-   - Random reveal hint up to 3 per puzzle
-   - Removed the sentence you requested from the instructions text
+/* - 10 Puzzles adapted from the PDF.
+   - Distractors increase by 1 each puzzle (2 to 11).
+   - Standard pseudocode syntax used (<- for assignment).
 */
 
 const MAX_HINTS_PER_PUZZLE = 3;
 
 const puzzles = [
+  // 1. No input, simple loop with output (2 Distractors)
   {
-    title: "Simple FOR output 1 to 3",
+    title: "1. Simple Loop Output",
     bullets: [
-      "No input — print numbers 1 to 3 using a FOR loop.",
-      "Each number should appear on its own line."
+      "This algorithm declares a counter and prints numbers 1 through 5.",
+      "The loop automatically increments the counter."
     ],
-    hint: "Use a loop variable (i). OUTPUT i each iteration.",
-    example: "1\n2\n3",
+    hint: "You need to start the loop, define the range, and close the loop.",
+    example: "1\n2\n3\n4\n5",
     lines: [
-      "___1___ i = ___2___ TO ___3___ DO",
-      "OUTPUT ___4___",
-      "NEXT ___5___"
+      "DECLARE LoopCounter : INTEGER",
+      "___1___ LoopCounter ← 1 ___2___ 5",
+      "OUTPUT LoopCounter",
+      "___3___ LoopCounter"
     ],
-    answers: ["FOR","1","3","i","i"],
-    bank: ["FOR","NEXT","i","1","3","TO","OUTPUT","2"]
+    answers: ["FOR","TO","NEXT"],
+    bank: ["FOR","TO","NEXT","IF","STEP"] // 3 correct + 2 distractors
   },
+  
+  // 2. Input, loop with output (3 Distractors)
   {
-    title: "FOR with STEP 3",
+    title: "2. Input Controlled Loop",
     bullets: [
-      "No input — output every third number from 1 up to 10.",
-      "Use STEP to change how much the loop increases each time."
+      "This algorithm asks the user for a number (Repetitions) and prints a phrase that many times.",
+      "The loop runs from 1 to the user's input."
     ],
-    hint: "Start at 1, end at 10, use STEP 3.",
-    example: "1\n4\n7\n10",
+    hint: "Declare the correct variable types and ensure the loop limit matches the input.",
+    example: "Input: 3\nOutput:\nComputer Science\nComputer Science\nComputer Science",
     lines: [
-      "___1___ i = ___2___ ___3___ ___4___ ___5___",
-      "OUTPUT i",
+      "DECLARE Repetitions : ___1___",
+      "DECLARE i : ___2___",
+      "INPUT ___3___",
+      "___4___ i ← 1 ___5___ Repetitions",
+      "OUTPUT \"Computer Science\"",
       "NEXT i"
     ],
-    answers: ["FOR","1","TO","10","3"],
-    bank: ["1","2","3","10","FOR","TO","STEP","OUTPUT","i","NEXT","4"]
+    answers: ["INTEGER","INTEGER","Repetitions","FOR","TO"],
+    bank: ["INTEGER","INTEGER","Repetitions","FOR","TO","STRING","Loop","END"] // 5 correct + 3 distractors
   },
+
+  // 3. Input, loop with input, output outside loop (4 Distractors)
   {
-    title: "Descending FOR loop",
+    title: "3. Output Last Item",
     bullets: [
-      "No input — count down from 5 to 1.",
-      "Use a negative STEP so the loop decreases."
+      "This algorithm asks how many items to process.",
+      "It allows the user to input that many values inside the loop.",
+      "It only outputs the *final* value entered after the loop finishes."
     ],
-    hint: "Set STEP to -1 to decrement the loop variable.",
-    example: "5\n4\n3\n2\n1",
+    hint: "Set up the loop bounds using the input variable and close the loop correctly.",
+    example: "Input NumberOfItems: 3\nInput: 5\nInput: 10\nInput: 7\nOutput: The last item entered was 7",
     lines: [
-      "___1___ k = ___2___ ___3___ ___4___ ___5___",
-      "OUTPUT k",
-      "NEXT k"
+      "DECLARE NumberOfItems : INTEGER",
+      "DECLARE CurrentItem : INTEGER",
+      "DECLARE Count : INTEGER",
+      "INPUT ___1___",
+      "FOR ___2___ ← 1 ___3___ NumberOfItems",
+      "INPUT CurrentItem",
+      "___4___ Count",
+      "OUTPUT \"The last item entered was\", CurrentItem"
     ],
-    answers: ["FOR","5","TO","1","-1"],
-    bank: ["FOR","k","5","1","-1","TO","STEP","OUTPUT","NEXT","i","0"]
+    answers: ["NumberOfItems","Count","TO","NEXT"],
+    bank: ["NumberOfItems","Count","TO","NEXT","IF","THEN","0","Total"] // 4 correct + 4 distractors
   },
+
+  // 4. Input, loop, IF inside loop (5 Distractors)
   {
-    title: "Sum a few values",
+    title: "4. Filter Loop (Output > 10)",
     bullets: [
-      "Input: prompt user for 3 numbers (one per iteration).",
-      "Add each number to a running total and print the total after the loop."
+      "This algorithm takes a maximum number from the user.",
+      "It prints all numbers up to that maximum, but ONLY if they are greater than 10."
     ],
-    hint: "Initialise total to 0 before the loop and add each input to total.",
-    example: "Input: 1, 2, 3  → Output: 6",
+    hint: "Use an IF statement inside the loop to check the value.",
+    example: "Input Max: 12\nOutput:\n11\n12",
     lines: [
-      "___1___ = ___2___",
-      "___3___ ___4___ ___5___ ___6___ ___7___",
-      "INPUT ___8___",
-      "___9___ = ___9___ ___10___ ___8___",
-      "NEXT ___11___",
-      "OUTPUT ___9___"
-    ],
-    answers: ["total","0","FOR","i","=","1","TO","n","total","+","i"],
-    bank: ["total","sum","0","1","2","+","-","*","FOR","i","j","TO","STEP","OUTPUT","INPUT","n","=","NEXT"]
-  },
-  {
-    title: "Double input values",
-    bullets: [
-      "Input: prompt the user 4 times for a number.",
-      "For each entered number, print twice its value."
-    ],
-    hint: "Multiply the input by 2 before outputting.",
-    example: "Input: 2 → Output: 4",
-    lines: [
-      "___1___ ___2___ ___3___ ___4___",
-      "INPUT ___5___",
-      "OUTPUT ___5___ ___6___ ___7___",
-      "NEXT ___8___"
-    ],
-    answers: ["FOR","i","=","1","value","*","2","i"],
-    bank: ["FOR","i","=","1","4","2","*","/","+","INPUT","OUTPUT","value","NEXT"]
-  },
-  {
-    title: "Output only even numbers",
-    bullets: [
-      "Input: the user enters 4 numbers.",
-      "Output the number only if it is even (divisible by 2)."
-    ],
-    hint: "Use MOD to test remainder when dividing by 2.",
-    example: "Input: 2,3,4,5 → Output:\n2\n4",
-    lines: [
-      "___1___ i = ___2___ ___3___ ___4___",
-      "INPUT ___5___",
-      "IF ___5___ ___6___ ___7___ ___8___",
-      "OUTPUT ___5___",
+      "DECLARE MaxValue : INTEGER",
+      "DECLARE Counter : INTEGER",
+      "INPUT MaxValue",
+      "FOR Counter ← ___1___ TO ___2___",
+      "IF Counter ___3___ 10",
+      "THEN",
+      "OUTPUT Counter",
       "ENDIF",
+      "NEXT Counter"
+    ],
+    answers: ["1","MaxValue",">"],
+    bank: ["1","MaxValue",">","<","=","STEP","DOWN","0"] // 3 correct + 5 distractors
+  },
+
+  // 5. Input, loop, IF-ELSE inside loop (6 Distractors)
+  {
+    title: "5. Even or Odd Checker",
+    bullets: [
+      "The user inputs a number of iterations.",
+      "The loop checks if the current counter is even or odd using the MOD function.",
+      "It prints a different message for each case."
+    ],
+    hint: "MOD(i, 2) returns 0 if the number is Even.",
+    example: "Input: 2\nOutput:\n1 is Odd\n2 is Even",
+    lines: [
+      "DECLARE Iterations : INTEGER",
+      "DECLARE ___1___ : INTEGER",
+      "INPUT Iterations",
+      "___2___ i ← 1 ___3___ Iterations",
+      "IF ___4___ = 0",
+      "THEN",
+      "OUTPUT i, \" is Even\"",
+      "ELSE",
+      "OUTPUT i, \" is Odd\"",
+      "ENDIF",
+      "NEXT i"
+    ],
+    answers: ["i","FOR","TO","MOD(i, 2)"],
+    bank: ["i","FOR","TO","MOD(i, 2)","MOD(2, i)","DIV","+","NEXT","WHILE","REPEAT"] // 4 correct + 6 distractors
+  },
+
+  // 6. Input, loop, input inside loop, totalling (7 Distractors)
+  {
+    title: "6. Summation Loop",
+    bullets: [
+      "This calculates the sum of numbers entered by the user.",
+      "The total must be reset to 0 before the loop starts."
+    ],
+    hint: "Initialize Sum to 0. Add each NumberEntry to Sum inside the loop.",
+    example: "Input TotalNumbers: 2\nInput: 5\nInput: 5\nOutput: The total sum is 10",
+    lines: [
+      "DECLARE TotalNumbers : INTEGER",
+      "DECLARE NumberEntry : INTEGER",
+      "DECLARE Sum : INTEGER",
+      "DECLARE ___1___ : INTEGER",
+      "Sum ← ___2___",
+      "INPUT ___3___",
+      "FOR ___1___ ← 1 TO ___3___",
+      "INPUT ___4___",
+      "Sum ← Sum + NumberEntry",
+      "NEXT k",
+      "OUTPUT \"The total sum is\", Sum"
+    ],
+    answers: ["k","0","TotalNumbers","NumberEntry"],
+    bank: ["k","0","TotalNumbers","NumberEntry","Sum","2","10","OUTPUT","IF","THEN","END"] // 4 correct + 7 distractors
+  },
+
+  // 7. Loop, totalling with IF-ELSE inside loop (8 Distractors)
+  {
+    title: "7. Split Totals (High vs Low)",
+    bullets: [
+      "Loops through a fixed range (1 to 20).",
+      "Sums numbers greater than 10 into 'HighTotal'.",
+      "Sums numbers less than or equal to 10 into 'LowTotal'."
+    ],
+    hint: "Check the loop range and ensure you are adding to the correct total variables.",
+    example: "Output:\nSum of high numbers: 155\nSum of low numbers: 55",
+    lines: [
+      "DECLARE HighTotal : INTEGER",
+      "DECLARE LowTotal : INTEGER",
+      "DECLARE Number : INTEGER",
+      "HighTotal ← 0",
+      "LowTotal ← 0",
+      "FOR Number ← 1 TO ___1___",
+      "IF Number ___2___",
+      "THEN",
+      "___3___ ← HighTotal + Number",
+      "ELSE",
+      "___4___ ← LowTotal + Number",
+      "ENDIF",
+      "___5___ Number",
+      "OUTPUT \"Sum of high numbers: \", HighTotal",
+      "OUTPUT \"Sum of low numbers: \", LowTotal"
+    ],
+    answers: ["20","> 10","HighTotal","LowTotal","NEXT"],
+    bank: ["20","> 10","HighTotal","LowTotal","NEXT","< 10","1","100","Count","INPUT","STEP","STOP","HighTotal"] // 5 correct + 8 distractors
+  },
+
+  // 8. Input, nested loop with output (9 Distractors)
+  {
+    title: "8. Coordinate Grid",
+    bullets: [
+      "This generates a grid of coordinates based on user input for rows and columns.",
+      "It uses a Nested Loop (a loop inside a loop)."
+    ],
+    hint: "The outer loop handles Rows, the inner loop handles Columns. Watch your variable names.",
+    example: "Input Rows: 2, Cols: 2\nOutput:\nRow 1 Col 1\nRow 1 Col 2\nRow 2 Col 1\nRow 2 Col 2",
+    lines: [
+      "DECLARE Rows : INTEGER",
+      "DECLARE Columns : INTEGER",
+      "DECLARE ___1___ : INTEGER",
+      "DECLARE ___2___ : INTEGER",
+      "INPUT Rows",
+      "INPUT Columns",
+      "FOR ___1___ ← 1 TO ___3___",
+      "FOR ___2___ ← 1 TO ___4___",
+      "OUTPUT \"Row\", ___1___, \" Col\", ___2___",
+      "NEXT ___2___",
       "NEXT ___1___"
     ],
-    answers: ["FOR","1","TO","4","num","MOD","2","= 0"],
-    bank: ["FOR","1","2","3","4","TO","STEP","MOD","%","=","= 0","num","n","INPUT","OUTPUT","IF","THEN","ENDIF","NEXT"]
+    answers: ["r","c","Rows","Columns"],
+    bank: ["r","c","Rows","Columns","i","j","1","0","OUTPUT","Grid","STEP","THEN","ENDIF"] // 4 correct + 9 distractors
   },
+
+  // 9. Input, nested loop, second loop inside IF (10 Distractors)
   {
-    title: "Count values above threshold",
+    title: "9. Conditional Inner Loop",
     bullets: [
-      "Input: prompt the user 5 times for a number.",
-      "Count how many of the entered numbers are greater than 10 and print the count."
+      "Loops through a limit input by the user.",
+      "If the current number is a multiple of 5, it triggers a small inner loop to print asterisks.",
+      "Otherwise, it just prints the number."
     ],
-    hint: "Initialise a counter at 0; when value > 10, increment the counter.",
-    example: "Input: 12,9,15,6,11 → Output: 3",
+    hint: "The inner loop (printing ***) only runs inside the IF statement.",
+    example: "Input: 5\nOutput: 1\n2\n3\n4\n5\nMultiple of 5 found\n***\n***\n***",
     lines: [
-      "___1___ = ___2___",
-      "___3___ ___4___ ___5___ ___6___",
-      "INPUT ___7___",
-      "IF ___7___ ___8___ ___9___ ___10___",
-      "___1___ = ___1___ + 1",
+      "DECLARE Limit : INTEGER",
+      "DECLARE OuterCount : INTEGER",
+      "DECLARE InnerCount : INTEGER",
+      "INPUT Limit",
+      "___1___ ← 1 ___2___ Limit",
+      "OUTPUT OuterCount",
+      "IF MOD(OuterCount, 5) = 0",
+      "THEN",
+      "OUTPUT \"Multiple of 5 found\"",
+      "FOR ___3___ ← 1 TO 3",
+      "OUTPUT \"***\"",
+      "___4___ InnerCount",
+      "ENDIF",
+      "NEXT ___5___"
+    ],
+    answers: ["FOR OuterCount","TO","InnerCount","NEXT","OuterCount"],
+    bank: ["FOR OuterCount","TO","InnerCount","NEXT","OuterCount","WHILE","REPEAT","UNTIL","> 5","Limit","Step","Count","0","10","IF"] // 5 correct + 10 distractors
+  },
+
+  // 10. Complex Logic (11 Distractors)
+  {
+    title: "10. Game Score Calculator",
+    bullets: [
+      "Calculates a score based on 'Turns'.",
+      "If the Turn is EVEN, it adds bonus points (looping twice to add 10 points).",
+      "If the Turn is ODD, it subtracts 5 points once."
+    ],
+    hint: "Even numbers are MOD 2 = 0. Use the correct loop variable for the bonus points.",
+    example: "Input MaxTurns: 2\nTurn 1 (Odd): Score -5\nTurn 2 (Even): Score +10, +10\nFinal: 15",
+    lines: [
+      "DECLARE MaxTurns : INTEGER",
+      "DECLARE TotalScore : INTEGER",
+      "DECLARE Turn : INTEGER",
+      "DECLARE Bonus : INTEGER",
+      "TotalScore ← 0",
+      "INPUT MaxTurns",
+      "FOR Turn ← 1 TO ___1___",
+      "IF ___2___ = 0",
+      "THEN",
+      "// Even turns get bonus",
+      "FOR ___3___ ← 1 TO 2",
+      "TotalScore ← TotalScore + 10",
+      "___4___ Bonus",
+      "ELSE",
+      "// Odd turns lose points",
+      "TotalScore ← TotalScore - 5",
       "ENDIF",
       "NEXT ___5___",
-      "OUTPUT ___1___"
+      "OUTPUT \"Final calculated score: \", TotalScore"
     ],
-    answers: ["count","0","FOR","i","1","TO","v",">","10","THEN"],
-    bank: ["count","cnt","0","1","5","10","TO","FOR","i","j","v","INPUT","OUTPUT",">","<","=","THEN","IF","NEXT","+","-"]
-  },
-  {
-    title: "FOR with variable step expression",
-    bullets: [
-      "No input. Assign a variable stepSize (e.g. 2) and use it in the STEP clause of a FOR loop.",
-      "The loop should print values from 1 to 5 stepping by stepSize."
-    ],
-    hint: "Declare stepSize, then use STEP stepSize in the FOR header.",
-    example: "With stepSize = 2 → Output:\n1\n3\n5",
-    lines: [
-      "___1___ = ___2___",
-      "___3___ ___4___ ___5___ ___6___ ___7___ ___8___",
-      "OUTPUT ___4___",
-      "NEXT ___4___"
-    ],
-    answers: ["stepSize","2","FOR","i","=","1","TO","5"],
-    bank: ["stepSize","step","2","1","5","FOR","i","j","=","TO","STEP","OUTPUT","NEXT","rand"]
-  },
-  {
-    title: "NEXT variable mismatch (attention to names)",
-    bullets: [
-      "No input. Print the numbers 1 to 3 using a FOR loop.",
-      "Be careful that the variable name in NEXT matches the FOR variable."
-    ],
-    hint: "If you use FOR index = 1 TO 3, then write NEXT index (not NEXT i).",
-    example: "1\n2\n3",
-    lines: [
-      "___1___ ___2___ ___3___ ___4___ ___5___",
-      "OUTPUT ___2___",
-      "NEXT ___6___"
-    ],
-    answers: ["FOR","index","=","1","3","index"],
-    bank: ["FOR","index","i","=","1","3","NEXT","OUTPUT","TO","STEP","j"]
-  },
-  {
-    title: "Nested FOR to build pairs (mostly blanks)",
-    bullets: [
-      "No input. Use nested FOR loops to produce ordered pairs (i, j): i from 1 to 2 and j from 1 to 3.",
-      "Print each pair (i, j) so that all six pairs are produced."
-    ],
-    hint: "Outer loop: FOR i = 1 TO 2 DO; inner loop: FOR j = 1 TO 3 DO; OUTPUT i , j; NEXT j; NEXT i.",
-    example: "1 , 1\n1 , 2\n1 , 3\n2 , 1\n2 , 2\n2 , 3",
-    lines: [
-      "___1___ ___2___ ___3___ ___4___ ___5___",
-      "___6___ ___7___ ___8___ ___9___ ___10___",
-      "___11___ ___12___ ___13___ ___14___ ___15___",
-      "___16___ ___17___ ___18___ ___19___ ___20___",
-      "___21___ ___22___ ___23___ ___24___ ___25___"
-    ],
-    answers: [
-      "FOR","i","=","1","TO",
-      "2","FOR","j","=","1",
-      "TO","3","DO","OUTPUT","i",
-      ",","j","NEXT","j","NEXT",
-      "i"
-    ],
-    bank: [
-      "FOR","NEXT","i","j","=","1","2","3","TO","STEP","DO","OUTPUT",",",";","INPUT","OUTPUT","FORWARD","END","NEXT i","NEXT j",
-      "rand","value","k","OUTPUT i","OUTPUT j"
-    ]
+    answers: ["MaxTurns","MOD(Turn, 2)","Bonus","NEXT","Turn"],
+    bank: ["MaxTurns","MOD(Turn, 2)","Bonus","NEXT","Turn","STEP","1","0","TotalScore","+","DIV","Turn","INPUT","OUTPUT","THEN","EndLoop"] // 5 correct + 11 distractors
   }
 ];
 
@@ -295,7 +373,7 @@ function populatePuzzleSelect(){
   puzzles.forEach((p,i)=>{
     const opt = document.createElement('option');
     opt.value = i;
-    opt.textContent = `${i+1}. ${p.title}`;
+    opt.textContent = p.title;
     puzzleSelect.appendChild(opt);
   });
   puzzleSelect.value = 0; // ensure the first puzzle is selected by default
@@ -359,7 +437,7 @@ function renderCode(puzzle){
       span.dataset.blank = num;
       span.dataset.filled = 'false';
       span.dataset.token = '';
-      span.textContent = `___${num}___`;
+      span.textContent = `___`;
       // drag/drop
       span.addEventListener('dragover', e => { e.preventDefault(); span.classList.add('dragover'); });
       span.addEventListener('dragleave', ()=> span.classList.remove('dragover'));
@@ -429,7 +507,7 @@ function resetCurrent(){
     b.dataset.filled = 'false';
     b.dataset.token = '';
     b.classList.remove('filled','correct','incorrect');
-    b.textContent = `___${b.dataset.blank}___`;
+    b.textContent = `___`;
   });
   renderBank(p.bank.slice());
   msgEl.textContent = '';
@@ -444,17 +522,26 @@ function resetCurrent(){
 function checkAnswers(){
   const p = puzzles[currentIndex];
   const answers = p.answers || [];
+  // sort blanks by index (dataset.blank)
   const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
   let allCorrect = true;
+  
+  // Note: answers array corresponds to blank indices 1, 2, 3...
+  // but blanks array is 0-indexed in JS.
+  // blank index 1 -> answers[0]
+  
   blanks.forEach((b, i)=>{
-    const placed = b.dataset.filled === 'true' ? b.dataset.token : '';
     const correct = answers[i] !== undefined ? String(answers[i]) : '';
+    const placed = b.dataset.filled === 'true' ? b.dataset.token : '';
+    
     if(correct === '' || correct === undefined) {
       b.classList.remove('correct','incorrect');
       return;
     }
+    
     const placedTrim = placed !== null ? placed.toString().trim() : '';
     const correctTrim = correct.toString().trim();
+    
     if(placedTrim === correctTrim){
       b.classList.remove('incorrect'); b.classList.add('correct');
     } else {
@@ -462,6 +549,7 @@ function checkAnswers(){
       allCorrect = false;
     }
   });
+  
   if(allCorrect){
     msgEl.textContent = 'All correct! Well done 🎉'; msgEl.style.color = '#1a7f3a';
   } else {
@@ -482,26 +570,32 @@ function revealRandomBlank(){
   const answers = p.answers || [];
   const blanks = Array.from(document.querySelectorAll('.blank')).sort((a,b)=> Number(a.dataset.blank)-Number(b.dataset.blank));
   const eligible = [];
+  
   blanks.forEach((b, i)=>{
     const correct = answers[i] !== undefined ? String(answers[i]) : '';
     if(!correct || correct.trim()==='') return;
+    
     const placed = b.dataset.filled === 'true' ? (b.dataset.token || '') : '';
     if(placed.toString().trim() !== correct.toString().trim()){
       eligible.push(i);
     }
   });
+  
   if(eligible.length === 0){
     msgEl.textContent = 'All blanks are already correct or there are no defined answers to reveal.';
     msgEl.style.color = '#444';
     return;
   }
+  
   const randIdx = eligible[Math.floor(Math.random()*eligible.length)];
   const targetBlank = blanks[randIdx];
   const correctVal = answers[randIdx];
+  
   targetBlank.dataset.token = correctVal;
   targetBlank.dataset.filled = 'true';
   targetBlank.textContent = correctVal;
   targetBlank.classList.remove('incorrect'); targetBlank.classList.add('correct');
+  
   usedHintsCount[currentIndex] = used + 1;
   msgEl.textContent = `Hint used: a blank has been filled (${usedHintsCount[currentIndex]} of ${MAX_HINTS_PER_PUZZLE}).`;
   msgEl.style.color = '#0b5';
@@ -528,33 +622,15 @@ function loadPuzzle(idx){
   if(idx < 0 || idx >= puzzles.length) idx = 0;
   currentIndex = idx;
   const p = puzzles[currentIndex];
-  // description
-  descTitle.textContent = p.title || '';
-  descBullets.innerHTML = '';
-  (p.bullets || []).forEach(b => {
-    const li = document.createElement('li');
-    li.textContent = b;
-    descBullets.appendChild(li);
-  });
-  teacherHint.textContent = p.hint || '';
-  if(p.example && p.example.trim().length > 0){
-    toggleExample.style.display = 'inline-block';
-    exampleBox.textContent = p.example;
-    exampleBox.style.display = 'none';
-    exampleBox.setAttribute('aria-hidden','true');
-    toggleExample.textContent = 'Show example output';
-  } else {
-    toggleExample.style.display = 'none';
-    exampleBox.style.display = 'none';
-    exampleBox.setAttribute('aria-hidden','true');
-  }
+  
+  renderDescription(p);
   renderCode(p);
   renderBank(p.bank.slice());
+  
   msgEl.textContent = '';
   document.querySelectorAll('.token[aria-pressed="true"]').forEach(x=>x.setAttribute('aria-pressed','false'));
   selectedToken = null;
   updateRevealHintBtn();
-  exampleBox.style.display = 'none'; exampleBox.setAttribute('aria-hidden','true'); toggleExample.textContent = 'Show example output';
 }
 
 // Events

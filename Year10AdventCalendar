@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Coding Advent Calendar</title>
+    <style>
+        :root {
+            --bg-color: #050a14;
+            --panel-bg: #0a1122;
+            --neon-green: #0f0;
+            --neon-red: #ff003c;
+            --neon-blue: #00f3ff;
+            --neon-amber: #ffae00;
+            --text-main: #c0c0c0;
+            --font-code: 'Courier New', Courier, monospace;
+            --font-ui: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 255, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        #candle-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            background: radial-gradient(circle at 50% 80%, rgba(255, 200, 150, 0.25) 0%, rgba(0, 0, 0, 0.9) 65%);
+            animation: candleFlicker 4s infinite;
+        }
+
+        @keyframes candleFlicker {
+            0% { opacity: 0.75; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        h1 {
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--neon-blue);
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            text-align: center;
+            z-index: 3;
+        }
+
+        .system-status {
+            font-family: var(--font-code);
+            color: var(--neon-green);
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            text-align: center;
+            z-index: 3;
+        }
+
+        .mission-brief {
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-green);
+            padding: 15px;
+            max-width: 800px;
+            width: 100%;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.1);
+            z-index: 3;
+        }
+
+        .brief-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--neon-green);
+            font-weight: bold;
+        }
+
+        .brief-content {
+            display: none;
+            margin-top: 10px;
+            border-top: 1px dashed var(--neon-green);
+            padding-top: 10px;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .brief-content.open { display: block; }
+        .highlight { color: var(--neon-amber); font-weight: bold; }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+            max-width: 900px;
+            width: 100%;
+            margin-bottom: 40px;
+            z-index: 3;
+        }
+
+        .day-card {
+            background: var(--panel-bg);
+            border: 1px solid #333;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            cursor: not-allowed;
+            position: relative;
+            transition: all 0.3s ease;
+            color: #555;
+            font-family: var(--font-code);
+        }
+
+        .day-card.locked { opacity: 0.5; }
+        .day-card.active {
+            border-color: var(--neon-amber);
+            color: var(--neon-amber);
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 174, 0, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .day-card.active:hover {
+            transform: scale(1.05);
+            background: #1a233a;
+        }
+
+        .day-card.solved {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+            animation: none;
+            box-shadow: inset 0 0 10px rgba(0,255,0,0.2);
+        }
+        .day-card.solved::after {
+            content: '✓';
+            position: absolute;
+            bottom: 5px; right: 5px;
+            font-size: 0.6em;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px rgba(255, 174, 0, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(255, 174, 0, 0.6); }
+            100% { box-shadow: 0 0 5px rgba(255, 174, 0, 0.2); }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 2px solid var(--neon-blue);
+            padding: 20px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.2);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px; right: 15px;
+            color: var(--neon-red);
+            font-size: 1.5em;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .code-container {
+            background: #000;
+            padding: 15px;
+            border-left: 3px solid var(--neon-blue);
+            font-family: var(--font-code);
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            margin: 15px 0;
+            color: #ddd;
+        }
+
+        input.code-input {
+            background: #222;
+            border: 1px solid #555;
+            color: var(--neon-amber);
+            font-family: var(--font-code);
+            width: 80px;
+            text-align: center;
+            padding: 2px;
+            margin: 0 2px;
+            text-transform: uppercase;
+        }
+
+        input.code-input.correct { border-color: var(--neon-green); color: var(--neon-green); background: #051405; }
+        input.code-input.wrong { border-color: var(--neon-red); animation: shake 0.3s; }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 8px 16px;
+            cursor: pointer;
+            font-family: var(--font-ui);
+            text-transform: uppercase;
+            margin-right: 10px;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn:hover { background: rgba(0, 243, 255, 0.2); }
+        .btn-check { border-color: var(--neon-green); color: var(--neon-green); }
+        .btn-check:hover { background: rgba(0, 255, 0, 0.2); }
+
+        .hint-area {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px dashed #555;
+            display: none;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        .line-item {
+            background: #111;
+            padding: 5px;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            border: 1px solid #333;
+        }
+        .line-controls { display: flex; flex-direction: column; margin-right: 10px; }
+        .control-arrow {
+            cursor: pointer; font-size: 0.8em; color: var(--neon-blue);
+            user-select: none;
+        }
+        .control-arrow:hover { color: #fff; }
+
+        .success-overlay {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .secret-char {
+            font-size: 4em;
+            color: var(--neon-green);
+            text-shadow: 0 0 20px var(--neon-green);
+            margin: 20px 0;
+            font-family: var(--font-code);
+            border: 2px solid var(--neon-green);
+            display: inline-block;
+            padding: 10px 30px;
+        }
+
+        .next-challenge-msg {
+            color: var(--text-main);
+            font-style: italic;
+            margin-top: 20px;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+        }
+
+        .grand-victory {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 200;
+            justify-content: center;
+        }
+
+        #victory-screen {
+            border: 4px solid transparent;
+            animation: neonBorder 3s infinite alternate;
+        }
+
+        @keyframes neonBorder {
+            0%   { box-shadow: 0 0 10px #ff003c, inset 0 0 10px #ff003c; }
+            25%  { box-shadow: 0 0 15px #00ff00, inset 0 0 15px #00ff00; }
+            50%  { box-shadow: 0 0 15px #00f3ff, inset 0 0 15px #00f3ff; }
+            75%  { box-shadow: 0 0 20px #ffd700, inset 0 0 20px #ffd700; }
+            100% { box-shadow: 0 0 25px #ffffff, inset 0 0 25px #ffffff; }
+        }
+
+        .xmas-text {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 4em;
+            background: linear-gradient(to right, var(--neon-red), var(--neon-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .confetti-piece {
+            position: fixed;
+            top: -10px;
+            width: 8px;
+            height: 14px;
+            opacity: 0.9;
+            z-index: 999;
+            animation: fallConfetti linear forwards;
+        }
+        @keyframes fallConfetti {
+            to { transform: translateY(120vh) rotate(720deg); }
+        }
+
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: white;
+            font-size: 12px;
+            opacity: 0.8;
+            animation: snowfall linear forwards;
+            user-select: none;
+            z-index: 500;
+        }
+        @keyframes snowfall {
+            to { transform: translateY(110vh); }
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: radial-gradient(white, transparent);
+            border-radius: 50%;
+            animation: sparkleAnim 1.5s ease-out forwards;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        @keyframes sparkleAnim {
+            0%   { opacity: 1;   transform: scale(0.2); }
+            50%  { opacity: 0.8; transform: scale(1.3); }
+            100% { opacity: 0;   transform: scale(0.1); }
+        }
+
+        .present {
+            position: fixed;
+            top: -40px;
+            width: 26px;
+            height: 26px;
+            border-radius: 4px;
+            box-shadow: 0 0 6px rgba(0,0,0,0.7);
+            z-index: 700;
+            animation: presentFall linear forwards;
+        }
+        .present::before,
+        .present::after {
+            content: "";
+            position: absolute;
+            background: rgba(255,255,255,0.8);
+        }
+        .present::before {
+            width: 4px;
+            height: 100%;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+        }
+        .present::after {
+            height: 4px;
+            width: 100%;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+        @keyframes presentFall {
+            to { transform: translateY(120vh) rotate(360deg); }
+        }
+
+        .pixel-sprite {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            image-rendering: pixelated;
+            z-index: 300;
+        }
+        .sprite-tree {
+            background:
+                linear-gradient(#0b3, #0b3),
+                linear-gradient(#0b3, #0b3),
+                linear-gradient(#0b3, #0b3),
+                linear-gradient(#630, #630);
+            background-repeat: no-repeat;
+            background-size:
+                24px 10px,
+                18px 10px,
+                12px 10px,
+                8px 8px;
+            background-position:
+                4px 2px,
+                7px 10px,
+                10px 18px,
+                12px 24px;
+        }
+        .sprite-santa {
+            background:
+                linear-gradient(#f00, #f00),
+                linear-gradient(#fff, #fff),
+                linear-gradient(#fcc, #fcc),
+                linear-gradient(#fff, #fff);
+            background-repeat: no-repeat;
+            background-size:
+                24px 10px,
+                26px 4px,
+                20px 10px,
+                24px 6px;
+            background-position:
+                4px 2px,
+                3px 0px,
+                6px 10px,
+                4px 20px;
+        }
+        .sprite-present {
+            background-color: #c00;
+            border: 4px solid #700;
+            box-shadow: inset 0 0 0 3px #ffa500;
+        }
+        .sprite-star {
+            background:
+                radial-gradient(circle, #ffd700 0, #ffd700 40%, transparent 41%);
+        }
+
+        .falling-sprite {
+            animation: spriteFall linear forwards;
+        }
+        @keyframes spriteFall {
+            to { transform: translateY(115vh); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="candle-overlay"></div>
+
+    <h1>Nexus Coding Advent</h1>
+    <div class="system-status">
+        LOCATION: MALAYSIA NODE (UTC+8)<br>
+        DATE: <span id="current-date">Loading...</span>
+    </div>
+
+    <div class="mission-brief">
+        <div class="brief-header" onclick="toggleBrief()">
+            <span>>> MISSION BRIEFING (CLICK TO EXPAND)</span>
+            <span>[+]</span>
+        </div>
+        <div class="brief-content" id="brief-content">
+            <p>Welcome, Coder! Every day, a new puzzle unlocks based on Malaysian Time.</p>
+            <ul>
+                <li><strong>Days 1-23:</strong> Fill in the missing keywords (e.g., IF, WHILE, INTEGER).</li>
+                <li><strong>Day 24:</strong> The Final Challenge requires you to reorder code lines.</li>
+            </ul>
+            <p class="highlight">IMPORTANT: When you solve a puzzle, you receive a SECRET NUMBER. WRITE THIS DOWN!</p>
+            <p><strong>Victory Condition:</strong> After completing Day 24, use the Solve Code button to unlock Christmas.</p>
+        </div>
+    </div>
+
+    <div class="calendar-grid" id="calendar-grid"></div>
+
+    <div style="margin-top: 15px; margin-bottom: 25px; z-index: 3;">
+        <button class="btn btn-check" onclick="promptSolveCode()">Solve Code</button>
+    </div>
+
+    <div class="modal-overlay" id="puzzle-modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <h2 id="modal-title" style="color:var(--neon-blue); margin-top:0;">DAY X</h2>
+            <p id="modal-question" style="color: #fff; font-style: italic;"></p>
+
+            <div id="puzzle-area"></div>
+
+            <div id="controls-area" style="margin-top: 15px;">
+                <button class="btn btn-check" onclick="checkAnswer()">Compile & Run</button>
+            </div>
+
+            <div id="hint-box" class="hint-area">
+                <strong>HINT BANK:</strong> <span id="word-bank"></span>
+                <br><br>
+                <button class="btn" id="reveal-btn" style="font-size: 0.8em;" onclick="revealKeyword()">Reveal One Keyword (Emergency)</button>
+            </div>
+
+            <div id="success-msg" class="success-overlay">
+                <h3 style="color:var(--neon-green)">COMPILATION SUCCESSFUL!</h3>
+                <p>Your Secret Number for today is:</p>
+                <div class="secret-char" id="secret-display">?</div>
+                <p style="color:var(--neon-amber)">Write this number down!</p>
+                <p class="next-challenge-msg">See you tomorrow for the next challenge!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grand-victory" id="victory-screen">
+        <div class="xmas-text">Merry Christmas!</div>
+        <p style="color: #fff; max-width: 600px;">System Unlocked. Protocol: FESTIVE_OVERRIDE initiated.</p>
+        <button class="btn btn-check" style="font-size: 1.2em; padding: 15px 30px;" onclick="playJingleBells()">♫ Play Jingle Bells ♫</button>
+        <br><br>
+        <button class="btn" onclick="location.reload()">Reset System</button>
+    </div>
+
+    <script>
+        const KEYWORDS = [
+            "DECLARE","INTEGER","STRING","BOOLEAN","REAL","CHAR","ARRAY","OF",
+            "FOR","TO","NEXT","WHILE","DO","ENDWHILE","REPEAT","UNTIL",
+            "IF","THEN","ELSE","ELSEIF","ENDIF","OUTPUT","INPUT","MOD","DIV",
+            "AND","OR","NOT","TRUE","FALSE","FUNCTION","PROCEDURE","RETURN",
+            "CALL","ENDPROCEDURE","ENDFUNCTION","CASE","OTHERWISE","ENDCASE",
+            "ROUND","RANDOM","LENGTH","SUBSTRING","UCASE"
+        ];
+
+        const puzzles = [
+            { d:1, s:'71', q:"Ask for name, output greeting.", c:'OUTPUT "Enter your name:"\nINPUT Name\nOUTPUT "Merry Christmas, ", Name, "!"'},
+            { d:2, s:'69', q:"Store mince pies in variable and display.", c:'DECLARE Number : INTEGER\nOUTPUT "How many mince pies did you eat?"\nINPUT Number\nOUTPUT "You ate ", Number, " mince pies!"'},
+            { d:3, s:'83', q:"Calculate full boxes (6 per box) and leftovers.", c:'DECLARE Chocolates, Boxes, Leftover : INTEGER\nOUTPUT "Enter total chocolates:"\nINPUT Chocolates\nBoxes ← Chocolates DIV 6\nLeftover ← Chocolates MOD 6\nOUTPUT "Full boxes: ", Boxes\nOUTPUT "Leftovers: ", Leftover'},
+            { d:4, s:'69', q:"Calculate turkey price with 5% tax, rounded to 2 decimals.", c:'DECLARE Price, FinalPrice : REAL\nOUTPUT "Enter turkey price:"\nINPUT Price\nFinalPrice ← Price * 1.05\nOUTPUT "Final Price: ", ROUND(FinalPrice, 2)'},
+            { d:5, s:'147', q:"If temp < 0, output snow warning.", c:'DECLARE Temp : INTEGER\nOUTPUT "Enter outside temperature:"\nINPUT Temp\nIF Temp < 0 THEN\n    OUTPUT "It might snow!"\nENDIF'},
+            { d:6, s:'78', q:"Good or bad behaviour check.", c:'DECLARE Behaviour : STRING\nOUTPUT "Were you good or bad this year?"\nINPUT Behaviour\nIF Behaviour = "good" THEN\n    OUTPUT "Santa will visit!"\nELSE\n    OUTPUT "Maybe next year..."\nENDIF'},
+            { d:7, s:'68', q:"Age >= 10 AND behaviour = 'good'.", c:'DECLARE Age : INTEGER\nDECLARE Behaviour : STRING\nOUTPUT "Enter age:"\nINPUT Age\nOUTPUT "Enter behaviour (good/bad):"\nINPUT Behaviour\nIF Age >= 10 AND Behaviour = "good" THEN\n    OUTPUT "Extra presents!"\nENDIF'},
+            { d:8, s:'69', q:"Check if day is Christmas Eve OR Christmas Day.", c:'DECLARE Day : STRING\nOUTPUT "Enter day:"\nINPUT Day\nIF Day = "Christmas Eve" OR Day = "Christmas Day" THEN\n    OUTPUT "Holiday time!"\nENDIF'},
+            { d:9, s:'32', q:"Tree decoration check (NOT logic).", c:'DECLARE Decorated : STRING\nOUTPUT "Is the tree decorated? (yes/no)"\nINPUT Decorated\nIF NOT (Decorated = "yes") THEN\n    OUTPUT "Time to decorate the tree!"\nENDIF'},
+            { d:10, s:'75', q:"Reindeer name length check (>6).", c:'DECLARE Name : STRING\nOUTPUT "Enter reindeer name:"\nINPUT Name\nIF LENGTH(Name) > 6 THEN\n    OUTPUT "Long name"\nELSE\n    OUTPUT "Short name"\nENDIF'},
+            { d:11, s:'69', q:"Nested IF for age and behaviour.", c:'DECLARE Age : INTEGER\nDECLARE Behaviour : STRING\nOUTPUT "Enter age:"\nINPUT Age\nIF Age < 12 THEN\n    OUTPUT "Enter behaviour (good/bad):"\n    INPUT Behaviour\n    IF Behaviour = "good" THEN\n        OUTPUT "You get toys!"\n    ELSE\n        OUTPUT "You get nothing!"\n    ENDIF\nENDIF'},
+            { d:12, s:'82', q:"Cookie count (IF-ELSEIF-ELSE).", c:'DECLARE Cookies : INTEGER\nOUTPUT "How many cookies did you eat?"\nINPUT Cookies\nIF Cookies < 5 THEN\n    OUTPUT "Light snack"\nELSEIF Cookies <= 10 THEN\n    OUTPUT "Nice treat"\nELSE\n    OUTPUT "You must be full!"\nENDIF'},
+            { d:13, s:'83', q:"Paper ID selection (CASE Statement).", c:'DECLARE ID : INTEGER\nOUTPUT "Enter Paper ID (1-3):"\nINPUT ID\nCASE OF ID\n    1: OUTPUT "Red"\n    2: OUTPUT "Green"\n    3: OUTPUT "Gold"\n    OTHERWISE OUTPUT "Unknown Colour"\nENDCASE'},
+            { d:14, s:'70', q:"FOR Loop: Ho Ho Ho 5 times.", c:'DECLARE Count : INTEGER\nFOR Count ← 1 TO 5\n    OUTPUT "Ho Ho Ho!"\nNEXT Count'},
+            { d:15, s:'69', q:"Simulate 3 dice rolls using RANDOM.", c:'DECLARE I, Roll : INTEGER\nFOR I ← 1 TO 3\n    Roll ← ROUND(RANDOM() * 5, 0) + 1\n    OUTPUT "You rolled: ", Roll\nNEXT I'},
+            { d:16, s:'69', q:"Repeat until password is 'Santa123'.", c:'DECLARE Password : STRING\nREPEAT\n    OUTPUT "Enter password:"\n    INPUT Password\nUNTIL Password = "Santa123"'},
+            { d:17, s:'83', q:"While loop countdown (10 to 1).", c:'DECLARE Count : INTEGER\nCount ← 10\nWHILE Count > 0 DO\n    OUTPUT Count\n    Count ← Count - 1\nENDWHILE'},
+            { d:18, s:'32', q:"Totaling prices until -1 is entered.", c:'DECLARE Price, Total : INTEGER\nTotal ← 0\nOUTPUT "Enter price (-1 to stop):"\nINPUT Price\nWHILE Price <> -1 DO\n    Total ← Total + Price\n    OUTPUT "Enter next price:"\n    INPUT Price\nENDWHILE\nOUTPUT "Total: ", Total'},
+            { d:19, s:'65', q:"Create tag from code (First 3 chars, UCASE).", c:'DECLARE Code, Tag : STRING\nOUTPUT "Enter code:"\nINPUT Code\nTag ← UCASE(SUBSTRING(Code, 1, 3))\nOUTPUT "Tag: ", Tag'},
+            { d:20, s:'76', q:"Nested FOR loop for 3x3 star grid.", c:'DECLARE Row, Col : INTEGER\nFOR Row ← 1 TO 3\n    FOR Col ← 1 TO 3\n        OUTPUT "*"\n    NEXT Col\n    OUTPUT ""\nNEXT Row'},
+            { d:21, s:'77', q:"Nested FOR: User defined square size.", c:'DECLARE Size, R, C : INTEGER\nOUTPUT "Enter size:"\nINPUT Size\nFOR R ← 1 TO Size\n    FOR C ← 1 TO Size\n        OUTPUT "#"\n    NEXT C\n    OUTPUT ""\nNEXT R'},
+            { d:22, s:'65', q:"Snowflakes FOR loop inside WHILE loop.", c:'DECLARE Answer, I : STRING\nDECLARE Count : INTEGER\nOUTPUT "Do you want snowflakes? (yes/no)"\nINPUT Answer\nWHILE Answer = "yes" DO\n    FOR Count ← 1 TO 4\n        OUTPUT "❄"\n    NEXT Count\n    OUTPUT "Do you want more snowflakes? (yes/no)"\n    INPUT Answer\nENDWHILE'},
+            { d:23, s:'76', q:"REPEAT inside FOR loop for 3 children.", c:'DECLARE Gift : STRING\nDECLARE Child : INTEGER\nFOR Child ← 1 TO 3\n    REPEAT\n        OUTPUT "Enter gift for child ", Child\n        INPUT Gift\n    UNTIL Gift <> ""\nNEXT Child'}
+        ];
+
+        const day24Data = {
+            d: 24,
+            s: '33',
+            q: "SHUFFLE CHALLENGE: Reorder the code to calculate Toy Weights for 2 Elves.",
+            linesCorrect: [
+                "DECLARE Elf, Toy, Weight, ElfTotal : INTEGER",
+                "FOR Elf ← 1 TO 2",
+                "    ElfTotal ← 0",
+                "    OUTPUT \"Elf \", Elf",
+                "    FOR Toy ← 1 TO 3",
+                "        OUTPUT \"Enter weight:\"",
+                "        INPUT Weight",
+                "        ElfTotal ← ElfTotal + Weight",
+                "    NEXT Toy",
+                "    OUTPUT \"Total for Elf \", Elf, \": \", ElfTotal",
+                "NEXT Elf"
+            ]
+        };
+
+        const SECRET_PHRASE = "GESEËNDE KERSFEES ALMAL!";
+
+        let currentDayIndex = 0;
+        let attemptCount = 0;
+        let day24State = [];
+        let bellsInterval = null;
+
+        function getMalaysianDate() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            return new Date(utc + (3600000 * 8));
+        }
+
+        function getStatus() {
+            const myDate = getMalaysianDate();
+            const isDec = myDate.getMonth() === 11;
+            const day = myDate.getDate();
+
+            if (!isDec) {
+                if (myDate.getMonth() < 11) return 0;
+                if (myDate.getMonth() > 11) return 25;
+            }
+
+            if (day >= 23) return 24;
+            return day;
+        }
+
+        function init() {
+            const statusLimit = getStatus();
+            const grid = document.getElementById('calendar-grid');
+            const dateSpan = document.getElementById('current-date');
+
+            const myDate = getMalaysianDate();
+            dateSpan.textContent = myDate.toDateString() + " " + myDate.toLocaleTimeString();
+
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= 24; i++) {
+                const card = document.createElement('div');
+                card.className = 'day-card';
+
+                if (i <= statusLimit) {
+                    card.classList.add('active');
+                    card.innerHTML = `<span>${i}</span>`;
+                    card.onclick = () => openPuzzle(i);
+                } else {
+                    card.classList.add('locked');
+                    card.innerHTML = `<span>${i}</span>`;
+                }
+                grid.appendChild(card);
+            }
+
+            initBackgroundSprites();
+        }
+
+        function toggleBrief() {
+            document.getElementById('brief-content').classList.toggle('open');
+        }
+
+        function closeModal() {
+            document.getElementById('puzzle-modal').style.display = 'none';
+        }
+
+        function openPuzzle(day) {
+            currentDayIndex = day;
+            attemptCount = 0;
+            const modal = document.getElementById('puzzle-modal');
+            const title = document.getElementById('modal-title');
+            const q = document.getElementById('modal-question');
+            const area = document.getElementById('puzzle-area');
+            const hintBox = document.getElementById('hint-box');
+            const successMsg = document.getElementById('success-msg');
+            const controls = document.getElementById('controls-area');
+
+            modal.style.display = 'flex';
+            title.textContent = `DAY ${day} PROTOCOL`;
+            hintBox.style.display = 'none';
+            successMsg.style.display = 'none';
+            area.innerHTML = '';
+            controls.style.display = 'block';
+
+            if (day === 24) {
+                q.textContent = day24Data.q;
+                renderDay24(area);
+            } else {
+                const pData = puzzles[day - 1];
+                q.textContent = pData.q;
+
+                let codeHtml = escapeHtml(pData.c);
+
+                KEYWORDS.forEach(kw => {
+                    const regex = new RegExp(`\\b${kw}\\b`, 'g');
+                    codeHtml = codeHtml.replace(regex, `<input type="text" class="code-input" data-answer="${kw}" maxlength="${kw.length + 2}">`);
+                });
+
+                const codeBlock = document.createElement('div');
+                codeBlock.className = 'code-container';
+                codeBlock.innerHTML = codeHtml;
+                area.appendChild(codeBlock);
+            }
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function renderDay24(container) {
+            day24State = [...day24Data.linesCorrect];
+            for (let i = day24State.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [day24State[i], day24State[j]] = [day24State[j], day24State[i]];
+            }
+            renderDay24Lines(container);
+        }
+
+        function renderDay24Lines(container) {
+            container.innerHTML = '';
+            const list = document.createElement('div');
+            list.className = 'code-container';
+            list.style.background = '#000';
+
+            day24State.forEach((line, index) => {
+                const item = document.createElement('div');
+                item.className = 'line-item';
+
+                const controls = document.createElement('div');
+                controls.className = 'line-controls';
+
+                const up = document.createElement('span');
+                up.innerHTML = '▲';
+                up.className = 'control-arrow';
+                up.onclick = () => moveLine(index, -1);
+
+                const down = document.createElement('span');
+                down.innerHTML = '▼';
+                down.className = 'control-arrow';
+                down.onclick = () => moveLine(index, 1);
+
+                if (index > 0) controls.appendChild(up);
+                if (index < day24State.length - 1) controls.appendChild(down);
+
+                item.appendChild(controls);
+
+                const text = document.createElement('span');
+                text.textContent = line;
+                item.appendChild(text);
+
+                list.appendChild(item);
+            });
+            container.appendChild(list);
+        }
+
+        function moveLine(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= day24State.length) return;
+            [day24State[index], day24State[newIndex]] = [day24State[newIndex], day24State[index]];
+            renderDay24Lines(document.getElementById('puzzle-area'));
+        }
+
+        function checkAnswer() {
+            if (currentDayIndex === 24) {
+                checkDay24();
+                return;
+            }
+
+            const inputs = document.querySelectorAll('.code-input');
+            let allCorrect = true;
+            let keywordsNeeded = [];
+
+            inputs.forEach(input => {
+                const userVal = input.value.trim().toUpperCase();
+                const correctVal = input.dataset.answer;
+                keywordsNeeded.push(correctVal);
+
+                if (userVal === correctVal) {
+                    input.classList.remove('wrong');
+                    input.classList.add('correct');
+                    input.readOnly = true;
+                } else {
+                    input.classList.add('wrong');
+                    allCorrect = false;
+                }
+            });
+
+            if (allCorrect) {
+                showSuccess(puzzles[currentDayIndex - 1].s);
+            } else {
+                handleFailure(keywordsNeeded);
+            }
+        }
+
+        function checkDay24() {
+            const currentString = JSON.stringify(day24State);
+            const targetString = JSON.stringify(day24Data.linesCorrect);
+
+            if (currentString === targetString) {
+                const area = document.getElementById('puzzle-area');
+                area.innerHTML = `
+                    <div style="text-align:center; padding: 20px;">
+                        <h3 style="color:var(--neon-green)">CODE RESTRUCTURED SUCCESSFULLY.</h3>
+                        <p style="color:#fff;">Congratulations! You have completed Day 24.</p>
+                        <p style="color:var(--neon-amber); font-weight:bold;">Next Step:</p>
+                        <p style="color:#fff;">Use the <strong>Solve Code</strong> button under the calendar to unlock Christmas using your decoded phrase.</p>
+                    </div>
+                `;
+                document.getElementById('controls-area').style.display = 'none';
+            } else {
+                alert("Compilation Error: Line order incorrect.");
+            }
+        }
+
+        function handleFailure(keywords) {
+            attemptCount++;
+            const hintBox = document.getElementById('hint-box');
+
+            if (attemptCount >= 2) {
+                hintBox.style.display = 'block';
+                const unique = [...new Set(keywords)];
+                unique.sort(() => Math.random() - 0.5);
+                document.getElementById('word-bank').textContent = unique.join(", ");
+            }
+        }
+
+        function revealKeyword() {
+            const inputs = document.querySelectorAll('.code-input');
+            for (let input of inputs) {
+                if (!input.classList.contains('correct')) {
+                    input.value = input.dataset.answer;
+                    input.classList.remove('wrong');
+                    break;
+                }
+            }
+        }
+
+        function showSuccess(char) {
+            const msg = document.getElementById('success-msg');
+            const display = document.getElementById('secret-display');
+            const controls = document.getElementById('controls-area');
+            const hintBox = document.getElementById('hint-box');
+
+            controls.style.display = 'none';
+            hintBox.style.display = 'none';
+            msg.style.display = 'block';
+            display.textContent = char;
+
+            const cards = document.querySelectorAll('.day-card');
+            if (cards[currentDayIndex - 1]) {
+                cards[currentDayIndex - 1].classList.add('solved');
+            }
+        }
+
+        function launchConfetti() {
+            const colors = ["#ff0000", "#00ff00", "#ffd700", "#ffffff"];
+            const numPieces = 150;
+
+            for (let i = 0; i < numPieces; i++) {
+                const confetti = document.createElement("div");
+                confetti.classList.add("confetti-piece");
+
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + "vw";
+                const duration = 3 + Math.random() * 3;
+                confetti.style.animationDuration = duration + "s";
+                confetti.style.animationDelay = (Math.random() * 1.5) + "s";
+
+                confetti.style.width = (6 + Math.random() * 4) + "px";
+                confetti.style.height = (10 + Math.random() * 6) + "px";
+
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), (duration + 3) * 1000);
+            }
+        }
+
+        function launchSnowfall() {
+            const snowCount = 70;
+
+            for (let i = 0; i < snowCount; i++) {
+                const snow = document.createElement("div");
+                snow.classList.add("snowflake");
+                snow.textContent = "❄";
+
+                snow.style.left = Math.random() * 100 + "vw";
+                snow.style.fontSize = (10 + Math.random() * 14) + "px";
+                snow.style.animationDuration = (4 + Math.random() * 4) + "s";
+                snow.style.opacity = 0.5 + Math.random() * 0.5;
+
+                document.body.appendChild(snow);
+                setTimeout(() => snow.remove(), 9000);
+            }
+        }
+
+        function burstSparkles() {
+            const container = document.getElementById("victory-screen");
+            const numSparkles = 40;
+
+            const rect = container.getBoundingClientRect();
+
+            for (let i = 0; i < numSparkles; i++) {
+                const sparkle = document.createElement("div");
+                sparkle.classList.add("sparkle");
+
+                const offsetX = rect.width / 2 + (Math.random() * 200 - 100);
+                const offsetY = rect.height / 3 + (Math.random() * 120 - 60);
+
+                sparkle.style.left = offsetX + "px";
+                sparkle.style.top = offsetY + "px";
+
+                container.appendChild(sparkle);
+                setTimeout(() => sparkle.remove(), 1600);
+            }
+        }
+
+        function santaHoHoHo() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+
+            o.type = "square";
+            o.frequency.value = 180;
+            g.gain.value = 0.0;
+
+            o.connect(g);
+            g.connect(ctx.destination);
+
+            const startTime = ctx.currentTime;
+            let t = startTime;
+
+            for (let i = 0; i < 3; i++) {
+                g.gain.setValueAtTime(0.25, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+                t += 0.35;
+            }
+
+            o.start(startTime);
+            o.stop(t + 0.1);
+        }
+
+        function launchPresents() {
+            const colors = [
+                { base: "#c00000", accent: "#ffcc00" },
+                { base: "#008000", accent: "#ff0000" },
+                { base: "#0044aa", accent: "#d0e8ff" }
+            ];
+            const count = 25;
+
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement("div");
+                p.classList.add("present");
+
+                const style = colors[Math.floor(Math.random() * colors.length)];
+                p.style.backgroundColor = style.base;
+                p.style.borderColor = style.accent;
+
+                p.style.left = Math.random() * 100 + "vw";
+                const duration = 4 + Math.random() * 4;
+                p.style.animationDuration = duration + "s";
+                p.style.animationDelay = (Math.random() * 2) + "s";
+
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), (duration + 3) * 1000);
+            }
+        }
+
+        function initBackgroundSprites() {
+            const types = ["sprite-tree", "sprite-santa", "sprite-present", "sprite-star"];
+            const staticCount = 8;
+
+            for (let i = 0; i < staticCount; i++) {
+                const sp = document.createElement("div");
+                sp.classList.add("pixel-sprite");
+                sp.classList.add(types[Math.floor(Math.random() * types.length)]);
+
+                sp.style.left = Math.random() * 100 + "vw";
+                sp.style.top = (5 + Math.random() * 80) + "vh";
+                sp.style.opacity = 0.55;
+
+                document.body.appendChild(sp);
+            }
+        }
+
+        function launchSpriteBurst() {
+            const types = ["sprite-tree", "sprite-santa", "sprite-present", "sprite-star"];
+            const count = 15;
+
+            for (let i = 0; i < count; i++) {
+                const sp = document.createElement("div");
+                sp.classList.add("pixel-sprite", "falling-sprite");
+                sp.classList.add(types[Math.floor(Math.random() * types.length)]);
+
+                sp.style.left = Math.random() * 100 + "vw";
+                sp.style.top = "-40px";
+                const duration = 4 + Math.random() * 3;
+                sp.style.animationDuration = duration + "s";
+
+                document.body.appendChild(sp);
+                setTimeout(() => sp.remove(), (duration + 2) * 1000);
+            }
+        }
+
+        function startBellsLoop() {
+            if (bellsInterval) return;
+
+            function playBellOnce() {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const o = ctx.createOscillator();
+                const g = ctx.createGain();
+
+                o.type = "sine";
+                o.frequency.value = 880;
+                g.gain.value = 0.001;
+
+                o.connect(g);
+                g.connect(ctx.destination);
+
+                const now = ctx.currentTime;
+                g.gain.setValueAtTime(0.3, now);
+                g.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+                o.start(now);
+                o.stop(now + 0.6);
+            }
+
+            playBellOnce();
+            bellsInterval = setInterval(playBellOnce, 2000);
+        }
+
+        function playJingleBells() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return alert("Audio not supported");
+            const ctx = new AudioContext();
+            const notes = { E: 329.63, G: 392.00, C: 261.63, D: 293.66, F: 349.23 };
+            const melody = [
+                {n: 'E', d: 0.2}, {n: 'E', d: 0.2}, {n: 'E', d: 0.4},
+                {n: 'E', d: 0.2}, {n: 'E', d: 0.2}, {n: 'E', d: 0.4},
+                {n: 'E', d: 0.2}, {n: 'G', d: 0.2}, {n: 'C', d: 0.2}, {n: 'D', d: 0.1}, {n: 'E', d: 0.8}
+            ];
+            let time = ctx.currentTime;
+            melody.forEach(note => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.value = notes[note.n];
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(time);
+                gain.gain.setValueAtTime(0.1, time);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + note.d);
+                osc.stop(time + note.d);
+                time += note.d + 0.05;
+            });
+        }
+
+        function showVictoryScreen() {
+            const victory = document.getElementById('victory-screen');
+            victory.style.display = 'flex';
+
+            launchConfetti();
+            launchSnowfall();
+            launchPresents();
+            launchSpriteBurst();
+            burstSparkles();
+            santaHoHoHo();
+            startBellsLoop();
+        }
+
+        function normalize(str) {
+            return str
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toUpperCase();
+        }
+
+        function promptSolveCode() {
+const userInput = window.prompt("Enter the final secret code to unlock Christmas:");
+
+            if (userInput === null) {
+                return;
+            }
+
+            const entered = normalize(userInput.trim());
+            const secret  = normalize(SECRET_PHRASE.trim());
+
+            if (entered === secret) {
+                showVictoryScreen();
+            } else {
+                alert("Access denied: secret code incorrect.\nHint: check your spelling and spaces!");
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
